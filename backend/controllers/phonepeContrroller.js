@@ -78,7 +78,6 @@ const checkStatus = async (req, res) => {
     const response = await fetch(url, options);
     const data = await response.json();
     console.log("CHECK STATUS RESPONSE: ", data);
-
     if (data.success) {
       return res.redirect(phonepeConfig.SUCCESS_URL);
     } else {
