@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Calendar,
   WalletCards,
+  Presentation,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { hrtime } from "process";
@@ -67,6 +68,11 @@ const sidebarNavItems = [
     icon: WalletCards,
     
   },
+  {
+    title: "Events",
+    href: "/dashboard/events",
+    icon: Presentation
+  }
 ];
 
 export function Sidebar() {

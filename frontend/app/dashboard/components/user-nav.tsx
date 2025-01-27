@@ -7,18 +7,18 @@ import {
   LayoutGrid,
   Phone,
   FileText,
-  PenTool,
   Blocks,
   Users,
   ClipboardList,
   Network,
-  Webhook,
   UserCircle,
   LogOut,
   Menu,
   Headset,
   ChevronDown,
   Calendar,
+  Presentation,
+  WalletCards,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import {
@@ -51,28 +51,48 @@ const NavbarItems = [
     icon: LayoutGrid,
   },
   {
+    title: "Integration",
+    href: "/dashboard/calendly",
+    icon: Blocks,
+  },
+  {
     title: "Platform",
     icon: Network,
     children: [
       { title: "Assistants", href: "/dashboard/assistants", icon: Users },
       { title: "Phone Numbers", href: "/dashboard/phone-numbers", icon: Phone },
       { title: "Files", href: "/dashboard/files", icon: FileText },
-      {
-        title: "Calender",
-        href: "/dashboard/calender",
-        icon: Calendar,
-      },
+      { title: "Calender", href: "/dashboard/calender", icon: Calendar },
     ],
   },
-
   {
     title: "Logs",
     icon: ClipboardList,
     children: [
       { title: "Calls", href: "/dashboard/calls", icon: Headset },
-      { title: "API Requests", href: "/dashboard/api-requests", icon: Network },
+      {
+        title: "API Requests",
+        href: "/dashboard/api-requests",
+        icon: Network,
+      },
     ],
   },
+  {
+    title: "Profile",
+    href: "/dashboard/profile",
+    icon: UserCircle,
+  },
+  {
+    title: "Payment",
+    href: "/dashboard/payment",
+    icon: WalletCards,
+    
+  },
+  {
+    title: "Events",
+    href: "/dashboard/events",
+    icon: Presentation
+  }
 ];
 
 const ClientSideImage = dynamic(() => import("next/image"), { ssr: false });

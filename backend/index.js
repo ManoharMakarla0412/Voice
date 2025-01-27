@@ -44,7 +44,7 @@ app.use('/api/calls', callRoutes);
 app.use('/api', logsRoute)
 app.use('/api/auth', calendlyRoutes);
 app.use('/api/phone', phonenumberRoutes)
-app.use("/api", appointmentRoutes);
+app.use('/api/appointments', appointmentRoutes);
 app.use('/api/payment', paymentRoutes);
 
 // Connect to MongoDB

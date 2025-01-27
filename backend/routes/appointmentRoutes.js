@@ -1,8 +1,7 @@
-const express = require("express");
-const { createAppointment } = require("../controllers/appointmentController");
+const express = require('express');
+const { createAppointment } = require('../controllers/appointmentController');
 const router = express.Router();
 
-// Route to create an appointment
-router.post("/appointments", createAppointment);
+router.post('/book', createAppointment);
 
 module.exports = router;

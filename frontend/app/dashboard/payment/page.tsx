@@ -36,7 +36,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[#1C1C1C] rounded-md text-gray-300 flex flex-col items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg text-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
         <p className="text-gray-600 mb-8">Complete your payment securely.</p>
