@@ -74,7 +74,8 @@ const checkStatus = async (req, res) => {
 
   try {
     const response = await fetch(`${phonepeConfig.MERCHANT_BASE_URL}/${phonepeConfig.MERCHANT_ID}/${merchantTransactionId}`, options);
-    console.log("CHECK STATUS RESPONSE: ",response);
+    const data = response.json();
+    console.log("CHECK STATUS RESPONSE: ",data);
     if (response.success === true) {
       return res.redirect(phonepeConfig.SUCCESS_URL);
     } else {
