@@ -73,7 +73,8 @@ const checkStatus = async (req, res) => {
   };
 
   try {
-    const response = await fetchData(`${phonepeConfig.MERCHANT_STATUS_URL}/${phonepeConfig.MERCHANT_ID}/${merchantTransactionId}`, options);
+    const response = await fetchData(`${phonepeConfig.MERCHANT_BASE_URL}/${phonepeConfig.MERCHANT_ID}/${merchantTransactionId}`, options);
+    console.log(response);
     if (response.success === true) {
       return res.redirect(phonepeConfig.SUCCESS_URL);
     } else {
