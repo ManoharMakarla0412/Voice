@@ -2,7 +2,7 @@
 
 const PaymentFailure = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-r from-red-400 via-pink-500 to-purple-500 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[#1C1C1C] rounded-md text-gray-300 flex flex-col items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg text-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Payment Failed!</h1>
         <p className="text-gray-600 mb-8">
@@ -25,7 +25,7 @@ const PaymentFailure = () => {
           </svg>
         </div>
         <button
-          onClick={() => window.location.href = "/checkout"}
+          onClick={() => window.location.href = "/dashboard/payment"}
           className="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105"
         >
           Try Again
