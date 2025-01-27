@@ -57,7 +57,8 @@ const checkStatus = async (req, res) => {
 
   // Generate checksum
   const keyIndex = 1;
-  const string = `/pg/v1/status/${phonepeConfig.MERCHANT_ID}/${merchantTransactionId}` + phonepeConfig.MERCHANT_KEY;
+  const endpoint = `/pg/v1/status/${phonepeConfig.MERCHANT_ID}/${merchantTransactionId}`;
+  const string = endpoint + phonepeConfig.MERCHANT_KEY;
   const sha256 = crypto.createHash('sha256').update(string).digest('hex');
   const checksum = sha256 + '###' + keyIndex;
 
@@ -73,10 +74,12 @@ const checkStatus = async (req, res) => {
   };
 
   try {
-    const response = await fetch(`${phonepeConfig.MERCHANT_BASE_URL}/${phonepeConfig.MERCHANT_ID}/${merchantTransactionId}`, options);
+    const url = `${phonepeConfig.MERCHANT_BASE_URL}${endpoint}`;
+    const response = await fetch(url, options);
     const data = await response.json();
-    console.log("CHECK STATUS RESPONSE: ",data);
-    if (response.success === true) {
+    console.log("CHECK STATUS RESPONSE: ", data);
+
+    if (data.success) {
       return res.redirect(phonepeConfig.SUCCESS_URL);
     } else {
       return res.redirect(phonepeConfig.FAILURE_URL);
@@ -86,5 +89,6 @@ const checkStatus = async (req, res) => {
     return res.redirect(phonepeConfig.FAILURE_URL);
   }
 };
+
 
 module.exports = { createOrder, checkStatus };
