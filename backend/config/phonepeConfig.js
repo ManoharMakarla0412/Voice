@@ -3,7 +3,7 @@ module.exports = {
   MERCHANT_ID: "ELIDEPROONLINE",
   MERCHANT_BASE_URL: "https://api.phonepe.com/apis/hermes",
   MERCHANT_STATUS_URL: "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status",
-  REDIRECT_URL: "https://voice-gnwl.onrender.com/api/payment/status",
-  SUCCESS_URL: "https://account.elidepro.com/dashboard/payment-success",
-  FAILURE_URL: "https://account.elidepro.com/dashboard/payment-failure",
+  REDIRECT_URL: "https://voice-i3n0.onrender.com/api/payment/status",
+  SUCCESS_URL: "https://elidepro.com/dashboard/payment-success",
+  FAILURE_URL: "https://elidepro.com/dashboard/payment-failure",
 };
