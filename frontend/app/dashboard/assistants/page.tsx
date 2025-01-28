@@ -16,6 +16,7 @@ import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
 import { BASE_URL } from "../../utils/constants";
+
 interface Assistant {
   id: string;
   name: string;
@@ -31,6 +32,7 @@ interface Assistant {
   firstMessage: string;
   endCallMessage: string;
 }
+
 export default function AssistantDashboard() {
   const [step, setStep] = useState(1);
   const [assistants, setAssistants] = useState<Assistant[]>([]);
@@ -43,8 +45,6 @@ export default function AssistantDashboard() {
     endCallMessage: "",
   });
 
-  const [isEditable, setIsEditable] = useState(false); // Edit toggle
-
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
@@ -52,9 +52,6 @@ export default function AssistantDashboard() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const vapi_token = process.env.VAPI_TOKEN; // Token from environment variables
-
-  // Fetch assistant data when the component is mounted
   useEffect(() => {
     const fetchAssistants = async () => {
       try {
@@ -68,34 +65,7 @@ export default function AssistantDashboard() {
         const data = await response.json();
         setAssistants(data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch assistants"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssistants();
-  }, []);
-
-  const toggleEditable = () => setIsEditable((prev) => !prev);
-  useEffect(() => {
-    const fetchAssistants = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${BASE_URL}/assistant/get`);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch assistants");
-        }
-
-        const data = await response.json();
-        setAssistants(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch assistants"
-        );
+        setError(err instanceof Error ? err.message : "Failed to fetch assistants");
       } finally {
         setLoading(false);
       }
@@ -107,10 +77,9 @@ export default function AssistantDashboard() {
   const createAssistant = async () => {
     try {
       const response = await fetch(`${BASE_URL}/assistant/create`, {
-        // Use your actual backend API URL
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${sessionStorage.getItem('auth_token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -122,7 +91,7 @@ export default function AssistantDashboard() {
           endCallMessage: formData.endCallMessage,
           messages: [{ role: "user", content: formData.systemPrompt }],
           name: formData.name,
-          toolIds: ["e402a911-71a4-4879-90d6-92ec38b9d123"], 
+          toolIds: ["e402a911-71a4-4879-90d6-92ec38b9d123"],
         }),
       });
 
@@ -146,42 +115,20 @@ export default function AssistantDashboard() {
     }
   };
 
-  const saveChanges = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/assistant/update`, {
-        method: "POST",
-        headers: {
-          Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Nzk5MzdjNzcyZWQ5OWM0NTRhZmU4NyIsImlhdCI6MTczNjA2NTI5NiwiZXhwIjoxNzM2MDY4ODk2fQ.OE3aZLvuJ6S_VWbtIyBAfO7xSPLzSXem8g8ny9WwAKs",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save changes");
-      }
-
-      alert("Changes saved successfully!");
-      setIsEditable(false);
-    } catch (error) {
-      console.error("Error saving changes:", error);
-      alert("Failed to save changes");
-    }
-  };
+  const stepTooltips = [
+    "Enter the assistant name.",
+    "Provide the first message and system instructions.",
+    "Set the end call message.",
+  ];
 
   return (
     <div className="min-h-screen p-4 bg-[#1C1C1C] rounded-md text-white">
-      <header className="sticky top-0 z-10  border-b border-gray-800">
+      <header className="sticky top-0 z-10 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-teal-500">
-            Assistant Dashboard
-          </h1>
+          <h1 className="text-xl font-semibold text-teal-500">Assistant Dashboard</h1>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-teal-600 hover:bg-teal-700 m-2">
-                Create Assistant
-              </Button>
+              <Button className="bg-teal-600 hover:bg-teal-700 m-2">Create Assistant</Button>
             </DialogTrigger>
             <DialogContent className="bg-gray-900 text-white max-w-lg mx-auto">
               <DialogHeader>
@@ -190,18 +137,49 @@ export default function AssistantDashboard() {
                   Follow the steps to configure your assistant.
                 </DialogDescription>
               </DialogHeader>
+
+              {/* Timeline with tooltips */}
+              <div className="flex items-center justify-center gap-4 my-4">
+                {[1, 2, 3].map((currentStep, index) => (
+                  <div key={currentStep} className="relative flex items-center gap-2 group">
+                    <div
+                      className={`h-8 w-8 flex items-center justify-center rounded-full border-2 ${
+                        step >= currentStep ? "bg-teal-500 border-teal-500" : "border-gray-500"
+                      }`}
+                    >
+                      <span
+                        className={`text-sm font-semibold ${
+                          step >= currentStep ? "text-white" : "text-gray-500"
+                        }`}
+                      >
+                        {currentStep}
+                      </span>
+                    </div>
+                    {currentStep < 3 && (
+                      <div
+                        className={`h-1 w-8 ${
+                          step > currentStep ? "bg-teal-500" : "bg-gray-500"
+                        }`}
+                      ></div>
+                    )}
+
+                    {/* Tooltip */}
+                    <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 text-sm bg-gray-800 text-white rounded px-3 py-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      {stepTooltips[index]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               <div className="py-4">
                 {step === 1 && (
                   <div className="grid gap-4">
-                    <span>Step {step}</span>
                     <Label htmlFor="name">Assistant Name</Label>
                     <Input
                       id="name"
                       placeholder="Enter assistant name"
                       value={formData.name}
-                      onChange={(e) =>
-                        handleInputChange("name", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("name", e.target.value)}
                       className="bg-gray-800 border-gray-700 focus:ring-teal-500"
                     />
                   </div>
@@ -209,15 +187,12 @@ export default function AssistantDashboard() {
 
                 {step === 2 && (
                   <div className="grid gap-4">
-                    <span>Step {step}</span>
                     <Label htmlFor="first-message">First Message</Label>
                     <Input
                       id="first-message"
                       placeholder="Hello! How can I assist you today?"
                       value={formData.firstMessage}
-                      onChange={(e) =>
-                        handleInputChange("firstMessage", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("firstMessage", e.target.value)}
                       className="bg-gray-800 border-gray-700 focus:ring-teal-500"
                     />
                     <Label htmlFor="system-prompt">System Prompt</Label>
@@ -225,9 +200,7 @@ export default function AssistantDashboard() {
                       id="system-prompt"
                       placeholder="Enter the system instructions for the assistant..."
                       value={formData.systemPrompt}
-                      onChange={(e) =>
-                        handleInputChange("systemPrompt", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("systemPrompt", e.target.value)}
                       className="min-h-[150px] bg-gray-800 border-gray-700 focus:ring-teal-500"
                     />
                   </div>
@@ -235,15 +208,12 @@ export default function AssistantDashboard() {
 
                 {step === 3 && (
                   <div className="grid gap-4">
-                    <span>Step {step}</span>
                     <Label htmlFor="end-call-message">End Call Message</Label>
                     <Input
                       id="end-call-message"
                       placeholder="Thank you for contacting us. Have a great day!"
                       value={formData.endCallMessage}
-                      onChange={(e) =>
-                        handleInputChange("endCallMessage", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("endCallMessage", e.target.value)}
                       className="bg-gray-800 border-gray-700 focus:ring-teal-500"
                     />
                   </div>
@@ -300,24 +270,18 @@ export default function AssistantDashboard() {
               </div>
               <div>
                 <Label>Provider</Label>
-                <p className="text-sm text-gray-400">
-                  {assistant.model.provider}
-                </p>
+                <p className="text-sm text-gray-400">{assistant.model.provider}</p>
               </div>
               {assistant.firstMessage && (
                 <div>
                   <Label>First Message</Label>
-                  <p className="text-sm text-gray-400">
-                    {assistant.firstMessage}
-                  </p>
+                  <p className="text-sm text-gray-400">{assistant.firstMessage}</p>
                 </div>
               )}
               {assistant.endCallMessage && (
                 <div>
                   <Label>End Call Message</Label>
-                  <p className="text-sm text-gray-400">
-                    {assistant.endCallMessage}
-                  </p>
+                  <p className="text-sm text-gray-400">{assistant.endCallMessage}</p>
                 </div>
               )}
               <Button

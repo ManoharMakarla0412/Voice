@@ -6,27 +6,37 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "../../components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "../../components/ui/form";
 import { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Github } from 'lucide-react';
+import { Eye, EyeOff } from "lucide-react";
 import { useLogin } from "../hooks/auth/useAuth";
+import { useToast } from "../../components/ui/use-toast";
+import { Toaster } from "../../components/ui/toaster";
 
 const queryClient = new QueryClient();
 
 const signInSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" }),
 });
 
 type LoginRequest = z.infer<typeof signInSchema>;
 
 function LoginPageContent() {
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  
+  const { toast } = useToast();
+
   const signInForm = useForm<LoginRequest>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -42,30 +52,47 @@ function LoginPageContent() {
       const response = await loginMutation.mutateAsync(data);
       if (response.token) {
         sessionStorage.setItem("auth_token", response.token);
-        sessionStorage.setItem("username",response.user.username);
+        sessionStorage.setItem("username", response.user.username);
         sessionStorage.setItem("email", response.user.email);
+        toast({
+          title: "Login Successful",
+          description: "You have been successfully logged in.",
+          variant: "success",
+        });
         router.push("/dashboard");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Invalid credentials. Please try again.");
+      toast({
+        title: "Login Failed",
+        description: "Invalid credentials. Please try again.",
+        variant: "failure",
+      });
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:32px_32px]">
+      <Toaster />
+
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-[400px] rounded-lg bg-[#141414] p-6 shadow-xl">
           <div className="space-y-4">
             <div className="space-y-2">
-              <h1 className="text-2xl font-semibold text-white">Sign into your account</h1>
+              <h1 className="text-2xl font-semibold text-white">
+                Sign into your account
+              </h1>
               <p className="text-sm text-gray-400">
-                Easily manage your autonomous voice assistants all in one dashboard.
+                Easily manage your autonomous voice assistants all in one
+                dashboard.
               </p>
             </div>
 
             <Form {...signInForm}>
-              <form onSubmit={signInForm.handleSubmit(onSignInSubmit)} className="space-y-4">
+              <form
+                onSubmit={signInForm.handleSubmit(onSignInSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={signInForm.control}
                   name="email"
@@ -103,7 +130,11 @@ function LoginPageContent() {
                             className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400"
                             onClick={() => setShowPassword(!showPassword)}
                           >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {showPassword ? (
+                              <Eye className="h-4 w-4" />
+                            ) : (
+                              <EyeOff className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </FormControl>
@@ -111,18 +142,14 @@ function LoginPageContent() {
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-[#2F9C7E] hover:bg-[#268C6E] text-white"
                 >
                   Sign In
                 </Button>
               </form>
             </Form>
-
-            {error && (
-              <div className="text-sm text-red-500 text-center">{error}</div>
-            )}
 
             <div className="space-y-2 text-center text-sm">
               <p className="text-gray-400">
@@ -131,7 +158,10 @@ function LoginPageContent() {
                   Sign up
                 </Link>
               </p>
-              <Link href="/forgot-password" className="text-[#2F9C7E] hover:underline block">
+              <Link
+                href="/forgot-password"
+                className="text-[#2F9C7E] hover:underline block"
+              >
                 Forgot your password?
               </Link>
             </div>
@@ -149,4 +179,3 @@ export default function LoginPage() {
     </QueryClientProvider>
   );
 }
-
