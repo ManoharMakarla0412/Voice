@@ -6,4 +6,4 @@ module.exports = {
   REDIRECT_URL: "https://voice-i3n0.onrender.com/api/payment/status",
   SUCCESS_URL: "https://account.elidepro.com/dashboard/payment-success",
   FAILURE_URL: "https://account.elidepro.com/dashboard/payment-failure",
-};
+}; 
