@@ -11,7 +11,7 @@ const phonenumberRoutes = require('./routes/phoneNumberRoute');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const paymentRoutes = require('./routes/phonepeRoutes');
 const eventRoutes = require("./routes/eventRoutes");
-
+const { scheduleBillingEmails } = require("./utils/billingEmailScheduler");
 const connectDB = require("./config/db"); // MongoDB connection
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -47,6 +47,11 @@ app.use("/api/events", eventRoutes);
 
 // Connect to MongoDB
 connectDB();
+
+
+// Start the cron scheduler
+scheduleBillingEmails();
+console.log("Billing email scheduler started");
 
 // Start the server
 app.listen(port, () => {

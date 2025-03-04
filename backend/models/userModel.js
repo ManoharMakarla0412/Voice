@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Define the Twilio number schema
 const twilioNumberSchema = new mongoose.Schema({
@@ -14,11 +14,14 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   username: { type: String, required: true },
-  twilioNumbers: [twilioNumberSchema],  // Array of Twilio numbers for each user
-  assistant: { type: Boolean, default: false },  // Reference to Assistant model
-  plan: { type: String, required: true }, // Reference to
+  twilioNumbers: [twilioNumberSchema],
+  assistant: { type: Boolean, default: false },
+  plan: { type: String, required: true }, // "monthly" or "yearly"
+  registrationDate: { type: Date, default: Date.now }, // When the user registered
+  billingCycleDays: { type: Number, default: 30 }, // Default to 30 days for monthly, 365 for yearly
+  lastBillingDate: { type: Date }, // Track the last billing date
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

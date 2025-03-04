@@ -6,9 +6,9 @@ import { FileIcon, Link, Plus, Trash, Upload } from 'lucide-react'
 import { BASE_URL } from '../../utils/constants';
 
 interface PDF {
-  id?: any;
+  _id?: any;
   name: string;
-  url: string;
+  url: string;  
   createdAt: string
 }
 
@@ -175,7 +175,7 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {pdfs.map((pdf) => (
                   <div
-                    key={pdf.id}
+                    key={pdf._id}
                     className="border rounded-lg p-4 bg-[#1f1f1f] flex flex-col items-center"
                   >
                     <FileIcon className="w-12 h-12 text-gray-400" />
@@ -198,7 +198,7 @@ export default function Home() {
                       <Button
                         variant="outline"
                         className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                        onClick={() => deletePdf(pdf.id)}
+                        onClick={() => deletePdf(pdf._id)}
                       >
                         <Trash className="w-4 h-4" />
                         Delete

@@ -8,7 +8,9 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ onPlanSelect }: PricingSectionProps) {
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly" | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly" | null>(
+    null
+  );
 
   const monthlyFeatures = [
     { text: "100 minutes every month" },
@@ -33,7 +35,9 @@ export function PricingSection({ onPlanSelect }: PricingSectionProps) {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
-      <h1 className="text-5xl font-bold text-white text-center mb-12">Pricing</h1>
+      <h1 className="text-5xl font-bold text-white text-center mb-12">
+        Pricing
+      </h1>
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <PricingCard
           title="Monthly"
@@ -55,4 +59,3 @@ export function PricingSection({ onPlanSelect }: PricingSectionProps) {
     </div>
   );
 }
-

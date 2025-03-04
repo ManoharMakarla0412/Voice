@@ -1,38 +1,30 @@
-"use client"; // Required for client-side interactivity in Next.js 14
+"use client";
 
-const PaymentSuccess = () => {
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+export default function PaymentSuccessPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to login page after 3 seconds
+    const timer = setTimeout(() => {
+      router.push("/login");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [router]);
+
   return (
-    <div className="min-h-screen bg-[#1C1C1C] rounded-md text-gray-300 flex flex-col items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Payment Successful!</h1>
-        <p className="text-gray-600 mb-8">
-          Thank you for your payment. Your transaction was completed successfully.
+    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <div className="text-center text-white">
+        <h1 className="text-2xl font-semibold mb-4">
+          Payment Setup Successful!
+        </h1>
+        <p className="text-gray-400">
+          Your autopay has been set up. Redirecting to login...
         </p>
-        <div className="flex justify-center">
-          <svg
-            className="w-16 h-16 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13l4 4L19 7"
-            ></path>
-          </svg>
-        </div>
-        <button
-          onClick={() => window.location.href = "/dashboard"}
-          className="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105"
-        >
-          Return to Home
-        </button>
       </div>
     </div>
   );
-};
-
-export default PaymentSuccess;
+}
