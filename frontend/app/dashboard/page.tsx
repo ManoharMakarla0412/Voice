@@ -1,10 +1,33 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { ArrowUpIcon, ArrowDownIcon, Loader2 } from 'lucide-react'
-import { ChartContainer } from "../../components/ui/chart"
-import { BASE_URL } from "../utils/constants"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Loader2 } from "lucide-react";
+import { Line, Pie } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { BASE_URL } from "../utils/constants";
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface Assistant {
   id: string;
@@ -12,27 +35,166 @@ interface Assistant {
   description?: string;
 }
 
-const metrics = [
-  { title: "Total Call Minutes", value: "38", change: "+131.80%", isPositive: true },
-  { title: "Number of Calls", value: "66", change: "+83.33%", isPositive: true },
-  { title: "Total Spent", value: "$7.15", change: "+79.42%", isPositive: true },
-  { title: "Average Cost per Call", value: "$0.18", change: "-2.14%", isPositive: false },
-]
+// Dummy data for charts (to match the image)
+const lineChartData = {
+  labels: ["", "", "", "", "", "", ""], // 7 points for daily data
+  datasets: [
+    {
+      data: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.48], // Example for Total Call Minutes
+      borderColor: "#f97316",
+      backgroundColor: "rgba(249, 115, 22, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
 
-const reasonCallEndedData = [
-  { name: "Call Ended Normally", value: 27 },
-  { name: "Network Issue", value: 7 },
-  { name: "Missed Call", value: 8 },
-  { name: "Busy Line", value: 1 },
-]
+const numberOfCallsData = {
+  labels: ["", "", "", "", "", "", ""],
+  datasets: [
+    {
+      data: [0, 0, 1, 0, 0, 2, 0],
+      borderColor: "#3b82f6",
+      backgroundColor: "rgba(59, 130, 246, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
 
-const callDurationData = [
-  { name: "Unknown Assistant", value: 24 },
-  { name: "Mary", value: 23 },
-]
+const totalSpentData = {
+  labels: ["", "", "", "", "", "", ""],
+  datasets: [
+    {
+      data: [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.04],
+      borderColor: "#10b981",
+      backgroundColor: "rgba(16, 185, 129, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
 
-const COLORS = ["#4ade80", "#818cf8", "#fb923c", "#f87171"]
-const DURATION_COLORS = ["#818cf8", "#4ade80"]
+const avgCostPerCallData = {
+  labels: ["", "", "", "", "", "", ""],
+  datasets: [
+    {
+      data: [0, 0.01, 0.02, 0.01, 0.02, 0.01, 0.02],
+      borderColor: "#3b82f6",
+      backgroundColor: "rgba(59, 130, 246, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
+
+const reasonCallEndedData = {
+  labels: ["", "", "", "", "", "", ""],
+  datasets: [
+    {
+      data: [0, 0, 0, 0, 0, 0, 1],
+      borderColor: "#10b981",
+      backgroundColor: "rgba(16, 185, 129, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
+
+const callDurationData = {
+  labels: ["", "", "", "", "", "", ""],
+  datasets: [
+    {
+      data: [0, 0.5, 1, 1.5, 1, 0.5, 0],
+      borderColor: "#3b82f6",
+      backgroundColor: "rgba(59, 130, 246, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
+
+const costBreakdownData = {
+  labels: ["", "", "", "", "", "", ""],
+  datasets: [
+    {
+      data: [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.04],
+      borderColor: "#f97316",
+      backgroundColor: "rgba(249, 115, 22, 0.2)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
+
+const callVolumeData = {
+  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  datasets: [
+    {
+      label: "Inbound",
+      data: [40, 20, 30, 10, 20, 30, 40],
+      borderColor: "#3b82f6",
+      backgroundColor: "rgba(59, 130, 246, 0.3)",
+      fill: true,
+      tension: 0.4,
+    },
+    {
+      label: "Outbound",
+      data: [30, 30, 20, 20, 10, 20, 30],
+      borderColor: "#10b981",
+      backgroundColor: "rgba(16, 185, 129, 0.3)",
+      fill: true,
+      tension: 0.4,
+    },
+  ],
+};
+
+const callPerformanceData = {
+  labels: ["Successful", "Failed", "Missed", "Busy"],
+  datasets: [
+    {
+      data: [65, 15, 15, 5],
+      backgroundColor: ["#10b981", "#3b82f6", "#f97316", "#ef4444"],
+      borderWidth: 0,
+    },
+  ],
+};
+
+// Chart options for minimalistic design
+const lineChartOptions = {
+  plugins: {
+    legend: { display: false },
+    tooltip: { enabled: false },
+  },
+  scales: {
+    x: { display: false },
+    y: { display: false },
+  },
+  elements: {
+    point: { radius: 0 },
+  },
+  maintainAspectRatio: false,
+};
+
+const areaChartOptions = {
+  plugins: {
+    legend: { position: "bottom" as const, labels: { color: "#9ca3af" } },
+    tooltip: { enabled: true },
+  },
+  scales: {
+    x: { ticks: { color: "#9ca3af" } },
+    y: { ticks: { color: "#9ca3af" } },
+  },
+  maintainAspectRatio: false,
+};
+
+const pieChartOptions = {
+  plugins: {
+    legend: { position: "bottom" as const, labels: { color: "#9ca3af" } },
+    tooltip: { enabled: true },
+  },
+  maintainAspectRatio: false,
+};
 
 export default function Dashboard() {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
@@ -43,11 +205,11 @@ export default function Dashboard() {
     const fetchAssistants = async () => {
       try {
         const response = await fetch(`${BASE_URL}/assistant/get`);
-        if (!response.ok) throw new Error('Failed to fetch assistants');
+        if (!response.ok) throw new Error("Failed to fetch assistants");
         const data = await response.json();
         setAssistants(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch assistants');
+        setError(err instanceof Error ? err.message : "Failed to fetch assistants");
       } finally {
         setIsLoading(false);
       }
@@ -57,108 +219,109 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#1C1C1C] rounded-md text-white p-6">
+    <div className="min-h-screen bg-gray-100 text-gray-900 p-6">
       <div className="max-w-[1400px] mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">Overview</h1>
-        
-        {/* Metrics Grid */}
+        {/* Overview Section */}
+        <h1 className="text-2xl font-semibold mb-2">Overview</h1>
+        <p className="text-sm text-gray-500 mb-6">Voice agent statistics & performance</p>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {metrics?.map((metric, index) => (
-            <Card key={index} className="bg-[#2a2a2a] border-0">
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-400">{metric.title}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">{metric.value}</span>
-                    <span className={`text-sm flex items-center ${
-                      metric.isPositive ? 'text-green-500' : 'text-red-500'
-                    }`}>
-                      {metric.isPositive ? (
-                        <ArrowUpIcon className="w-4 h-4 mr-1" />
-                      ) : (
-                        <ArrowDownIcon className="w-4 h-4 mr-1" />
-                      )}
-                      {metric.change}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <Card className="bg-[#2a2a2a] border-0">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Reason Call Ended</CardTitle>
-              <p className="text-sm text-gray-400">Calls aggregated by reason of why the call ended or completed.</p>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                data={reasonCallEndedData}
-                colors={COLORS}
-                className="h-[300px]"
-              />
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Total Call Minutes</p>
+              <p className="text-2xl font-bold">0.48</p>
+              <div className="h-20">
+                <Line data={lineChartData} options={lineChartOptions} />
+              </div>
             </CardContent>
           </Card>
-
-          <Card className="bg-[#2a2a2a] border-0">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Average Call Duration by Assistant</CardTitle>
-              <p className="text-sm text-gray-400">Average call duration by assistant in minutes.</p>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                data={callDurationData}
-                colors={DURATION_COLORS}
-                className="h-[300px]"
-              />
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Number of Calls</p>
+              <p className="text-2xl font-bold">2</p>
+              <div className="h-20">
+                <Line data={numberOfCallsData} options={lineChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Total Spent</p>
+              <p className="text-2xl font-bold">$0.05</p>
+              <div className="h-20">
+                <Line data={totalSpentData} options={lineChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Average Cost per Call</p>
+              <p className="text-2xl font-bold">$0.02</p>
+              <div className="h-20">
+                <Line data={avgCostPerCallData} options={lineChartOptions} />
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Assistants Table */}
-        <Card className="bg-[#2a2a2a] border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Assistants Table</CardTitle>
-            <p className="text-sm text-gray-400">Total calls and average call duration aggregated by assistant.</p>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                </div>
-              ) : error ? (
-                <div className="text-center py-8 text-red-400">{error}</div>
-              ) : (
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Assistant Name</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Description</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Call Count</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Avg Duration</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {assistants.map((assistant) => (
-                      <tr key={assistant.id} className="border-b border-gray-700 hover:bg-gray-800/50 transition-colors">
-                        <td className="py-3 px-4">{assistant.name}</td>
-                        <td className="py-3 px-4 text-gray-400">{assistant.description || 'No description'}</td>
-                        <td className="py-3 px-4">24</td>
-                        <td className="py-3 px-4">3.65 min</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Call Analysis Section */}
+        <h2 className="text-xl font-semibold mb-4">Call Analysis</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Reason Call Ended</p>
+              <p className="text-xl font-bold">HANGUP</p>
+              <div className="h-20">
+                <Line data={reasonCallEndedData} options={lineChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Average Call Duration by Assistant</p>
+              <p className="text-xl font-bold">1.5 min</p>
+              <div className="h-20">
+                <Line data={callDurationData} options={lineChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-sm text-gray-500">Cost Breakdown</p>
+              <p className="text-xl font-bold">$0.05</p>
+              <div className="h-20">
+                <Line data={costBreakdownData} options={lineChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Call Volume and Performance Section */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Call Volume</CardTitle>
+              <p className="text-sm text-gray-500">Inbound vs Outbound calls</p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-60">
+                <Line data={callVolumeData} options={areaChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white rounded-lg shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium">Call Performance</CardTitle>
+              <p className="text-sm text-gray-500">Breakdown of call outcomes</p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-60">
+                <Pie data={callPerformanceData} options={pieChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  )
+  );
 }
-

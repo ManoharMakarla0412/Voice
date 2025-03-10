@@ -51,11 +51,6 @@ const NavbarItems = [
     icon: LayoutGrid,
   },
   {
-    title: "Integration",
-    href: "/dashboard/calendly",
-    icon: Blocks,
-  },
-  {
     title: "Platform",
     icon: Network,
     children: [
@@ -78,20 +73,10 @@ const NavbarItems = [
     ],
   },
   {
-    title: "Profile",
-    href: "/dashboard/profile",
-    icon: UserCircle,
-  },
-  {
     title: "Payment",
     href: "/dashboard/payment",
     icon: WalletCards,
     
-  },
-  {
-    title: "Events",
-    href: "/dashboard/events",
-    icon: Presentation
   }
 ];
 

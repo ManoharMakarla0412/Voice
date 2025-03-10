@@ -63,7 +63,7 @@ const bookAppointmentOnCalCom = async (customerName, service, startTime, endTime
 // Handle appointment booking
 exports.createAppointment = async (req, res) => {
   const { customerName, service, dateString } = req.body;
-
+  console.log("req.body", req.body);
   try {
     const appointmentDate = parseDate(dateString);
     const startTime = new Date(appointmentDate);
