@@ -159,7 +159,7 @@ function LoginPageContent() {
                 </Link>
               </p>
               <Link
-                href="/forgot-password"
+                href="/reset-password"
                 className="text-[#2F9C7E] hover:underline block"
               >
                 Forgot your password?

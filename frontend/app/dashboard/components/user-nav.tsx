@@ -71,12 +71,6 @@ const NavbarItems = [
         icon: Network,
       },
     ],
-  },
-  {
-    title: "Payment",
-    href: "/dashboard/payment",
-    icon: WalletCards,
-    
   }
 ];
 

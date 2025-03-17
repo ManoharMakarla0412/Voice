@@ -217,110 +217,164 @@ export default function Dashboard() {
 
     fetchAssistants();
   }, []);
+ 
+  // Skeleton UI Component
+  const SkeletonCard = () => (
+    <Card className="bg-gray-800 rounded-lg shadow-md animate-pulse">
+      <CardContent className="p-6">
+        <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+        <div className="h-6 bg-gray-700 rounded w-1/2 mb-4"></div>
+        <div className="h-20 bg-gray-700 rounded"></div>
+      </CardContent>
+    </Card>
+  );
 
-  return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 p-6">
+  const SkeletonLargeCard = () => (
+    <Card className="bg-gray-800 rounded-lg shadow-md animate-pulse">
+      <CardHeader>
+        <div className="h-5 bg-gray-700 rounded w-1/3 mb-2"></div>
+        <div className="h-4 bg-gray-700 rounded w-2/3"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-60 bg-gray-700 rounded"></div>
+      </CardContent>
+    </Card>
+  );
+
+ return (
+    <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-[1400px] mx-auto">
-        {/* Overview Section */}
-        <h1 className="text-2xl font-semibold mb-2">Overview</h1>
-        <p className="text-sm text-gray-500 mb-6">Voice agent statistics & performance</p>
+        {isLoading ? (
+          <>
+            {/* Skeleton Overview Section */}
+            <div className="h-8 bg-gray-700 rounded w-1/4 mb-2 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-1/3 mb-6 animate-pulse"></div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Total Call Minutes</p>
-              <p className="text-2xl font-bold">0.48</p>
-              <div className="h-20">
-                <Line data={lineChartData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Number of Calls</p>
-              <p className="text-2xl font-bold">2</p>
-              <div className="h-20">
-                <Line data={numberOfCallsData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Total Spent</p>
-              <p className="text-2xl font-bold">$0.05</p>
-              <div className="h-20">
-                <Line data={totalSpentData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Average Cost per Call</p>
-              <p className="text-2xl font-bold">$0.02</p>
-              <div className="h-20">
-                <Line data={avgCostPerCallData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
 
-        {/* Call Analysis Section */}
-        <h2 className="text-xl font-semibold mb-4">Call Analysis</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Reason Call Ended</p>
-              <p className="text-xl font-bold">HANGUP</p>
-              <div className="h-20">
-                <Line data={reasonCallEndedData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Average Call Duration by Assistant</p>
-              <p className="text-xl font-bold">1.5 min</p>
-              <div className="h-20">
-                <Line data={callDurationData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardContent className="p-6">
-              <p className="text-sm text-gray-500">Cost Breakdown</p>
-              <p className="text-xl font-bold">$0.05</p>
-              <div className="h-20">
-                <Line data={costBreakdownData} options={lineChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Skeleton Call Analysis Section */}
+            <div className="h-7 bg-gray-700 rounded w-1/5 mb-4 animate-pulse"></div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
 
-        {/* Call Volume and Performance Section */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Call Volume</CardTitle>
-              <p className="text-sm text-gray-500">Inbound vs Outbound calls</p>
-            </CardHeader>
-            <CardContent>
-              <div className="h-60">
-                <Line data={callVolumeData} options={areaChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white rounded-lg shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Call Performance</CardTitle>
-              <p className="text-sm text-gray-500">Breakdown of call outcomes</p>
-            </CardHeader>
-            <CardContent>
-              <div className="h-60">
-                <Pie data={callPerformanceData} options={pieChartOptions} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Skeleton Call Volume and Performance Section */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SkeletonLargeCard />
+              <SkeletonLargeCard />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Actual Overview Section */}
+            <h1 className="text-2xl font-semibold mb-2 text-white">Overview</h1>
+            <p className="text-sm text-gray-400 mb-6">Voice agent statistics & performance</p>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Total Call Minutes</p>
+                  <p className="text-2xl font-bold text-white">0.48</p>
+                  <div className="h-20">
+                    <Line data={lineChartData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Number of Calls</p>
+                  <p className="text-2xl font-bold text-white">2</p>
+                  <div className="h-20">
+                    <Line data={numberOfCallsData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Total Spent</p>
+                  <p className="text-2xl font-bold text-white">$0.05</p>
+                  <div className="h-20">
+                    <Line data={totalSpentData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Average Cost per Call</p>
+                  <p className="text-2xl font-bold text-white">$0.02</p>
+                  <div className="h-20">
+                    <Line data={avgCostPerCallData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Actual Call Analysis Section */}
+            <h2 className="text-xl font-semibold mb-4 text-white">Call Analysis</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Reason Call Ended</p>
+                  <p className="text-xl font-bold text-white">HANGUP</p>
+                  <div className="h-20">
+                    <Line data={reasonCallEndedData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Average Call Duration by Assistant</p>
+                  <p className="text-xl font-bold text-white">1.5 min</p>
+                  <div className="h-20">
+                    <Line data={callDurationData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-400">Cost Breakdown</p>
+                  <p className="text-xl font-bold text-white">$0.05</p>
+                  <div className="h-20">
+                    <Line data={costBreakdownData} options={lineChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Actual Call Volume and Performance Section */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg font-medium text-white">Call Volume</CardTitle>
+                  <p className="text-sm text-gray-400">Inbound vs Outbound calls</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-60">
+                    <Line data={callVolumeData} options={areaChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800 rounded-lg shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg font-medium text-white">Call Performance</CardTitle>
+                  <p className="text-sm text-gray-400">Breakdown of call outcomes</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-60">
+                    <Pie data={callPerformanceData} options={pieChartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

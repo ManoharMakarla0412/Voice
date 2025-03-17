@@ -51,12 +51,6 @@ const sidebarNavItems = [
         icon: Network,
       },
     ],
-  },
-  {
-    title: "Payment",
-    href: "/dashboard/payment",
-    icon: WalletCards,
-    
   }
 ];
 
