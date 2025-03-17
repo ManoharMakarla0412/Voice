@@ -17,28 +17,36 @@ import {
 } from "../../components/ui/form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader, Github } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 import { useSignUp } from "../hooks/auth/useAuth";
+import { useToast } from "../../components/ui/use-toast";
+import { Toaster } from "../../components/ui/toaster";
 
 const signUpSchema = z.object({
   username: z
     .string()
-    .min(3, { message: "Username must be at least 3 characters" }),
+    .min(3, { message: "Username must be at least 3 characters" })
+    .max(20, { message: "Username must not exceed 20 characters" })
+    .regex(/^[a-zA-Z0-9_]+$/, {
+      message: "Username can only contain letters, numbers, and underscores",
+    }),
   email: z.string().email({ message: "Invalid email address" }),
   password: z
     .string()
-    .min(8, { message: "Password must be at least 8 characters" }),
+    .min(8, { message: "Password must be at least 8 characters" })
+    .regex(/[A-Z]/, { message: "Password must contain an uppercase letter" })
+    .regex(/[0-9]/, { message: "Password must contain a number" }),
 });
 
 type SignupRequest = z.infer<typeof signUpSchema>;
 
 export default function SignupPage() {
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [showSignupForm, setShowSignupForm] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const signUpForm = useForm<SignupRequest>({
     resolver: zodResolver(signUpSchema),
@@ -47,6 +55,7 @@ export default function SignupPage() {
       email: "",
       password: "",
     },
+    mode: "onChange", // Real-time validation
   });
 
   const signUpMutation = useSignUp();
@@ -54,44 +63,69 @@ export default function SignupPage() {
   const handlePlanSelect = (plan: "monthly" | "yearly") => {
     setSelectedPlan(plan);
     setShowSignupForm(true);
+    toast({
+      title:`Selected ${plan} plan!` ,
+      description: "You have been successfully Selected plan.",
+      variant: "success",
+    });
   };
 
   const onSignUpSubmit = async (data: SignupRequest) => {
     if (!selectedPlan) {
-      setError("Please select a plan first");
+      toast({
+        title:"Please select a plan first" ,
+        description: "You must need select a plan.",
+        variant: "failure",
+      });
       return;
     }
 
     try {
       setIsLoading(true);
-      setError(null);
 
-      // Call the signup API
       const response = await signUpMutation.mutateAsync({
         ...data,
         plan: selectedPlan,
       });
 
-      // Check if a redirect URL for PhonePe is returned
-      if (response.redirectUrl) {
-        // Redirect the user to PhonePe to authenticate the mandate
-        window.location.href = response.redirectUrl;
+      // Handle successful signup based on updated backend response
+      if (response.status === "success" && response.data.token) {
+        sessionStorage.setItem("auth_token", response.data.token);
+        sessionStorage.setItem("username", response.data.user.username);
+        sessionStorage.setItem("email", response.data.user.email);
+        toast({
+          title:`Signup successful!` ,
+          description: "You have been successfully Selected plan.",
+          variant: "success",
+        });
+        router.push("/login");
       } else {
-        throw new Error("No redirect URL received from server");
+        toast({
+          title:"Error" ,
+          description: "Unexpected response from server",
+          variant: "failure",
+        });
       }
     } catch (error: any) {
       setIsLoading(false);
-      if (error.message) {
-        console.log("ERROR MESSAGE: ", error);
-        setError(error.message);
-      } else {
-        setError("An unexpected error occurred. Please try again.");
-      }
+      console.error("Signup error:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "An unexpected error occurred. Please try again.";
+
+        toast({
+          title:"Error" ,
+          description: errorMessage || "Unexpected response from server",
+          variant: "failure",
+        });
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:32px_32px]">
+      <Toaster />
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         {!showSignupForm ? (
           <PricingSection onPlanSelect={handlePlanSelect} />
@@ -104,20 +138,10 @@ export default function SignupPage() {
                 </h1>
                 <p className="text-sm text-gray-400">
                   Selected plan:{" "}
-                  {selectedPlan?.charAt(0).toUpperCase() +
-                    selectedPlan?.slice(1)}
-                </p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#222222]"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-[#141414] px-2 text-gray-400">
-                    OR SIGN UP WITH
+                  <span className="capitalize">
+                    {selectedPlan || "None selected"}
                   </span>
-                </div>
+                </p>
               </div>
 
               <Form {...signUpForm}>
@@ -138,10 +162,11 @@ export default function SignupPage() {
                             <Input
                               {...field}
                               placeholder="Your username"
-                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400"
+                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#2F9C7E] transition-all"
+                              disabled={isLoading}
                             />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-red-400" />
                         </FormItem>
                       )}
                     />
@@ -156,10 +181,11 @@ export default function SignupPage() {
                               {...field}
                               type="email"
                               placeholder="name@example.com"
-                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400"
+                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#2F9C7E] transition-all"
+                              disabled={isLoading}
                             />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-red-400" />
                         </FormItem>
                       )}
                     />
@@ -178,12 +204,15 @@ export default function SignupPage() {
                               {...field}
                               type={showPassword ? "text" : "password"}
                               placeholder="Your password"
-                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 pr-10"
+                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#2F9C7E] transition-all pr-10"
+                              disabled={isLoading}
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                              disabled={isLoading}
+                              aria-label="Toggle password visibility"
                             >
                               {showPassword ? (
                                 <Eye className="h-4 w-4" />
@@ -193,19 +222,19 @@ export default function SignupPage() {
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />
                   <Button
                     type="submit"
-                    className="w-full bg-[#2F9C7E] hover:bg-[#268C6E] text-white"
-                    disabled={isLoading}
+                    className="w-full bg-[#2F9C7E] hover:bg-[#268C6E] text-white font-semibold py-2.5 rounded-lg transition-all"
+                    disabled={isLoading || !signUpForm.formState.isValid}
                   >
                     {isLoading ? (
                       <>
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        Setting up autopay...
+                        Signing up...
                       </>
                     ) : (
                       "Sign Up"
@@ -214,13 +243,12 @@ export default function SignupPage() {
                 </form>
               </Form>
 
-              {error && (
-                <div className="text-sm text-red-500 text-center">{error}</div>
-              )}
-
               <div className="text-center text-sm text-gray-400">
                 Already have an account?{" "}
-                <Link href="/login" className="text-[#2F9C7E] hover:underline">
+                <Link
+                  href="/login"
+                  className="text-[#2F9C7E] hover:underline font-medium"
+                >
                   Sign in
                 </Link>
               </div>

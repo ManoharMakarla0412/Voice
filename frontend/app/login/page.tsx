@@ -50,10 +50,10 @@ function LoginPageContent() {
   const onSignInSubmit = async (data: LoginRequest) => {
     try {
       const response = await loginMutation.mutateAsync(data);
-      if (response.token) {
-        sessionStorage.setItem("auth_token", response.token);
-        sessionStorage.setItem("username", response.user.username);
-        sessionStorage.setItem("email", response.user.email);
+      if (response.data.token) {
+        sessionStorage.setItem("auth_token", response.data.token);
+        sessionStorage.setItem("username", response.data.user.username);
+        sessionStorage.setItem("email", response.data.user.email);
         toast({
           title: "Login Successful",
           description: "You have been successfully logged in.",
