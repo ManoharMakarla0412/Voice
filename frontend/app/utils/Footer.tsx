@@ -122,9 +122,6 @@ const Footer: React.FC = () => {
             <Link href="/refund-policy" className="text-gray-400 hover:text-white transition-colors">
             Refund Policy
             </Link>
-            <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-              Cookie Policy
-            </Link>
           </div>
 
           {/* Social Media Links with Icons */}
