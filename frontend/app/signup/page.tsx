@@ -1,4 +1,5 @@
-"use client";
+// pages/signup.tsx (assuming Pages Router)
+"use client"; // Note: This directive is for App Router; remove if using Pages Router
 
 import { useState } from "react";
 import { PricingSection } from "../../components/ui/pricing-section";
@@ -15,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../../components/ui/form";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // Use "next/router" if Pages Router
 import Link from "next/link";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import { useSignUp } from "../hooks/auth/useAuth";
@@ -64,8 +65,8 @@ export default function SignupPage() {
     setSelectedPlan(plan);
     setShowSignupForm(true);
     toast({
-      title:`Selected ${plan} plan!` ,
-      description: "You have been successfully Selected plan.",
+      title: `Selected ${plan} plan!`,
+      description: "You have successfully selected a plan.",
       variant: "success",
     });
   };
@@ -73,8 +74,8 @@ export default function SignupPage() {
   const onSignUpSubmit = async (data: SignupRequest) => {
     if (!selectedPlan) {
       toast({
-        title:"Please select a plan first" ,
-        description: "You must need select a plan.",
+        title: "Please select a plan first",
+        description: "You must select a plan.",
         variant: "failure",
       });
       return;
@@ -88,20 +89,19 @@ export default function SignupPage() {
         plan: selectedPlan,
       });
 
-      // Handle successful signup based on updated backend response
       if (response.status === "success" && response.data.token) {
         sessionStorage.setItem("auth_token", response.data.token);
         sessionStorage.setItem("username", response.data.user.username);
         sessionStorage.setItem("email", response.data.user.email);
         toast({
-          title:`Signup successful!` ,
-          description: "You have been successfully Selected plan.",
+          title: "Signup successful!",
+          description: "You have successfully signed up.",
           variant: "success",
         });
         router.push("/login");
       } else {
         toast({
-          title:"Error" ,
+          title: "Error",
           description: "Unexpected response from server",
           variant: "failure",
         });
@@ -115,11 +115,11 @@ export default function SignupPage() {
         error.message ||
         "An unexpected error occurred. Please try again.";
 
-        toast({
-          title:"Error" ,
-          description: errorMessage || "Unexpected response from server",
-          variant: "failure",
-        });
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "failure",
+      });
     }
   };
 
@@ -243,14 +243,40 @@ export default function SignupPage() {
                 </form>
               </Form>
 
-              <div className="text-center text-sm text-gray-400">
-                Already have an account?{" "}
-                <Link
-                  href="/login"
+              <div className="text-center text-sm text-gray-400 space-y-2">
+                <p>
+                  Already have an account?{" "}
+                  <Link
+                    href="/login"
+                    className="text-[#2F9C7E] hover:underline font-medium"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+                <p>
+                  By signing up, you agree to our{" "}
+                  <Link
+                    href="/terms-and-conditions"
+                    className="text-[#2F9C7E] hover:underline font-medium"
+                  >
+                    Terms & Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy-policy"
+                    className="text-[#2F9C7E] hover:underline font-medium"
+                  >
+                    Privacy Policy
+                  </Link>.
+                  and {" "}
+
+                  <Link 
+                  href= "/refund-policy"
                   className="text-[#2F9C7E] hover:underline font-medium"
-                >
-                  Sign in
-                </Link>
+>
+                                      Refund Policy
+                  </Link>
+                </p>
               </div>
             </div>
           </div>

@@ -164,6 +164,31 @@ function LoginPageContent() {
               >
                 Forgot your password?
               </Link>
+
+              <p className="text-white">
+                  By signing in, you agree to our{" "}
+                  <Link
+                    href="/terms-and-conditions"
+                    className="text-[#2F9C7E] hover:underline font-medium"
+                  >
+                    Terms & Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy-policy"
+                    className="text-[#2F9C7E] hover:underline font-medium"
+                  >
+                    Privacy Policy
+                  </Link>.
+                  and {" "}
+
+                  <Link 
+                  href= "/refund-policy"
+                  className="text-[#2F9C7E] hover:underline font-medium"
+>
+                                      Refund Policy
+                  </Link>
+                </p>
             </div>
           </div>
         </div>
