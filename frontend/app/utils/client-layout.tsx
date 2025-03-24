@@ -86,9 +86,6 @@ export default function ClientLayout({
               <div className="flex-1 flex flex-col overflow-x-auto">
                 {/* Main dashboard content */}
                 <main className="flex-1">{children}</main>
-
-                {/* Footer positioned correctly relative to main content */}
-                <Footer />
               </div>
             </div>
           </div>
@@ -100,9 +97,6 @@ export default function ClientLayout({
 
             {/* Public site content without extra padding */}
             <main className="flex-1">{children}</main>
-
-            {/* Public site footer */}
-            <Footer />
           </div>
         )}
       </SessionContextProvider>
