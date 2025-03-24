@@ -9,7 +9,7 @@ const Footer = () => {
   return (
     <footer className="bg-neutral text-neutral-content">
       {/* Main footer content */}
-      <div className="footer p-10 max-w-7xl mx-auto">
+      <div className="footer md:footer-horizontal p-10 max-w-7xl mx-auto">
         {/* Logo and Description */}
         <div>
           <Link href="/" className="inline-block">
