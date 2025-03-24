@@ -15,7 +15,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <div className="relative min-h-screen flex flex-col bg-background">
       {/* Header */}
 
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60">
         <Navbar />
       </header>
 
@@ -50,7 +50,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </aside>
 
           {/* Desktop sidebar */}
-          <aside className="hidden lg:block w-64 flex-shrink-0 border-r bg-background">
+          <aside className="hidden lg:block w-64 shrink-0 border-r bg-background">
             <div className="h-full overflow-y-auto">
               <Sidebar />
             </div>

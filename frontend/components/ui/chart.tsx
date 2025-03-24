@@ -65,7 +65,7 @@ export function Chart({ data, colors, showLabel = true, className }: ChartProps)
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 return (
-                  <div className="bg-[#2a2a2a] px-3 py-2 rounded shadow-md border border-gray-800">
+                  <div className="bg-[#2a2a2a] px-3 py-2 rounded-sm shadow-md border border-gray-800">
                     <p className="text-white text-sm">{`${payload[0].name}: ${payload[0].value}`}</p>
                   </div>
                 )

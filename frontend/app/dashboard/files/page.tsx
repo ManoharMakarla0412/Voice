@@ -190,7 +190,7 @@ export default function Home() {
                         href={pdf.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded flex items-center gap-2"
+                        className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded-sm flex items-center gap-2"
                       >
                         <Link className="w-4 h-4" />
                         Open

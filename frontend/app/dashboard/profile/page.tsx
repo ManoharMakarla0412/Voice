@@ -76,7 +76,7 @@ const Profile = () => {
                 type="email"
                 value={user?.email}
                 disabled
-                className="w-full bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-600 focus:outline-none"
+                className="w-full bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-600 focus:outline-hidden"
               />
             </div>
             <div>
@@ -88,7 +88,7 @@ const Profile = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="w-full bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-600 focus:outline-none"
+                className="w-full bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-600 focus:outline-hidden"
               />
             </div>
             <button
@@ -116,7 +116,7 @@ const Profile = () => {
               value={confirmEmail}
               onChange={(e) => setConfirmEmail(e.target.value)}
               placeholder="Enter your email"
-              className="w-full bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-600 focus:outline-none mb-4"
+              className="w-full bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-600 focus:outline-hidden mb-4"
             />
             <button
               onClick={handleDeleteAccount}

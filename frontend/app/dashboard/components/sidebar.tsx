@@ -2,27 +2,18 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ScrollArea } from "../../../components/ui/scroll-area";
 import {
   LayoutGrid,
   Phone,
   FileText,
-  PenTool,
   Users,
   ClipboardList,
   Network,
-  Blocks,
-  Webhook,
-  UserCircle,
   Headset,
   ChevronDown,
-  ChevronRight,
   Calendar,
-  WalletCards,
-  Presentation,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
-import { hrtime } from "process";
 
 const sidebarNavItems = [
   {
@@ -37,7 +28,7 @@ const sidebarNavItems = [
       { title: "Assistants", href: "/dashboard/assistants", icon: Users },
       { title: "Phone Numbers", href: "/dashboard/phone-numbers", icon: Phone },
       { title: "Files", href: "/dashboard/files", icon: FileText },
-      { title: "Calender", href: "/dashboard/calender", icon: Calendar },
+      { title: "Calendar", href: "/dashboard/calender", icon: Calendar },
     ],
   },
   {
@@ -51,11 +42,12 @@ const sidebarNavItems = [
         icon: Network,
       },
     ],
-  }
+  },
 ];
 
 export function Sidebar() {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const currentYear = new Date().getFullYear();
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({
@@ -65,71 +57,71 @@ export function Sidebar() {
   };
 
   return (
-    <div className="hidden lg:block w-64 bg-[#050505] text-gray-200 h-screen fixed left-0 top-0 overflow-y-auto">
-      <div className="flex h-full flex-col">
-        <div className="flex items-center justify-center h-16 border-b border-gray-800">
-          <h1 className="text-xl font-bold">ELIDE</h1>
-        </div>
-        <ScrollArea className="flex-1 px-4">
-          <nav className="space-y-2 py-4">
-            {sidebarNavItems.map((item) => {
-              const hasChildren = item.children && item.children.length > 0;
-              const isOpen = openMenus[item.title];
+    <div className="fixed top-[57px] left-0 h-[calc(100vh-57px)] flex flex-col bg-base-300 w-64 border-r border-base-200 overflow-y-auto">
+      {/* Main Menu (scrollable if needed) */}
+      <div className="flex-1 px-3 py-4 overflow-y-auto">
+        <ul className="menu menu-md w-full">
+          {sidebarNavItems.map((item) => {
+            const hasChildren = item.children && item.children.length > 0;
+            const isOpen = openMenus[item.title];
 
+            if (!hasChildren) {
               return (
-                <div key={item.title} className="space-y-1">
-                  {hasChildren ? (
-                    <div>
-                      <button
-                        onClick={() => toggleMenu(item.title)}
-                        className={cn(
-                          "w-full flex items-center justify-between text-sm rounded-md px-3 py-2 transition-colors hover:bg-gray-800 hover:text-white",
-                          isOpen && "bg-gray-800 text-white"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          {item.title}
-                        </div>
-                        {isOpen ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </button>
-                      {isOpen && (
-                        <div className="ml-4 space-y-1 pt-2">
-                          {item.children.map((child) => (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              className={cn(
-                                "w-full flex items-center justify-start gap-2 text-sm rounded-md px-3 py-2 transition-colors hover:bg-gray-800 hover:text-white"
-                              )}
-                            >
-                              <child.icon className="h-4 w-4" />
-                              {child.title}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <Link
-                      href={item.href || "/dashboard"}
-                      className={cn(
-                        "w-full flex items-center justify-start gap-2 text-sm rounded-md px-3 py-2 transition-colors hover:bg-gray-800 hover:text-white"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  )}
-                </div>
+                <li key={item.title}>
+                  <Link
+                    href={item.href || "/dashboard"}
+                    className={cn(
+                      "flex items-center gap-3 my-1 font-medium",
+                      "hover:bg-base-200 active:bg-primary active:text-primary-content"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </Link>
+                </li>
               );
-            })}
-          </nav>
-        </ScrollArea>
+            }
+
+            return (
+              <li key={item.title} className="my-1">
+                <details open={isOpen} onChange={() => toggleMenu(item.title)}>
+                  <summary
+                    className={cn(
+                      "font-medium hover:bg-base-200",
+                      isOpen && "font-semibold"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.title}
+                  </summary>
+                  <ul className="pl-4 mt-1">
+                    {item.children.map((child) => (
+                      <li key={child.href}>
+                        <Link
+                          href={child.href}
+                          className={cn(
+                            "flex items-center gap-3 py-2",
+                            "hover:bg-base-200 active:bg-primary active:text-primary-content"
+                          )}
+                        >
+                          <child.icon className="h-3.5 w-3.5" />
+                          <span className="text-sm">{child.title}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Footer */}
+      <div className="p-3 text-center border-t border-base-200 bg-base-200">
+        <p className="text-xs opacity-70">
+          © {currentYear} Elide Pro. All rights reserved.
+        </p>
       </div>
     </div>
   );

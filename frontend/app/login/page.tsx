@@ -4,22 +4,13 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "../../components/ui/form";
 import { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useLogin } from "../hooks/auth/useAuth";
-import { useToast } from "../../components/ui/use-toast";
-import { Toaster } from "../../components/ui/toaster";
+import Image from "next/image";
+import logo from "../../public/images/logo.png";
 
 const queryClient = new QueryClient();
 
@@ -34,10 +25,15 @@ type LoginRequest = z.infer<typeof signInSchema>;
 
 function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
-  const { toast } = useToast();
 
-  const signInForm = useForm<LoginRequest>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginRequest>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       email: "",
@@ -49,146 +45,194 @@ function LoginPageContent() {
 
   const onSignInSubmit = async (data: LoginRequest) => {
     try {
+      setIsLoading(true);
+      setLoginError(null);
       const response = await loginMutation.mutateAsync(data);
+
       if (response.data.token) {
         sessionStorage.setItem("auth_token", response.data.token);
         sessionStorage.setItem("username", response.data.user.username);
         sessionStorage.setItem("email", response.data.user.email);
-        toast({
-          title: "Login Successful",
-          description: "You have been successfully logged in.",
-          variant: "success",
-        });
+
+        // Show toast with DaisyUI
+        document.body.appendChild(createToast("Login Successful", "success"));
+
         router.push("/dashboard");
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
-        variant: "failure",
-      });
+      setLoginError("Invalid credentials. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0A0A0A] bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:32px_32px]">
-      <Toaster />
+  // Helper function to create toast notifications
+  const createToast = (
+    message: string,
+    type: "info" | "success" | "warning" | "error"
+  ) => {
+    const toast = document.createElement("div");
+    toast.className = `toast toast-end`;
 
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-[400px] rounded-lg bg-[#141414] p-6 shadow-xl">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h1 className="text-2xl font-semibold text-white">
-                Sign into your account
-              </h1>
-              <p className="text-sm text-gray-400">
-                Easily manage your autonomous voice assistants all in one
-                dashboard.
-              </p>
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${type} py-2`;
+    alert.innerHTML = `<span>${message}</span>`;
+
+    toast.appendChild(alert);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+
+    return toast;
+  };
+
+  return (
+    <div className="min-h-screen bg-base-100 flex items-center justify-center p-4 bg-grid-pattern">
+      <div className="card w-full max-w-sm bg-base-200 shadow-xl">
+        <div className="card-body p-5">
+          {/* Logo Section */}
+          <div className="flex justify-center mb-3">
+            <div className="relative h-10 w-32">
+              <Image
+                src={logo}
+                alt="Elide Pro Logo"
+                fill
+                style={{ objectFit: "contain" }}
+                priority
+                className="transition-all duration-300 hover:scale-105"
+              />
+            </div>
+          </div>
+
+          <h2 className="card-title text-xl font-bold mb-1">Welcome Back</h2>
+          <p className="text-base-content/70 text-sm mb-4">
+            Sign in to manage your autonomous voice assistants
+          </p>
+
+          {loginError && (
+            <div className="alert alert-error py-2 text-xs mb-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="stroke-current shrink-0 h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSignInSubmit)} className="space-y-3">
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm">Email</span>
+              </label>
+              <input
+                type="email"
+                placeholder="your.email@example.com"
+                className={`input input-bordered input-sm w-full ${
+                  errors.email ? "input-error" : ""
+                }`}
+                {...register("email")}
+              />
+              {errors.email && (
+                <label className="label py-0">
+                  <span className="label-text-alt text-error text-xs">
+                    {errors.email.message}
+                  </span>
+                </label>
+              )}
             </div>
 
-            <Form {...signInForm}>
-              <form
-                onSubmit={signInForm.handleSubmit(onSignInSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={signInForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Your email address"
-                          type="email"
-                          className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signInForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                            placeholder="Your password"
-                            type={showPassword ? "text" : "password"}
-                            className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 pr-10"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <Eye className="h-4 w-4" />
-                            ) : (
-                              <EyeOff className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full bg-[#2F9C7E] hover:bg-[#268C6E] text-white"
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm">Password</span>
+                <Link
+                  href="/reset-password"
+                  className="label-text-alt link link-primary text-xs"
                 >
-                  Sign In
-                </Button>
-              </form>
-            </Form>
-
-            <div className="space-y-2 text-center text-sm">
-              <p className="text-gray-400">
-                Don't have an account?{" "}
-                <Link href="/signup" className="text-[#2F9C7E] hover:underline">
-                  Sign up
+                  Forgot password?
                 </Link>
-              </p>
-              <Link
-                href="/reset-password"
-                className="text-[#2F9C7E] hover:underline block"
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className={`input input-bordered input-sm w-full pr-10 ${
+                    errors.password ? "input-error" : ""
+                  }`}
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/60 hover:text-primary"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <Eye className="h-3.5 w-3.5" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <label className="label py-0">
+                  <span className="label-text-alt text-error text-xs">
+                    {errors.password.message}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="form-control mt-4">
+              <button
+                type="submit"
+                className={`btn btn-primary btn-sm ${
+                  isLoading ? "loading" : ""
+                }`}
+                disabled={isLoading}
               >
-                Forgot your password?
+                {isLoading ? (
+                  <span className="loading loading-spinner loading-xs"></span>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </div>
+          </form>
+
+          <div className="divider my-2 text-xs">OR</div>
+
+          <div className="text-center space-y-2">
+            <p className="text-base-content/70 text-sm">
+              Don't have an account?{" "}
+              <Link href="/signup" className="link link-primary">
+                Sign up
               </Link>
+            </p>
 
-              <p className="text-white">
-                  By signing in, you agree to our{" "}
-                  <Link
-                    href="/terms-and-conditions"
-                    className="text-[#2F9C7E] hover:underline font-medium"
-                  >
-                    Terms & Conditions
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy-policy"
-                    className="text-[#2F9C7E] hover:underline font-medium"
-                  >
-                    Privacy Policy
-                  </Link>.
-                  and {" "}
-
-                  <Link 
-                  href= "/refund-policy"
-                  className="text-[#2F9C7E] hover:underline font-medium"
->
-                                      Refund Policy
-                  </Link>
-                </p>
+            <div className="text-xs text-base-content/60 max-w-sm mx-auto">
+              By signing in, you agree to our{" "}
+              <Link href="/terms-and-conditions" className="link link-primary">
+                Terms
+              </Link>
+              ,{" "}
+              <Link href="/privacy-policy" className="link link-primary">
+                Privacy
+              </Link>{" "}
+              and{" "}
+              <Link href="/refund-policy" className="link link-primary">
+                Refund
+              </Link>{" "}
+              policies
             </div>
           </div>
         </div>
@@ -200,6 +244,15 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <QueryClientProvider client={queryClient}>
+      <style jsx global>{`
+        .bg-grid-pattern {
+          background-image: radial-gradient(
+            rgba(255, 255, 255, 0.1) 1px,
+            transparent 1px
+          );
+          background-size: 32px 32px;
+        }
+      `}</style>
       <LoginPageContent />
     </QueryClientProvider>
   );

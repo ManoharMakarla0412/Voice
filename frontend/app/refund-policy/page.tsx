@@ -4,21 +4,21 @@ import Footer from '../utils/Footer';
 
 const RefundPolicy: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-gray-900 to-black">
       {/* Reusable Header */}
       <Header />
 
       {/* Main Content */}
-      <main className="flex-grow">
+      <main className="grow">
         <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
           <div className="text-center mb-16">
-            <div className="inline-block p-1 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 mb-6">
+            <div className="inline-block p-1 rounded-lg bg-linear-to-r from-blue-500 to-purple-600 mb-6">
               <div className="bg-black px-4 py-1 rounded-md">
                 <span className="text-gray-300 text-sm">Effective Date: February 18, 2025</span>
               </div>
             </div>
-            <h1 className="text-5xl font-bold text-white mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold text-white mb-6 bg-linear-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               Refund Policy
             </h1>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto leading-relaxed">
@@ -29,7 +29,7 @@ const RefundPolicy: React.FC = () => {
 
           {/* Content Sections */}
           <div className="space-y-12 text-gray-300">
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors">
+            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
                   1
@@ -49,7 +49,7 @@ const RefundPolicy: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors">
+            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
                   2
@@ -66,7 +66,7 @@ const RefundPolicy: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors">
+            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
                   3
@@ -85,7 +85,7 @@ const RefundPolicy: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors">
+            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
                   4
@@ -108,7 +108,7 @@ const RefundPolicy: React.FC = () => {
               </ol>
             </section>
 
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors">
+            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
                   5

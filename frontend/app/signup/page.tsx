@@ -1,28 +1,18 @@
-// pages/signup.tsx (assuming Pages Router)
-"use client"; // Note: This directive is for App Router; remove if using Pages Router
+"use client";
 
 import { useState } from "react";
-import { PricingSection } from "../../components/ui/pricing-section";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../../components/ui/form";
-import { useRouter } from "next/navigation"; // Use "next/router" if Pages Router
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useSignUp } from "../hooks/auth/useAuth";
-import { useToast } from "../../components/ui/use-toast";
-import { Toaster } from "../../components/ui/toaster";
+import Image from "next/image";
+import logo from "../../public/images/logo.png";
+import { PricingSection } from "../dashboard/components/pricing-section";
 
+// Define the complete type for the signup form including plan and billing
 const signUpSchema = z.object({
   username: z
     .string()
@@ -39,244 +29,333 @@ const signUpSchema = z.object({
     .regex(/[0-9]/, { message: "Password must contain a number" }),
 });
 
-type SignupRequest = z.infer<typeof signUpSchema>;
+// Basic form type without plan/billing (for the form only)
+type SignupFormData = z.infer<typeof signUpSchema>;
+
+// Extended type for the API request that includes plan/billing
+interface SignupRequest extends SignupFormData {
+  plan: string;
+  billing: "monthly" | "yearly";
+}
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
+  const [selectedBilling, setSelectedBilling] = useState<"monthly" | "yearly">(
+    "monthly"
+  );
   const [showSignupForm, setShowSignupForm] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
   const router = useRouter();
-  const { toast } = useToast();
 
-  const signUpForm = useForm<SignupRequest>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<SignupFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       username: "",
       email: "",
       password: "",
     },
-    mode: "onChange", // Real-time validation
+    mode: "onChange",
   });
 
   const signUpMutation = useSignUp();
 
-  const handlePlanSelect = (plan: "monthly" | "yearly") => {
-    setSelectedPlan(plan);
+  const handlePlanSelect = (
+    planType: string,
+    billingCycle: "monthly" | "yearly"
+  ) => {
+    setSelectedPlan(planType);
+    setSelectedBilling(billingCycle);
     setShowSignupForm(true);
-    toast({
-      title: `Selected ${plan} plan!`,
-      description: "You have successfully selected a plan.",
-      variant: "success",
-    });
+    document.body.appendChild(
+      createToast(
+        `Selected ${planType} plan with ${billingCycle} billing!`,
+        "success"
+      )
+    );
   };
 
-  const onSignUpSubmit = async (data: SignupRequest) => {
+  const onSignUpSubmit = async (data: SignupFormData) => {
     if (!selectedPlan) {
-      toast({
-        title: "Please select a plan first",
-        description: "You must select a plan.",
-        variant: "failure",
-      });
+      document.body.appendChild(
+        createToast("Please select a plan first", "error")
+      );
       return;
     }
 
     try {
       setIsLoading(true);
+      setSignupError(null);
 
-      const response = await signUpMutation.mutateAsync({
+      // Create the complete request with plan and billing
+      const signupRequest: SignupRequest = {
         ...data,
         plan: selectedPlan,
-      });
+        billing: selectedBilling,
+      };
+
+      const response = await signUpMutation.mutateAsync(signupRequest);
 
       if (response.status === "success" && response.data.token) {
         sessionStorage.setItem("auth_token", response.data.token);
         sessionStorage.setItem("username", response.data.user.username);
         sessionStorage.setItem("email", response.data.user.email);
-        toast({
-          title: "Signup successful!",
-          description: "You have successfully signed up.",
-          variant: "success",
-        });
-        router.push("/login");
+
+        document.body.appendChild(createToast("Signup successful!", "success"));
+        router.push("/dashboard");
       } else {
-        toast({
-          title: "Error",
-          description: "Unexpected response from server",
-          variant: "failure",
-        });
+        setSignupError("Unexpected response from server");
       }
     } catch (error: any) {
-      setIsLoading(false);
       console.error("Signup error:", error);
-
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "An unexpected error occurred. Please try again.";
-
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "failure",
-      });
+      setSignupError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Helper function to create toast notifications
+  const createToast = (
+    message: string,
+    type: "info" | "success" | "warning" | "error"
+  ) => {
+    const toast = document.createElement("div");
+    toast.className = `toast toast-end`;
+
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${type} py-2`;
+    alert.innerHTML = `<span>${message}</span>`;
+
+    toast.appendChild(alert);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+
+    return toast;
+  };
+
+  // Go back to plan selection
+  const handleChangePlan = () => {
+    setShowSignupForm(false);
+  };
+
+  // Helper function to get descriptive plan name
+  const getPlanLabel = () => {
+    const planName =
+      selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
+    return `${planName} (${selectedBilling})`;
+  };
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A] bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:32px_32px]">
-      <Toaster />
-      <div className="flex min-h-screen flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-base-100 flex items-center justify-center p-4 bg-grid-pattern">
+      <style jsx>{`
+        .bg-grid-pattern {
+          background-image: radial-gradient(
+            rgba(255, 255, 255, 0.1) 1px,
+            transparent 1px
+          );
+          background-size: 32px 32px;
+        }
+      `}</style>
+
+      <div className="w-full max-w-4xl">
         {!showSignupForm ? (
           <PricingSection onPlanSelect={handlePlanSelect} />
         ) : (
-          <div className="w-full max-w-[400px] rounded-lg bg-[#141414] p-6 shadow-xl">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-semibold text-white">
-                  Create your account
-                </h1>
-                <p className="text-sm text-gray-400">
-                  Selected plan:{" "}
-                  <span className="capitalize">
-                    {selectedPlan || "None selected"}
-                  </span>
-                </p>
+          <div className="card bg-base-200 shadow-xl max-w-sm mx-auto">
+            <div className="card-body p-5">
+              {/* Logo Section */}
+              <div className="flex justify-center mb-3">
+                <div className="relative h-10 w-32">
+                  <Image
+                    src={logo}
+                    alt="Elide Pro Logo"
+                    fill
+                    style={{ objectFit: "contain" }}
+                    priority
+                    className="transition-all duration-300 hover:scale-105"
+                  />
+                </div>
               </div>
 
-              <Form {...signUpForm}>
-                <form
-                  onSubmit={signUpForm.handleSubmit(onSignUpSubmit)}
-                  className="space-y-4"
+              <h2 className="card-title text-xl font-bold mb-1">
+                Create your account
+              </h2>
+
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-base-content/70">
+                    Selected plan:
+                  </span>
+                  <span className="badge badge-primary capitalize">
+                    {getPlanLabel()}
+                  </span>
+                </div>
+                <button
+                  onClick={handleChangePlan}
+                  className="btn btn-ghost btn-xs"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={signUpForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">
-                            Username
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Your username"
-                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#2F9C7E] transition-all"
-                              disabled={isLoading}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400" />
-                        </FormItem>
-                      )}
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                  Change plan
+                </button>
+              </div>
+
+              {signupError && (
+                <div className="alert alert-error py-2 text-xs mb-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="stroke-current shrink-0 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                    <FormField
-                      control={signUpForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Email</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="email"
-                              placeholder="name@example.com"
-                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#2F9C7E] transition-all"
-                              disabled={isLoading}
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-400" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={signUpForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">
-                          Password
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              {...field}
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Your password"
-                              className="border-[#222222] bg-[#141414] text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#2F9C7E] transition-all pr-10"
-                              disabled={isLoading}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                              disabled={isLoading}
-                              aria-label="Toggle password visibility"
-                            >
-                              {showPassword ? (
-                                <Eye className="h-4 w-4" />
-                              ) : (
-                                <EyeOff className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
+                  </svg>
+                  <span>{signupError}</span>
+                </div>
+              )}
+
+              <form
+                onSubmit={handleSubmit(onSignUpSubmit)}
+                className="space-y-3"
+              >
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text text-sm">Username</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Your username"
+                    className={`input input-bordered input-sm w-full ${
+                      errors.username ? "input-error" : ""
+                    }`}
+                    {...register("username")}
+                    disabled={isLoading}
                   />
-                  <Button
+                  {errors.username && (
+                    <label className="label py-0">
+                      <span className="label-text-alt text-error text-xs">
+                        {errors.username.message}
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text text-sm">Email</span>
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    className={`input input-bordered input-sm w-full ${
+                      errors.email ? "input-error" : ""
+                    }`}
+                    {...register("email")}
+                    disabled={isLoading}
+                  />
+                  {errors.email && (
+                    <label className="label py-0">
+                      <span className="label-text-alt text-error text-xs">
+                        {errors.email.message}
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text text-sm">Password</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className={`input input-bordered input-sm w-full pr-10 ${
+                        errors.password ? "input-error" : ""
+                      }`}
+                      {...register("password")}
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/60 hover:text-primary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <Eye className="h-3.5 w-3.5" />
+                      ) : (
+                        <EyeOff className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <label className="label py-0">
+                      <span className="label-text-alt text-error text-xs">
+                        {errors.password.message}
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="form-control mt-4">
+                  <button
                     type="submit"
-                    className="w-full bg-[#2F9C7E] hover:bg-[#268C6E] text-white font-semibold py-2.5 rounded-lg transition-all"
-                    disabled={isLoading || !signUpForm.formState.isValid}
+                    className="btn btn-primary btn-sm"
+                    disabled={isLoading || !isValid}
                   >
                     {isLoading ? (
-                      <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        Signing up...
-                      </>
+                      <span className="loading loading-spinner loading-xs"></span>
                     ) : (
                       "Sign Up"
                     )}
-                  </Button>
-                </form>
-              </Form>
+                  </button>
+                </div>
+              </form>
 
-              <div className="text-center text-sm text-gray-400 space-y-2">
-                <p>
+              <div className="divider my-2 text-xs">OR</div>
+
+              <div className="text-center space-y-2">
+                <p className="text-base-content/70 text-sm">
                   Already have an account?{" "}
-                  <Link
-                    href="/login"
-                    className="text-[#2F9C7E] hover:underline font-medium"
-                  >
+                  <Link href="/login" className="link link-primary">
                     Sign in
                   </Link>
                 </p>
-                <p>
+
+                <div className="text-xs text-base-content/60 max-w-sm mx-auto">
                   By signing up, you agree to our{" "}
                   <Link
                     href="/terms-and-conditions"
-                    className="text-[#2F9C7E] hover:underline font-medium"
+                    className="link link-primary"
                   >
-                    Terms & Conditions
+                    Terms
+                  </Link>
+                  ,{" "}
+                  <Link href="/privacy-policy" className="link link-primary">
+                    Privacy
                   </Link>{" "}
                   and{" "}
-                  <Link
-                    href="/privacy-policy"
-                    className="text-[#2F9C7E] hover:underline font-medium"
-                  >
-                    Privacy Policy
-                  </Link>.
-                  and {" "}
-
-                  <Link 
-                  href= "/refund-policy"
-                  className="text-[#2F9C7E] hover:underline font-medium"
->
-                                      Refund Policy
-                  </Link>
-                </p>
+                  <Link href="/refund-policy" className="link link-primary">
+                    Refund
+                  </Link>{" "}
+                  policies
+                </div>
               </div>
             </div>
           </div>

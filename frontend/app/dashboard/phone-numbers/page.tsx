@@ -175,7 +175,7 @@ export default function PhoneNumberManager() {
                   </button>
                 </div>
                 
-                <div className="flex items-center gap-2 bg-[#141414] rounded px-3 py-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2 bg-[#141414] rounded-sm px-3 py-2 text-sm text-gray-400">
                   <span>{phone.id}</span>
                   <button className="ml-auto hover:text-white">
                     <Copy className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function PhoneNumberManager() {
                   <div className="space-y-4">
                     <div>
                       <Label className="text-gray-400">Inbound Phone Number</Label>
-                      <div className="flex bg-[#1E1E1E] rounded border border-gray-800 mt-1">
+                      <div className="flex bg-[#1E1E1E] rounded-sm border border-gray-800 mt-1">
                         <div className="px-3 py-2 border-r border-gray-800">🇺🇸</div>
                         <Input
                           value={phone.number}
@@ -227,7 +227,7 @@ export default function PhoneNumberManager() {
 
                     <div>
                       <Label className="text-gray-400">Squad</Label>
-                      <div className="mt-1 p-4 bg-[#1E1E1E] border border-gray-800 rounded">
+                      <div className="mt-1 p-4 bg-[#1E1E1E] border border-gray-800 rounded-sm">
                         <div className="flex items-center text-yellow-500 text-sm">
                           <span className="mr-2">⚠</span>
                           No squads available.{" "}
@@ -242,7 +242,7 @@ export default function PhoneNumberManager() {
                       <p className="text-sm text-gray-400 mb-2">
                         Set a fallback destination for inbound calls when the assistant or squad is not available.
                       </p>
-                      <div className="flex bg-[#1E1E1E] rounded border border-gray-800">
+                      <div className="flex bg-[#1E1E1E] rounded-sm border border-gray-800">
                         <button className="px-3 py-2 border-r border-gray-800 flex items-center gap-2">
                           🇺🇸 <ChevronDown className="w-4 h-4" />
                         </button>

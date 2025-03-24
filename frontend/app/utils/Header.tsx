@@ -7,7 +7,7 @@ import logo from "../../public/images/logo.png"
 
 const Header: React.FC = () => {
   return (
-    <header className="border-b border-gray-800 bg-black/50 backdrop-blur-sm sticky top-0 z-10">
+    <header className="border-b border-gray-800 bg-black/50 backdrop-blur-xs sticky top-0 z-10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
@@ -41,7 +41,7 @@ const Header: React.FC = () => {
           </Link>
           <Link
             href="/signup"
-            className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium hover:opacity-90 transition-opacity"
+            className="px-4 py-2 rounded-md bg-linear-to-r from-blue-500 to-purple-600 text-white font-medium hover:opacity-90 transition-opacity"
           >
             Sign up
           </Link>

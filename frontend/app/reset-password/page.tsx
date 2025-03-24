@@ -118,7 +118,7 @@ export default function ResetPassword() {
                 id="email"
                 type="email"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-xs focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -152,7 +152,7 @@ export default function ResetPassword() {
                 id="token"
                 type="text"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-xs focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
                 placeholder="Enter reset token from email"
                 value={resetToken}
                 onChange={(e) => setResetToken(e.target.value)}
@@ -170,7 +170,7 @@ export default function ResetPassword() {
                 id="newPassword"
                 type="password"
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-xs focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
                 placeholder="Enter new password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}

@@ -6,7 +6,7 @@ const TermsAndConditions: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900">Terms and Conditions</h1>
           <p className="mt-2 text-sm text-gray-600">Last Updated: January 08, 2025</p>
@@ -14,9 +14,9 @@ const TermsAndConditions: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow">
+      <main className="grow">
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="bg-white shadow-sm overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <section className="prose prose-lg text-gray-700 max-w-none">
                 <p>

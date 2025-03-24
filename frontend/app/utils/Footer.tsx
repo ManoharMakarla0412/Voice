@@ -1,143 +1,151 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FaLinkedin, FaFacebook, FaTwitter } from "react-icons/fa"; // Import icons from react-icons
+import { FaLinkedin, FaFacebook, FaTwitter, FaGithub } from "react-icons/fa";
 
-const logo = "/images/logo.png"; // Replace with your actual logo path
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
 
-const Footer: React.FC = () => {
   return (
-    <footer className="bg-black border-t border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and Description */}
-          <div>
-            <Link href="/" className="flex items-center">
-              <Image
-                src={logo}
-                alt="Elide Pro Logo"
-                width={120}
-                height={120}
-              />
+    <footer className="bg-neutral text-neutral-content">
+      {/* Main footer content */}
+      <div className="footer p-10 max-w-7xl mx-auto">
+        {/* Logo and Description */}
+        <div>
+          <Link href="/" className="inline-block">
+            <Image
+              src="/images/logo.png"
+              alt="Elide Pro Logo"
+              width={120}
+              height={120}
+              className="mb-2"
+            />
+          </Link>
+          <p className="w-80 text-sm opacity-75">
+            Elide Pro - Streamlining the discovery phase of sales calls with
+            AI-powered automation. Making your sales process smarter, faster,
+            and more effective.
+          </p>
+
+          {/* Social Media Icons */}
+          <div className="mt-4 flex gap-4">
+            <Link
+              href="https://www.linkedin.com/company/elidepro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-circle btn-sm btn-ghost"
+            >
+              <FaLinkedin className="w-5 h-5" />
             </Link>
-            <p className="mt-4 text-gray-400">
-              Streamlining the discovery phase of sales calls with AI-powered automation.
-            </p>
-          </div>
-
-          {/* Product Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Product</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Integrations
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Enterprise
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Documentation
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Community
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Support
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Company</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Legal
-                </Link>
-              </li>
-            </ul>
+            <Link
+              href="https://www.facebook.com/elidepro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-circle btn-sm btn-ghost"
+            >
+              <FaFacebook className="w-5 h-5" />
+            </Link>
+            <Link
+              href="https://twitter.com/elidepro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-circle btn-sm btn-ghost"
+            >
+              <FaTwitter className="w-5 h-5" />
+            </Link>
+            <Link
+              href="https://github.com/elidepro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-circle btn-sm btn-ghost"
+            >
+              <FaGithub className="w-5 h-5" />
+            </Link>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
-          {/* Copyright */}
-          <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Elide Pro. All rights reserved.</p>
+        {/* Product Links */}
+        <div>
+          <span className="footer-title">Product</span>
+          <Link href="/features" className="link link-hover">
+            Features
+          </Link>
+          <Link href="/pricing" className="link link-hover">
+            Pricing
+          </Link>
+          <Link href="/integrations" className="link link-hover">
+            Integrations
+          </Link>
+          <Link href="/enterprise" className="link link-hover">
+            Enterprise
+          </Link>
+          <Link href="/demo" className="link link-hover">
+            Request Demo
+          </Link>
+        </div>
 
-          {/* Policy Links */}
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-and-conditions" className="text-gray-400 hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/refund-policy" className="text-gray-400 hover:text-white transition-colors">
+        {/* Resources Links */}
+        <div>
+          <span className="footer-title">Resources</span>
+          <Link href="/docs" className="link link-hover">
+            Documentation
+          </Link>
+          <Link href="/blog" className="link link-hover">
+            Blog
+          </Link>
+          <Link href="/community" className="link link-hover">
+            Community
+          </Link>
+          <Link href="/support" className="link link-hover">
+            Support
+          </Link>
+          <Link href="/tutorials" className="link link-hover">
+            Tutorials
+          </Link>
+        </div>
+
+        {/* Company Links */}
+        <div>
+          <span className="footer-title">Company</span>
+          <Link href="/about" className="link link-hover">
+            About
+          </Link>
+          <Link href="/careers" className="link link-hover">
+            Careers
+          </Link>
+          <Link href="/contact" className="link link-hover">
+            Contact
+          </Link>
+          <Link href="/legal" className="link link-hover">
+            Legal
+          </Link>
+          <Link href="/partners" className="link link-hover">
+            Partners
+          </Link>
+        </div>
+
+        {/* Legal Links - Replacing Newsletter */}
+        <div>
+          <span className="footer-title">Legal</span>
+          <Link href="/privacy-policy" className="link link-hover">
+            Privacy Policy
+          </Link>
+          <Link href="/terms-and-conditions" className="link link-hover">
+            Terms of Service
+          </Link>
+          <Link href="/refund-policy" className="link link-hover">
             Refund Policy
-            </Link>
-          </div>
-
-          {/* Social Media Links with Icons */}
-          <div className="flex space-x-4 mt-4 md:mt-0">
-            <Link href="https://www.linkedin.com/company/elidepro" target="_blank" rel="noopener noreferrer">
-              <FaLinkedin className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-            </Link>
-            <Link href="https://www.facebook.com/elidepro" target="_blank" rel="noopener noreferrer">
-              <FaFacebook className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-            </Link>
-            <Link href="https://twitter.com/elidepro" target="_blank" rel="noopener noreferrer">
-              <FaTwitter className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-            </Link>
-          </div>
+          </Link>
+          <Link href="/cookies" className="link link-hover">
+            Cookie Policy
+          </Link>
+          <Link href="/gdpr" className="link link-hover">
+            GDPR Compliance
+          </Link>
         </div>
       </div>
+
+      
     </footer>
   );
 };
