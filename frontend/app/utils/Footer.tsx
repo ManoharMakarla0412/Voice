@@ -131,7 +131,7 @@ const Footer = () => {
             Privacy Policy
           </Link>
           <Link href="/terms-and-conditions" className="link link-hover">
-            Terms of Service
+            Terms and Conditions
           </Link>
           <Link href="/refund-policy" className="link link-hover">
             Refund Policy

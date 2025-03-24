@@ -1,12 +1,10 @@
 import React from 'react';
-import Footer from '../utils/Footer';
-import Header from '../utils/Header';
+
 
 const PrivacyPolicy: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-linear-to-b from-gray-900 to-black">
       {/* Header */}
-      <Header />
 
       {/* Main Content */}
       <main className="grow">
@@ -158,7 +156,7 @@ const PrivacyPolicy: React.FC = () => {
       </main>
 
       {/* Reusable Footer */}
-      <Footer />
+
     </div>
   );
 };

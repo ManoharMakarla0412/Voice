@@ -96,7 +96,7 @@ export default function ClientLayout({
           // AUTH/MARKETING LAYOUT - For non-logged-in users
           <div className="min-h-screen flex flex-col">
             {/* Public site header */}
-            <Header />
+          
 
             {/* Public site content without extra padding */}
             <main className="flex-1">{children}</main>
