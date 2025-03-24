@@ -32,12 +32,12 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "basic",
       name: "Basic",
-      monthlyPrice: 9.99,
-      yearlyPrice: 99.99,
+      monthlyPrice: 10000,
+      yearlyPrice: 110000,
       description: "Perfect for small teams and startups",
       features: [
         { title: "1 Voice Assistant", monthly: true, yearly: true },
-        { title: "50 Minutes per Month", monthly: true, yearly: true },
+        { title: "500 Minutes per Month", monthly: true, yearly: true },
         { title: "Email Support", monthly: true, yearly: true },
         { title: "Basic Call Analytics", monthly: true, yearly: true },
         { title: "CRM Integration", monthly: false, yearly: true },
@@ -47,28 +47,28 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "pro",
       name: "Pro",
-      monthlyPrice: 24.99,
-      yearlyPrice: 249.99,
+      monthlyPrice: 17000,
+      yearlyPrice: 170000,
       description: "For growing businesses with more needs",
       popular: true,
       features: [
         { title: "3 Voice Assistants", monthly: true, yearly: true },
-        { title: "200 Minutes per Month", monthly: true, yearly: true },
+        { title: "1000 Minutes per Month", monthly: true, yearly: true },
         { title: "Email & Chat Support", monthly: true, yearly: true },
         { title: "Advanced Call Analytics", monthly: true, yearly: true },
         { title: "CRM Integration", monthly: true, yearly: true },
-        { title: "Priority Support", monthly: false, yearly: true },
+        { title: "Priority Support", monthly: false, yearly: false },
       ],
     },
     {
       id: "enterprise",
       name: "Enterprise",
-      monthlyPrice: 49.99,
-      yearlyPrice: 499.99,
+      monthlyPrice: 30000,
+      yearlyPrice: 280000,
       description: "For large organizations with custom needs",
       features: [
         { title: "10 Voice Assistants", monthly: true, yearly: true },
-        { title: "Unlimited Minutes", monthly: true, yearly: true },
+        { title: "2000 Minutes per Month", monthly: true, yearly: true },
         { title: "24/7 Phone Support", monthly: true, yearly: true },
         { title: "Enterprise Analytics", monthly: true, yearly: true },
         { title: "Custom CRM Integration", monthly: true, yearly: true },
@@ -111,7 +111,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
             >
               Yearly
               <span className="badge badge-sm badge-success ml-2">
-                Save 15%
+                Save upto 22%
               </span>
             </button>
           </div>
@@ -139,7 +139,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
                 <div className="mt-1">
                   <div className="flex items-baseline">
                     <span className="text-2xl font-bold">
-                      $
+                    ₹
                       {billingCycle === "monthly"
                         ? plan.monthlyPrice
                         : plan.yearlyPrice}
