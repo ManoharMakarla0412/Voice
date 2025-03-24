@@ -6,7 +6,7 @@ const appointmentSchema = new mongoose.Schema({
   appointmentDateTime: { type: Date, required: true },
   duration: { type: Number, required: true },
   callId: { type: String, required: true, unique: true },
-  assistantId: { type: String, required: true },
+  assistantId: { type: String },
   timestamp: { type: Date, default: Date.now },
   status: { type: String, enum: ['scheduled', 'completed', 'cancelled'], default: 'scheduled' }
 }, { timestamps: true });
