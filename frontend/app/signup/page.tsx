@@ -107,7 +107,9 @@ export default function SignupPage() {
         sessionStorage.setItem("email", response.data.user.email);
 
         document.body.appendChild(createToast("Signup successful!", "success"));
-        router.push("/dashboard");
+        if(response.status == "success"){
+        router.push("/login");
+        }
       } else {
         setSignupError("Unexpected response from server");
       }

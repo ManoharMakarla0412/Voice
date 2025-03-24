@@ -95,23 +95,34 @@ const User = require("../models/userModel");
 //   }
 // };
 
+
 const signup = async (req, res) => {
   try {
-    const { email, password, username, plan } = req.body;
+    const { email, password, username, plan, billing } = req.body;
 
     // Validate required fields
-    if (!email || !password || !username || !plan) {
+    if (!email || !password || !username || !plan || !billing) {
       return res.status(400).json({
         status: "error",
-        message: "All fields (email, password, username, plan) are required",
+        message:
+          "All fields (email, password, username, plan, billing) are required",
       });
     }
 
-    // Validate plan value
-    if (!["monthly", "yearly"].includes(plan)) {
+    // Validate plan value (assuming plan is a type like "basic", "pro", etc.)
+    const validPlans = ["basic", "pro", "enterprise"]; // Adjust based on your pricing plans
+    if (!validPlans.includes(plan)) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid plan selected. Choose 'monthly' or 'yearly'",
+        message: `Invalid plan. Choose from ${validPlans.join(", ")}`,
+      });
+    }
+
+    // Validate billing value
+    if (!["monthly", "yearly"].includes(billing)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid billing cycle. Choose 'monthly' or 'yearly'",
       });
     }
 
@@ -127,14 +138,15 @@ const signup = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user with plan details
+    // Create new user with plan and billing details
     const newUser = new User({
       email,
       password: hashedPassword,
       username,
       plan,
+      billing, // Store billing cycle
       registrationDate: new Date(),
-      billingCycleDays: plan === "monthly" ? 30 : 365,
+      billingCycleDays: billing === "monthly" ? 30 : 365, // Set billing cycle days
     });
 
     await newUser.save();
@@ -153,6 +165,7 @@ const signup = async (req, res) => {
           email: newUser.email,
           username: newUser.username,
           plan: newUser.plan,
+          billing: newUser.billing,
           registrationDate: newUser.registrationDate,
         },
         token,
@@ -168,6 +181,7 @@ const signup = async (req, res) => {
   }
 };
 
+module.exports = { signup };
 // // Update the phonePeCallback to set billing fields
 // const phonePeCallback = async (req, res) => {
 //   try {

@@ -16,9 +16,14 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   twilioNumbers: [twilioNumberSchema],
   assistant: { type: Boolean, default: false },
-  plan: { type: String, required: true }, // "monthly" or "yearly"
+  plan: { type: String, required: true }, // e.g., "basic", "pro", "enterprise"
+  billing: {
+    type: String,
+    required: true,
+    enum: ["monthly", "yearly"], // Restrict to valid values
+  },
   registrationDate: { type: Date, default: Date.now }, // When the user registered
-  billingCycleDays: { type: Number, default: 30 }, // Default to 30 days for monthly, 365 for yearly
+  billingCycleDays: { type: Number, default: 30 }, // Default to 30, updated based on billing
   lastBillingDate: { type: Date }, // Track the last billing date
 });
 
