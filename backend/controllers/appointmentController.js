@@ -1,4 +1,4 @@
-const moment = require('moment'); // For date parsing
+const moment = require('moment');
 const Appointment = require('../models/appointmentModel');
 
 exports.createAppointment = async (req, res) => {
@@ -11,14 +11,19 @@ exports.createAppointment = async (req, res) => {
     }
 
     const toolCall = message.toolCalls[0];
-    console.log('Tool Call:', JSON.stringify(toolCall, null, 2)); // Debug tool call
+    console.log('Tool Call:', JSON.stringify(toolCall, null, 2));
 
     if (toolCall.function.name !== 'Function_Tool') {
       return res.status(400).json({ error: 'Unexpected tool call' });
     }
 
     const args = toolCall.function.arguments;
-    console.log('Arguments:', args); // Debug arguments
+    console.log('Arguments:', args);
+
+    // Validate dateandtime
+    if (!args.dateandtime || typeof args.dateandtime !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid dateandtime argument' });
+    }
 
     // Calculate conversation duration
     const messages = message.artifact.messages;
@@ -26,13 +31,14 @@ exports.createAppointment = async (req, res) => {
     const endTime = messages[messages.length - 1].time;
     const durationMs = endTime - startTime;
     const durationMinutes = Math.round(durationMs / 60000);
-    console.log('Duration (minutes):', durationMinutes); // Debug duration
+    console.log('Duration (minutes):', durationMinutes);
 
     // Parse "tomorrow 11 AM" to Date object
     const today = moment();
     let appointmentDateTime;
     if (args.dateandtime.toLowerCase().includes('tomorrow')) {
-      const timePart = args.dateandtime.split('tomorrow')[1].trim();
+      const timePartRaw = args.dateandtime.split('tomorrow')[1];
+      const timePart = timePartRaw && timePartRaw.trim() ? timePartRaw.trim() : '11 AM'; // Default to 11 AM
       appointmentDateTime = moment(today)
         .add(1, 'day')
         .set({
@@ -41,33 +47,39 @@ exports.createAppointment = async (req, res) => {
           second: 0,
           millisecond: 0
         });
+    } else {
+      appointmentDateTime = moment(args.dateandtime, 'YYYY-MM-DD HH:mm'); // Fallback format
     }
-    console.log('Appointment DateTime:', appointmentDateTime ? appointmentDateTime.toDate() : 'Not parsed'); // Debug date
+
+    if (!appointmentDateTime.isValid()) {
+      return res.status(400).json({ error: 'Invalid dateandtime format' });
+    }
+    console.log('Appointment DateTime:', appointmentDateTime.toDate());
 
     // Structure the appointment data
     const appointmentData = {
       fullName: args.customername || 'Unknown',
       problem: args.typeofservice || 'Not specified',
-      appointmentDateTime: appointmentDateTime ? appointmentDateTime.toDate() : new Date(),
+      appointmentDateTime: appointmentDateTime.toDate(),
       duration: durationMinutes,
       callId: message.call.id,
       assistantId: message.assistant.id,
       timestamp: new Date(message.timestamp),
       status: 'scheduled'
     };
-    console.log('Appointment Data:', appointmentData); // Debug data before saving
+    console.log('Appointment Data:', appointmentData);
 
     // Save to database
     const newAppointment = new Appointment(appointmentData);
     const savedAppointment = await newAppointment.save();
-    console.log('Saved Appointment:', savedAppointment); // Debug saved data
+    console.log('Saved Appointment:', savedAppointment);
 
     res.status(200).json({
       message: 'Appointment booked successfully',
       appointment: appointmentData,
     });
   } catch (error) {
-    console.error('Error processing appointment:', error); // Log full error object
+    console.error('Error processing appointment:', error);
     res.status(500).json({ error: 'Failed to process appointment', details: error.message });
   }
 };
