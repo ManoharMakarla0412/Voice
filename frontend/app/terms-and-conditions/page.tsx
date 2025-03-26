@@ -93,114 +93,162 @@ export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-base-100">
       {/* Header */}
-      <div className="bg-base-200 py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-4">Terms and Conditions</h1>
-          <p className="text-base-content/80 max-w-3xl">
+      <div className="bg-base-200 py-16">
+        <div className="container mx-auto px-4 text-center">
+          <div className="badge badge-primary mb-4 p-4">
+            <span>Last Updated: January 08, 2025</span>
+          </div>
+          
+          <h1 className="text-5xl font-bold mb-6 text-primary">
+            Terms and Conditions
+          </h1>
+          
+          <p className="text-base-content/80 text-lg max-w-2xl mx-auto">
             Welcome to Elide Pro! These Terms and Conditions outline the rules
             and regulations for the use of our website and services. By
             accessing or using Elide Pro, you agree to comply with these terms.
           </p>
-          <div className="badge badge-primary mt-4">
-            Last Updated: January 08, 2025
+        </div>
+      </div>
+
+      {/* Main Content with Table of Contents */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Table of Contents */}
+          <div className="lg:w-1/4">
+            <div className="sticky top-4">
+              <div className="card bg-base-200 shadow-md">
+                <div className="card-body">
+                  <h3 className="text-lg font-bold mb-3">Table of Contents</h3>
+                  <ul className="menu p-0">
+                    {sections.map((section) => (
+                      <li key={section.id}>
+                        <a href={`#${section.id}`} className="text-base-content/80 hover:text-primary">
+                          {section.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Sections */}
+          <div className="lg:w-3/4">
+            <div className="space-y-6">
+              {sections.map((section, index) => (
+                <div
+                  key={section.id}
+                  id={section.id}
+                  className="card bg-base-200 shadow-xl"
+                >
+                  <div className="card-body">
+                    <h2 className="card-title flex items-center gap-3">
+                      <div className="avatar avatar-placeholder">
+                        <div className="bg-primary text-primary-content rounded-full w-8">
+                          <span>{index + 1}</span>
+                        </div>
+                      </div>
+                      {section.title}
+                    </h2>
+                    
+                    <div className="text-base-content/80 mt-4">
+                      <p>{section.content}</p>
+
+                      {section.list && (
+                        <ul className="list-disc pl-6 mt-4 space-y-2">
+                          {section.list.map((item, i) => (
+                            <li key={i} className="text-base-content/80">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {section.link && (
+                        <div className="mt-4">
+                          <Link
+                            href={section.link.href}
+                            className="link link-primary"
+                          >
+                            {section.link.text}
+                          </Link>
+                        </div>
+                      )}
+
+                      {section.contact && (
+                        <div className="card bg-base-300/50 mt-4 p-4 rounded-lg">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                className="w-5 h-5 text-primary"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                />
+                              </svg>
+                              <span className="font-medium">Email:</span>
+                              <a
+                                href={`mailto:${section.contact.email}`}
+                                className="link link-primary"
+                              >
+                                {section.contact.email}
+                              </a>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                className="w-5 h-5 mt-1 text-primary"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              <span className="font-medium">Address:</span>
+                              <span className="text-base-content/80">{section.contact.address}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {sections.map((section) => (
-            <div
-              key={section.id}
-              id={section.id}
-              className="card bg-base-200 shadow-md"
-            >
-              <div className="card-body">
-                <h2 className="card-title text-xl">{section.title}</h2>
-                <p className="text-base-content/80 mt-2">{section.content}</p>
-
-                {section.list && (
-                  <ul className="list-disc pl-5 mt-3 space-y-1">
-                    {section.list.map((item, i) => (
-                      <li key={i} className="text-base-content/80">
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {section.link && (
-                  <div className="mt-4">
-                    <Link
-                      href={section.link.href}
-                      className="link link-primary"
-                    >
-                      {section.link.text}
-                    </Link>
-                  </div>
-                )}
-
-                {section.contact && (
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        className="w-4 h-4 text-primary"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span className="font-medium">Email:</span>
-                      <a
-                        href={`mailto:${section.contact.email}`}
-                        className="link link-primary"
-                      >
-                        {section.contact.email}
-                      </a>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        className="w-4 h-4 mt-1 text-primary"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      <span className="font-medium">Address:</span>
-                      <span>{section.contact.address}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Footer */}
+      <footer className="footer footer-center p-8 bg-base-200 text-base-content">
+        <div>
+          <p>© {new Date().getFullYear()} Elide Pro. All rights reserved.</p>
+          <div className="flex justify-center gap-4 mt-2">
+            <Link href="/privacy-policy" className="link link-hover">Privacy Policy</Link>
+            <Link href="/refund-policy" className="link link-hover">Refund Policy</Link>
+          </div>
         </div>
-      </div>
-
-     
-
-      
+      </footer>
     </div>
   );
 }

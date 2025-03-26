@@ -16,7 +16,6 @@ export default function ResetPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      console.log("Requesting reset password with email:", email); // Debugging
       const response = await fetch(
         `${BASE_URL}/api/auth/reset-password`,
         {
@@ -38,7 +37,7 @@ export default function ResetPassword() {
       setMessage(data.message);
       setStep(2);
     } catch (error) {
-      console.error("Error during reset password request:", error); // Debugging
+      console.error("Error during reset password request:", error);
       setMessage("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -49,7 +48,6 @@ export default function ResetPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      console.log("Reset token and new password:", { resetToken, newPassword }); // Debugging
       const response = await fetch(
         `${BASE_URL}/api/auth/confirm-reset-password`,
         {
@@ -77,7 +75,7 @@ export default function ResetPassword() {
         router.push("/login");
       }, 3000);
     } catch (error) {
-      console.error("Error during password reset confirmation:", error); // Debugging
+      console.error("Error during password reset confirmation:", error);
       setMessage("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -85,115 +83,139 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center ">
-      <div className="max-w-md w-full p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold  text-primary">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="card bg-base-100 shadow-xl w-full max-w-md">
+        <div className="card-body p-8">
+          <h2 className="card-title text-2xl font-bold text-primary justify-center mb-4">
             Reset Password
           </h2>
+  
+          {message && (
+            <div className={`alert ${message.includes("error") ? "alert-error" : "alert-success"}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                {message.includes("error") ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                )}
+              </svg>
+              <span>{message}</span>
+            </div>
+          )}
+  
+          {step === 1 ? (
+            <form className="space-y-6 mt-6" onSubmit={handleRequestReset}>
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text text-base">Email Address</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="input input-bordered w-full"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+  
+              <div className="form-control w-full mt-6">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary w-full"
+                >
+                  {loading ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Reset Link"
+                  )}
+                </button>
+              </div>
+              
+              <div className="divider">OR</div>
+              
+              <div className="form-control w-full">
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm w-full"
+                  onClick={() => router.push("/login")}
+                >
+                  Back to Login
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form className="space-y-6 mt-6" onSubmit={handleConfirmReset}>
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text text-base">Reset Token</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="input input-bordered w-full"
+                  placeholder="Enter reset token from email"
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                />
+              </div>
+  
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text text-base">New Password</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="input input-bordered w-full"
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <label className="label">
+                  <span className="label-text-alt">
+                    Password must be at least 8 characters
+                  </span>
+                </label>
+              </div>
+  
+              <div className="form-control w-full mt-6">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary w-full"
+                >
+                  {loading ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Resetting...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </button>
+              </div>
+              
+              <div className="form-control w-full">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm w-full"
+                  onClick={() => {
+                    setStep(1);
+                    setMessage("");
+                  }}
+                >
+                  Back to Email Form
+                </button>
+              </div>
+            </form>
+          )}
         </div>
-  
-        {message && (
-          <div
-            className={`p-4 mt-4 rounded-md text-center text-sm font-medium ${
-              message.includes("error")
-                ? "bg-red-100 text-red-700"
-                : "bg-green-100 text-green-700"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-  
-        {step === 1 ? (
-          <form className="mt-6 space-y-4" onSubmit={handleRequestReset}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-xs focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-  
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white ${
-                  loading
-                    ? "bg-indigo-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500"
-                }`}
-              >
-                {loading ? "Sending..." : "Send Reset Link"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <form className="mt-6 space-y-4" onSubmit={handleConfirmReset}>
-            <div>
-              <label
-                htmlFor="token"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Reset Token
-              </label>
-              <input
-                id="token"
-                type="text"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-xs focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
-                placeholder="Enter reset token from email"
-                value={resetToken}
-                onChange={(e) => setResetToken(e.target.value)}
-              />
-            </div>
-  
-            <div>
-              <label
-                htmlFor="newPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                New Password
-              </label>
-              <input
-                id="newPassword"
-                type="password"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-xs focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-white"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
-  
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white ${
-                  loading
-                    ? "bg-indigo-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500"
-                }`}
-              >
-                {loading ? "Resetting..." : "Reset Password"}
-              </button>
-            </div>
-          </form>
-        )}
       </div>
     </div>
   );
-  
 }

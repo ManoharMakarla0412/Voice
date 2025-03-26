@@ -1,67 +1,75 @@
 import React from 'react';
 
-
 const PrivacyPolicy: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-b from-gray-900 to-black">
-      {/* Header */}
-
-      {/* Main Content */}
-      <main className="grow">
-        <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          {/* Header Section */}
-          <div className="text-center mb-16">
-            <div className="inline-block p-1 rounded-lg bg-linear-to-r from-blue-500 to-purple-600 mb-6">
-              <div className="bg-black px-4 py-1 rounded-md">
-                <span className="text-gray-300 text-sm">Last Updated: January 08, 2025</span>
-              </div>
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-6 bg-linear-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              Privacy Policy
-            </h1>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto leading-relaxed">
-              Welcome to Elide Pro! This Privacy Policy outlines how we collect, use, and protect your information when
-              you use our website and services. By accessing or using Elide Pro, you agree to this policy.
-            </p>
+    <div className="min-h-screen bg-base-100">
+      <main className="container mx-auto py-16 px-4">
+        {/* Header Section */}
+        <div className="text-center mb-16">
+          <div className="badge badge-primary mb-4 p-4">
+            <span>Last Updated: January 08, 2025</span>
           </div>
+          
+          <h1 className="text-5xl font-bold mb-6 text-primary">
+            Privacy Policy
+          </h1>
+          
+          <p className="text-base-content/80 text-lg max-w-2xl mx-auto">
+            Welcome to Elide Pro! This Privacy Policy outlines how we collect, use, and protect your information when
+            you use our website and services. By accessing or using Elide Pro, you agree to this policy.
+          </p>
+        </div>
 
-          {/* Content Sections */}
-          <div className="space-y-12 text-gray-300">
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
-                  1
-                </span>
+        {/* Content Sections */}
+        <div className="space-y-8">
+          {/* Introduction Section */}
+          <div className="card bg-base-200 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title flex items-center gap-3">
+                <div className="avatar avatar-placeholder">
+                  <div className="bg-primary text-primary-content rounded-full w-8">
+                    <span>1</span>
+                  </div>
+                </div>
                 Introduction
               </h2>
-              <p className="text-gray-300 leading-relaxed">
-                These Terms and Conditions, along with privacy policy or other terms (“Terms”) constitute a binding
-                agreement by and between{' '}
-                <span className="font-semibold text-white">
-                  SYNERGIZING FUTURE OUTCOMES AND REVOLUTIONS PRIVATE LIMITED
-                </span>
-                , (“Website Owner” or “we” or “us” or “our”) and you (“you” or “your”) and relate to your use of our
-                website, goods (as applicable) or services (as applicable) (collectively, “Services”).
-              </p>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                By using our website and availing the Services, you agree that you have read and accepted these Terms
-                (including the Privacy Policy). We reserve the right to modify these Terms at any time and without
-                assigning any reason. It is your responsibility to periodically review these Terms to stay informed of
-                updates.
-              </p>
-            </section>
+              <div className="text-base-content/80 space-y-4">
+                <p>
+                  These Terms and Conditions, along with privacy policy or other terms ("Terms") constitute a binding
+                  agreement by and between{' '}
+                  <span className="font-semibold text-base-content">
+                    SYNERGIZING FUTURE OUTCOMES AND REVOLUTIONS PRIVATE LIMITED
+                  </span>
+                  , ("Website Owner" or "we" or "us" or "our") and you ("you" or "your") and relate to your use of our
+                  website, goods (as applicable) or services (as applicable) (collectively, "Services").
+                </p>
+                <p>
+                  By using our website and availing the Services, you agree that you have read and accepted these Terms
+                  (including the Privacy Policy). We reserve the right to modify these Terms at any time and without
+                  assigning any reason. It is your responsibility to periodically review these Terms to stay informed of
+                  updates.
+                </p>
+              </div>
+            </div>
+          </div>
 
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
-                  2
-                </span>
+          {/* Terms of Use Section */}
+          <div className="card bg-base-200 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title flex items-center gap-3">
+                <div className="avatar avatar-placeholder">
+                  <div className="bg-primary text-primary-content rounded-full w-8">
+                    <span>2</span>
+                  </div>
+                </div>
                 Terms of Use
               </h2>
-              <p className="text-gray-300 leading-relaxed mb-4">
+              
+              <p className="text-base-content/80 mb-4">
                 The use of this website or availing of our Services is subject to the following terms of use:
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-gray-300">
+              
+              <ul className="list-disc pl-6 space-y-2 text-base-content/80">
                 <li>
                   To access and use the Services, you agree to provide true, accurate, and complete information to us
                   during and after registration, and you shall be responsible for all acts done through the use of your
@@ -123,40 +131,41 @@ const PrivacyPolicy: React.FC = () => {
                   information provided on this website.
                 </li>
               </ul>
-            </section>
+            </div>
+          </div>
 
-            <section className="bg-gray-800/20 rounded-2xl p-8 backdrop-blur-xs border border-gray-800 hover:border-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 mr-3 text-sm">
-                  3
-                </span>
+          {/* Contact Information Section */}
+          <div className="card bg-base-200 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title flex items-center gap-3">
+                <div className="avatar avatar-placeholder">
+                  <div className="bg-primary text-primary-content rounded-full w-8">
+                    <span>3</span>
+                  </div>
+                </div>
                 Contact Information
               </h2>
-              <p className="text-gray-300 leading-relaxed">
+              
+              <p className="text-base-content/80">
                 If you have any questions about this Privacy Policy, please contact us at:
               </p>
-              <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-                <p className="text-gray-300">
-                  <strong className="text-white">Email:</strong>{' '}
-                  <a
-                    href="mailto:support@elidepro.com"
-                    className="text-blue-400 hover:text-blue-300 transition-colors"
-                  >
+              
+              <div className="mt-4 p-4 bg-base-300 rounded-lg">
+                <p className="mb-2">
+                  <strong>Email:</strong>{' '}
+                  <a href="mailto:support@elidepro.com" className="link link-primary">
                     support@elidepro.com
                   </a>
                 </p>
-                <p className="text-gray-300 mt-2">
-                  <strong className="text-white">Address:</strong> 7th Floor, Asian Suncity, Kothaguda, Kondapur,
+                <p>
+                  <strong>Address:</strong> 7th Floor, Asian Suncity, Kothaguda, Kondapur,
                   Hyderabad – 500084
                 </p>
               </div>
-            </section>
+            </div>
           </div>
         </div>
       </main>
-
-      {/* Reusable Footer */}
-
     </div>
   );
 };
