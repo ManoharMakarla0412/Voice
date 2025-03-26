@@ -44,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning data-theme="dark">
-      <body className="min-h-screen antialiased bg-base-200 font-sans">
+    <html lang="en" suppressHydrationWarning data-theme="custom">
+      <body className="min-h-screen antialiased bg-base-200 ">
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

@@ -1,10 +1,9 @@
-"use client";
+"use client"
 
-import React from "react";
+
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import logo from "../public/images/logo.png";
-//logo
 
 const NotFoundPage: React.FC = () => {
   const router = useRouter();
