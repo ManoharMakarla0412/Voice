@@ -12,7 +12,7 @@ import Image from "next/image";
 import logo from "../../public/images/logo.png";
 import { PricingSection } from "../dashboard/components/pricing-section";
 
-// Define the complete type for the signup form including plan and billing
+// Schema and types remain unchanged
 const signUpSchema = z.object({
   username: z
     .string()
@@ -28,11 +28,7 @@ const signUpSchema = z.object({
     .regex(/[A-Z]/, { message: "Password must contain an uppercase letter" })
     .regex(/[0-9]/, { message: "Password must contain a number" }),
 });
-
-// Basic form type without plan/billing (for the form only)
 type SignupFormData = z.infer<typeof signUpSchema>;
-
-// Extended type for the API request that includes plan/billing
 interface SignupRequest extends SignupFormData {
   plan: string;
   billing: "monthly" | "yearly";
@@ -92,7 +88,6 @@ export default function SignupPage() {
       setIsLoading(true);
       setSignupError(null);
 
-      // Create the complete request with plan and billing
       const signupRequest: SignupRequest = {
         ...data,
         plan: selectedPlan,
@@ -107,8 +102,8 @@ export default function SignupPage() {
         sessionStorage.setItem("email", response.data.user.email);
 
         document.body.appendChild(createToast("Signup successful!", "success"));
-        if(response.status == "success"){
-        router.push("/login");
+        if (response.status === "success") {
+          router.push("/login");
         }
       } else {
         setSignupError("Unexpected response from server");
@@ -125,7 +120,6 @@ export default function SignupPage() {
     }
   };
 
-  // Helper function to create toast notifications
   const createToast = (
     message: string,
     type: "info" | "success" | "warning" | "error"
@@ -146,12 +140,10 @@ export default function SignupPage() {
     return toast;
   };
 
-  // Go back to plan selection
   const handleChangePlan = () => {
     setShowSignupForm(false);
   };
 
-  // Helper function to get descriptive plan name
   const getPlanLabel = () => {
     const planName =
       selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
@@ -159,29 +151,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100 flex items-center justify-center p-4 bg-grid-pattern">
-      <style jsx>{`
-        .bg-grid-pattern {
-          background-image: radial-gradient(
-            rgba(255, 255, 255, 0.1) 1px,
-            transparent 1px
-          );
-          background-size: 32px 32px;
-        }
-      `}</style>
-
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
         {!showSignupForm ? (
           <PricingSection onPlanSelect={handlePlanSelect} />
         ) : (
-          <div className="card bg-base-200 shadow-xl max-w-sm mx-auto">
+          <div className="card bg-base-100/45 shadow-xl">
             <div className="card-body p-5">
-              {/* Logo Section */}
+              {/* Logo */}
               <div className="flex justify-center mb-3">
                 <div className="relative h-10 w-32">
                   <Image
                     src={logo}
-                    alt="Elide Pro Logo"
+                    alt="Logo"
                     fill
                     style={{ objectFit: "contain" }}
                     priority
@@ -315,10 +297,43 @@ export default function SignupPage() {
                   )}
                 </div>
 
+                <div className="form-control mt-2">
+                  <label className="label cursor-pointer justify-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-primary checkbox-xs"
+                    />
+                    <span className="label-text text-xs text-base-content/70">
+                      I agree to the{" "}
+                      <Link
+                        href="/terms-and-conditions"
+                        className="link link-primary uppercase"
+                      >
+                        Terms
+                      </Link>
+                      ,{" "}
+                      <Link
+                        href="/privacy-policy"
+                        className="link link-primary uppercase"
+                      >
+                        Privacy
+                      </Link>{" "}
+                      &{" "}
+                      <Link
+                        href="/refund-policy"
+                        className="link link-primary uppercase"
+                      >
+                        Refund
+                      </Link>{" "}
+                      policies
+                    </span>
+                  </label>
+                </div>
+
                 <div className="form-control mt-4">
                   <button
                     type="submit"
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-primary btn-sm uppercase"
                     disabled={isLoading || !isValid}
                   >
                     {isLoading ? (
@@ -339,25 +354,6 @@ export default function SignupPage() {
                     Sign in
                   </Link>
                 </p>
-
-                <div className="text-xs text-base-content/60 max-w-sm mx-auto">
-                  By signing up, you agree to our{" "}
-                  <Link
-                    href="/terms-and-conditions"
-                    className="link link-primary"
-                  >
-                    Terms
-                  </Link>
-                  ,{" "}
-                  <Link href="/privacy-policy" className="link link-primary">
-                    Privacy
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/refund-policy" className="link link-primary">
-                    Refund
-                  </Link>{" "}
-                  policies
-                </div>
               </div>
             </div>
           </div>

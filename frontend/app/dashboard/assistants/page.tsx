@@ -2,6 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { BASE_URL } from "../../utils/constants";
+import {
+  Plus,
+  Bot,
+  Calendar,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  Trash2,
+  Edit3,
+  Sparkles,
+  MessageSquare,
+  Clock,
+  Cpu,
+  Terminal,
+  X,
+} from "lucide-react";
 
 interface Assistant {
   id: string;
@@ -24,6 +41,7 @@ export default function AssistantDashboard() {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [formData, setFormData] = useState({
     name: "",
     firstMessage: "",
@@ -39,7 +57,6 @@ export default function AssistantDashboard() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Move fetchAssistants outside useEffect so it can be reused
   const fetchAssistants = async () => {
     try {
       setLoading(true);
@@ -90,13 +107,10 @@ export default function AssistantDashboard() {
         throw new Error(error.message || "Failed to create assistant");
       }
 
-      const data = await response.json();
+      await response.json();
 
       // Show success toast
-      document.getElementById("success_toast")?.classList.remove("hidden");
-      setTimeout(() => {
-        document.getElementById("success_toast")?.classList.add("hidden");
-      }, 3000);
+      showToast("Assistant created successfully!", "success");
 
       setIsModalOpen(false);
       setStep(1); // Reset step
@@ -105,273 +119,537 @@ export default function AssistantDashboard() {
         firstMessage: "",
         systemPrompt: "",
         endCallMessage: "",
-      }); // Reset form
+      });
 
-      // Now we can refresh the assistants list
+      // Refresh the assistants list
       fetchAssistants();
     } catch (error: any) {
       console.error("Error creating assistant:", error.message);
-
-      // Show error toast
-      document.getElementById("error_toast")?.classList.remove("hidden");
-      setTimeout(() => {
-        document.getElementById("error_toast")?.classList.add("hidden");
-      }, 3000);
+      showToast("Failed to create assistant", "error");
     }
   };
 
+  const showToast = (
+    message: string,
+    type: "info" | "success" | "warning" | "error"
+  ) => {
+    const toast = document.createElement("div");
+    toast.className = "toast toast-top toast-end";
+
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${type} py-2`;
+    alert.innerHTML = `<span>${message}</span>`;
+
+    toast.appendChild(alert);
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  };
+
   const stepTooltips = [
-    "Enter the assistant name.",
-    "Provide the first message and system instructions.",
-    "Set the end call message.",
+    "Enter the assistant name",
+    "Configure messages",
+    "Set the end call message",
   ];
 
+  // Render the grid view of assistants
+  const renderGridView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {assistants.map((assistant) => (
+        <div
+          key={assistant.id}
+          className="card bg-base-100/45 shadow-xl h-full hover:shadow-2xl transition-all"
+        >
+          <div className="card-body p-0">
+            {/* Header section with gradient background */}
+            <div className="bg-gradient-to-r from-primary/10 to-base-300/20 p-5 rounded-t-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="avatar placeholder online">
+                  <div className="bg-primary text-primary-content rounded-full w-12">
+                    <span>
+                      <Bot size={20} />
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="card-title text-lg font-bold">
+                    {assistant.name}
+                  </h2>
+                  <div className="flex items-center text-xs text-base-content/70">
+                    <Calendar size={12} className="mr-1.5" />
+                    Created {new Date(assistant.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-3">
+                <div className="badge badge-primary badge-outline py-2.5 gap-1">
+                  <Cpu size={12} />
+                  {assistant.model.model}
+                </div>
+                <div className="badge badge-secondary badge-outline py-2.5">
+                  {assistant.model.provider}
+                </div>
+              </div>
+            </div>
+
+            {/* Details section */}
+            <div className="p-5 space-y-4">
+              {assistant.firstMessage && (
+                <div className="bg-base-200/40 rounded-lg p-3">
+                  <div className="flex items-center text-sm font-medium mb-1.5">
+                    <MessageSquare size={14} className="mr-1.5 text-primary" />
+                    First Message
+                  </div>
+                  <p className="text-sm text-base-content/80 line-clamp-2">
+                    "{assistant.firstMessage}"
+                  </p>
+                </div>
+              )}
+
+              {assistant.endCallMessage && (
+                <div className="bg-base-200/40 rounded-lg p-3">
+                  <div className="flex items-center text-sm font-medium mb-1.5">
+                    <Clock size={14} className="mr-1.5 text-primary" />
+                    End Call Message
+                  </div>
+                  <p className="text-sm text-base-content/80 line-clamp-2">
+                    "{assistant.endCallMessage}"
+                  </p>
+                </div>
+              )}
+
+              <div className="card-actions justify-between mt-4 pt-3 border-t border-base-300/30">
+                <button className="btn btn-sm btn-error btn-outline gap-1">
+                  <Trash2 size={14} />
+                  Delete
+                </button>
+                <button className="btn btn-sm btn-primary gap-1">
+                  <Edit3 size={14} />
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Render the list view of assistants
+  const renderListView = () => (
+    <div className="overflow-x-auto">
+      <table className="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Model</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {assistants.map((assistant) => (
+            <tr key={assistant.id} className="hover">
+              <td>
+                <div className="flex items-center gap-3">
+                  <div className="avatar placeholder">
+                    <div className="bg-primary/20 text-primary rounded-full w-8">
+                      <Bot size={14} />
+                    </div>
+                  </div>
+                  <span className="font-medium">{assistant.name}</span>
+                </div>
+              </td>
+              <td>
+                <div className="flex items-center gap-2">
+                  <div className="badge badge-primary badge-outline badge-sm gap-1">
+                    <Cpu size={10} />
+                    {assistant.model.model}
+                  </div>
+                  <span className="text-xs text-base-content/70">
+                    {assistant.model.provider}
+                  </span>
+                </div>
+              </td>
+              <td className="text-xs text-base-content/70">
+                {new Date(assistant.createdAt).toLocaleDateString()}
+              </td>
+              <td>
+                <div className="join">
+                  <button
+                    className="btn btn-sm btn-ghost btn-square join-item tooltip"
+                    data-tip="Edit"
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost text-error btn-square join-item tooltip"
+                    data-tip="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen p-4 bg-base-300 rounded-md">
-      <header className="sticky top-0 z-10 border-b border-base-content/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-primary">
-            Assistant Dashboard
-          </h1>
+    <div className="min-h-screen p-4 md:p-6">
+      {/* Header with view toggle */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 max-w-7xl mx-auto">
+        <div>
+          <h1 className="text-3xl font-bold">Assistants</h1>
+          <p className="text-base-content/70">
+            Create and manage your AI voice assistants
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <div className="join">
+            <button
+              className={`join-item btn btn-sm ${
+                viewMode === "grid" ? "btn-active" : ""
+              }`}
+              onClick={() => setViewMode("grid")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button
+              className={`join-item btn btn-sm ${
+                viewMode === "list" ? "btn-active" : ""
+              }`}
+              onClick={() => setViewMode("list")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
           <button
-            className="btn btn-primary m-2"
+            className="btn btn-primary btn-sm gap-1.5"
             onClick={() => setIsModalOpen(true)}
           >
+            <Plus size={16} />
             Create Assistant
           </button>
         </div>
-      </header>
-
-      {/* Success Toast */}
-      <div id="success_toast" className="toast toast-top toast-end hidden">
-        <div className="alert alert-success">
-          <span>Assistant created successfully!</span>
-        </div>
       </div>
 
-      {/* Error Toast */}
-      <div id="error_toast" className="toast toast-top toast-end hidden">
-        <div className="alert alert-error">
-          <span>Failed to create assistant!</span>
-        </div>
+      <div className="max-w-7xl mx-auto">
+        {error && (
+          <div className="alert alert-error mb-6">
+            <AlertTriangle size={16} />
+            <span>{error}</span>
+            <button
+              className="btn btn-circle btn-ghost btn-sm"
+              onClick={() => setError(null)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Display assistants */}
+        {loading ? (
+          <div className="flex justify-center items-center p-20">
+            <div className="flex flex-col items-center gap-3">
+              <span className="loading loading-spinner loading-lg text-primary"></span>
+              <p className="text-base-content/70">Loading assistants...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="card bg-base-100/45 shadow-xl">
+            <div className="card-body p-4 md:p-6">
+              {assistants.length > 0 ? (
+                viewMode === "grid" ? (
+                  renderGridView()
+                ) : (
+                  renderListView()
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-20">
+                  <div className="avatar placeholder mb-6">
+                    <div className="bg-primary/10 text-primary rounded-full w-24 h-24">
+                      <Bot size={40} />
+                    </div>
+                  </div>
+
+                  <h2 className="text-2xl font-bold mb-3">No Assistants Yet</h2>
+                  <p className="text-base-content/70 max-w-md mb-8">
+                    Create your first assistant to start building your AI voice
+                    assistant experience.
+                  </p>
+
+                  <button
+                    className="btn btn-primary gap-2"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <Sparkles size={18} />
+                    Create Your First Assistant
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal for creating assistants */}
-      <dialog className={`modal ${isModalOpen ? "modal-open" : ""}`}>
-        <div className="modal-box bg-base-200">
-          <h3 className="font-bold text-lg">Create New Assistant</h3>
-          <p className="py-2 text-base-content/70">
-            Follow the steps to configure your assistant.
-          </p>
+      {isModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box bg-base-100/45 shadow-xl max-w-2xl">
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setIsModalOpen(false)}
+            >
+              <X size={16} />
+            </button>
 
-          {/* Timeline with tooltips */}
-          <div className="flex items-center justify-center gap-4 my-4">
-            {[1, 2, 3].map((currentStep, index) => (
+            <h3 className="font-bold text-xl mb-2 flex items-center gap-2">
+              <Terminal size={20} className="text-primary" />
+              Create New Assistant
+            </h3>
+
+            <p className="text-base-content/70 mb-4">
+              Configure your AI assistant in 3 simple steps
+            </p>
+
+            {/* Step progress */}
+            <div className="w-full bg-base-300 rounded-full h-1.5 mb-6">
               <div
-                key={currentStep}
-                className="relative flex items-center gap-2 group"
-              >
+                className="bg-primary h-1.5 rounded-full transition-all"
+                style={{ width: `${(step / 3) * 100}%` }}
+              ></div>
+            </div>
+
+            <div className="flex justify-between text-xs text-base-content/70 mb-6">
+              {stepTooltips.map((tooltip, index) => (
                 <div
-                  className={`h-8 w-8 flex items-center justify-center rounded-full border-2 
-                    ${
-                      step >= currentStep
-                        ? "bg-primary border-primary"
-                        : "border-base-content/30"
-                    }`}
+                  key={index}
+                  className={`flex flex-col items-center gap-1.5 w-1/3 ${
+                    step > index + 1
+                      ? "text-success"
+                      : step === index + 1
+                      ? "text-primary"
+                      : ""
+                  }`}
                 >
-                  <span
-                    className={`text-sm font-semibold 
-                      ${
-                        step >= currentStep
-                          ? "text-primary-content"
-                          : "text-base-content/50"
-                      }`}
-                  >
-                    {currentStep}
-                  </span>
-                </div>
-                {currentStep < 3 && (
                   <div
-                    className={`h-1 w-8 ${
-                      step > currentStep ? "bg-primary" : "bg-base-content/30"
-                    }`}
-                  ></div>
-                )}
-
-                {/* Tooltip */}
-                <div
-                  className="tooltip tooltip-bottom"
-                  data-tip={stepTooltips[index]}
-                >
-                  <div className="w-2 h-2"></div>
+                    className={`
+                    w-6 h-6 rounded-full flex items-center justify-center 
+                    ${
+                      step > index + 1
+                        ? "bg-success/20 text-success"
+                        : step === index + 1
+                        ? "bg-primary text-base-100"
+                        : "bg-base-300 text-base-content/70"
+                    }
+                  `}
+                  >
+                    {step > index + 1 ? (
+                      <CheckCircle2 size={14} />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
+                  </div>
+                  <span className="text-center">{tooltip}</span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <div className="py-4">
-            {step === 1 && (
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">Assistant Name</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter assistant name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="input input-bordered w-full"
-                />
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-4">
-                <div className="form-control w-full">
+            <div className="py-4">
+              {step === 1 && (
+                <div className="form-control">
                   <label className="label">
-                    <span className="label-text">First Message</span>
+                    <span className="label-text font-medium">
+                      Assistant Name
+                    </span>
+                    <span className="label-text-alt text-error">Required</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Hello! How can I assist you today?"
-                    value={formData.firstMessage}
-                    onChange={(e) =>
-                      handleInputChange("firstMessage", e.target.value)
-                    }
-                    className="input input-bordered w-full"
+                    placeholder="Enter a name for your assistant"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    className="input input-bordered w-full bg-base-200/50"
                   />
-                </div>
-                <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text">System Prompt</span>
-                  </label>
-                  <textarea
-                    placeholder="Enter the system instructions for the assistant..."
-                    value={formData.systemPrompt}
-                    onChange={(e) =>
-                      handleInputChange("systemPrompt", e.target.value)
-                    }
-                    className="textarea textarea-bordered min-h-[150px] w-full"
-                  ></textarea>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">End Call Message</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Thank you for contacting us. Have a great day!"
-                  value={formData.endCallMessage}
-                  onChange={(e) =>
-                    handleInputChange("endCallMessage", e.target.value)
-                  }
-                  className="input input-bordered w-full"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="modal-action flex justify-between w-full">
-            <button
-              className="btn btn-outline"
-              onClick={handleBack}
-              disabled={step === 1}
-            >
-              Back
-            </button>
-            {step < 3 ? (
-              <button className="btn btn-primary" onClick={handleNext}>
-                Next
-              </button>
-            ) : (
-              <button className="btn btn-primary" onClick={createAssistant}>
-                Create
-              </button>
-            )}
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button onClick={() => setIsModalOpen(false)}>close</button>
-        </form>
-      </dialog>
-
-      {/* Display assistants */}
-      {loading ? (
-        <div className="flex justify-center items-center mt-8">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-        </div>
-      ) : error ? (
-        <div className="alert alert-error mt-8 max-w-7xl mx-auto">
-          <span>{error}</span>
-        </div>
-      ) : (
-        <div className="mt-8 max-w-7xl mx-auto grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {assistants.length > 0 ? (
-            assistants.map((assistant) => (
-              <div key={assistant.id} className="card bg-base-100 shadow-xl">
-                <div className="card-body">
-                  <div className="card-title text-primary flex items-center justify-between">
-                    {assistant.name}
-                    <span className="text-sm text-base-content/60">
-                      {new Date(assistant.createdAt).toLocaleDateString()}
+                    <span className="label-text-alt text-base-content/70">
+                      This name will be used to identify your assistant
                     </span>
+                  </label>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-6">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-medium">
+                        First Message
+                      </span>
+                      <span className="label-text-alt text-error">
+                        Required
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Hello! How can I assist you today?"
+                      value={formData.firstMessage}
+                      onChange={(e) =>
+                        handleInputChange("firstMessage", e.target.value)
+                      }
+                      className="input input-bordered w-full bg-base-200/50"
+                    />
+                    <label className="label">
+                      <span className="label-text-alt text-base-content/70">
+                        This is the first message your assistant will say to
+                        users
+                      </span>
+                    </label>
                   </div>
-                  <div className="space-y-4 mt-4">
-                    <div>
-                      <label className="block text-sm font-medium">Model</label>
-                      <p className="text-sm text-base-content/70">
-                        {assistant.model.model}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">
-                        Provider
-                      </label>
-                      <p className="text-sm text-base-content/70">
-                        {assistant.model.provider}
-                      </p>
-                    </div>
-                    {assistant.firstMessage && (
-                      <div>
-                        <label className="block text-sm font-medium">
-                          First Message
-                        </label>
-                        <p className="text-sm text-base-content/70">
-                          {assistant.firstMessage}
-                        </p>
-                      </div>
-                    )}
-                    {assistant.endCallMessage && (
-                      <div>
-                        <label className="block text-sm font-medium">
-                          End Call Message
-                        </label>
-                        <p className="text-sm text-base-content/70">
-                          {assistant.endCallMessage}
-                        </p>
-                      </div>
-                    )}
-                    <button className="btn btn-outline w-full">
-                      Edit Assistant
-                    </button>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-medium">
+                        System Prompt
+                      </span>
+                      <span className="label-text-alt text-error">
+                        Required
+                      </span>
+                    </label>
+                    <textarea
+                      placeholder="You are a helpful assistant that..."
+                      value={formData.systemPrompt}
+                      onChange={(e) =>
+                        handleInputChange("systemPrompt", e.target.value)
+                      }
+                      className="textarea textarea-bordered min-h-[150px] w-full bg-base-200/50"
+                    ></textarea>
+                    <label className="label">
+                      <span className="label-text-alt text-base-content/70">
+                        Instructions that define how your assistant behaves
+                      </span>
+                    </label>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center p-8">
-              <p className="text-base-content/70">
-                No assistants found. Create your first assistant!
-              </p>
+              )}
+
+              {step === 3 && (
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">
+                      End Call Message
+                    </span>
+                    <span className="label-text-alt text-error">Required</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Thank you for contacting us. Have a great day!"
+                    value={formData.endCallMessage}
+                    onChange={(e) =>
+                      handleInputChange("endCallMessage", e.target.value)
+                    }
+                    className="input input-bordered w-full bg-base-200/50"
+                  />
+                  <label className="label">
+                    <span className="label-text-alt text-base-content/70">
+                      This message will be spoken when the call ends
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="divider my-2"></div>
+
+            <div className="flex justify-between items-center mt-6">
+              <button
+                className="btn btn-outline btn-sm gap-1"
+                onClick={handleBack}
+                disabled={step === 1}
+              >
+                <ChevronLeft size={16} />
+                Back
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+
+                {step < 3 ? (
+                  <button
+                    className="btn btn-primary btn-sm gap-1"
+                    onClick={handleNext}
+                    disabled={
+                      (step === 1 && !formData.name) ||
+                      (step === 2 &&
+                        (!formData.firstMessage || !formData.systemPrompt))
+                    }
+                  >
+                    Next
+                    <ChevronRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-primary btn-sm gap-1"
+                    onClick={createAssistant}
+                    disabled={!formData.endCallMessage}
+                  >
+                    <CheckCircle2 size={16} />
+                    Create Assistant
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div
+            className="modal-backdrop"
+            onClick={() => setIsModalOpen(false)}
+          ></div>
         </div>
       )}
     </div>
   );
 }
-
