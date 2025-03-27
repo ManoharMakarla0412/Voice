@@ -1,36 +1,24 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* Custom dark theme with purple accents */
+
 @plugin "daisyui/theme" {
   name: "custom";
   default: true;
   prefersdark: true;
   color-scheme: "dark";
-
- 
   --color-base-100: oklch(0% 0 0);
-  --color-base-200: oklch(
-    5% 0.03 260
-  ); 
+  --color-base-200: oklch(5% 0.03 260); 
   --color-base-300: oklch(25% 0.03 260); 
   --color-base-content: oklch(96% 0.01 240); 
-
-  
   --color-primary: oklch(60% 0.25 292);
   --color-primary-content: oklch(96% 0.01 240);
-
   --color-secondary: oklch(70% 0.2 250);
   --color-secondary-content: oklch(96% 0.01 240);
-
-
   --color-accent: oklch(55% 0.28 280);
   --color-accent-content: oklch(96% 0.01 240);
-
   --color-neutral: oklch(30% 0.03 260);
   --color-neutral-content: oklch(96% 0.01 240);
-
-
   --color-info: oklch(70% 0.2 220);
   --color-info-content: oklch(98% 0.01 240);
   --color-success: oklch(65% 0.25 140);
@@ -39,16 +27,14 @@
   --color-warning-content: oklch(20% 0.05 80);
   --color-error: oklch(65% 0.3 30);
   --color-error-content: oklch(98% 0.01 240);
-
-  /* Component properties */
-  --radius-selector: 0.5rem; /* For checkbox, toggle, badge */
-  --radius-field: 0.25rem; /* For buttons, inputs, selects */
-  --radius-box: 0.5rem; /* For cards, modals, alerts */
-  --size-selector: 0.25rem; /* Base size for selectors */
-  --size-field: 0.25rem; /* Base size for fields */
+  --radius-selector: 0.5rem; 
+  --radius-field: 0.25rem; 
+  --radius-box: 0.5rem; 
+  --size-selector: 0.25rem; 
+  --size-field: 0.25rem; 
   --border: 1px;
-  --depth: 0; /* No 3D effect */
-  --noise: 1; /* Subtle noise effect */
+  --depth: 0; 
+  --noise: 1; 
 }
 
 @plugin "daisyui/theme" {
@@ -86,12 +72,7 @@
   --noise: 0;
 }
 
-/* Global style overrides for specific components if needed */
-.badge-primary {
-  border-radius: 0.5rem;
-}
 
-/* Add background gradient to body */
 body {
   background: radial-gradient(
     circle at center,

@@ -152,14 +152,25 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full ">
         {!showSignupForm ? (
           <PricingSection onPlanSelect={handlePlanSelect} />
         ) : (
-          <div className="card bg-base-100/45 shadow-xl">
-            <div className="card-body p-5">
+          <div className="mx-auto card max-w-sm bg-gray-800/45 shadow-xl">
+            <div className="card-body p-5 relative">
+              {/* Change plan button - positioned at the top left */}
+              <div className="absolute top-2 left-2">
+                <button
+                  onClick={handleChangePlan}
+                  className="btn btn-primary btn-soft  btn-xs"
+                >
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                  Change plan
+                </button>
+              </div>
+
               {/* Logo */}
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-3 mt-6">
                 <div className="relative h-10 w-32">
                   <Image
                     src={logo}
@@ -176,22 +187,15 @@ export default function SignupPage() {
                 Create your account
               </h2>
 
-              <div className="flex items-center justify-between mb-3">
+              <div className="mb-3">
                 <div className="flex items-center gap-1">
                   <span className="text-sm text-base-content/70">
                     Selected plan:
                   </span>
-                  <span className="badge badge-primary capitalize">
+                  <span className="badge badge-soft badge-primary  capitalize">
                     {getPlanLabel()}
                   </span>
                 </div>
-                <button
-                  onClick={handleChangePlan}
-                  className="btn btn-ghost btn-xs"
-                >
-                  <ArrowLeft className="h-3 w-3 mr-1" />
-                  Change plan
-                </button>
               </div>
 
               {signupError && (
@@ -318,7 +322,7 @@ export default function SignupPage() {
                       >
                         Privacy
                       </Link>{" "}
-                      &{" "}
+                      and{" "}
                       <Link
                         href="/refund-policy"
                         className="link link-primary uppercase"
@@ -333,7 +337,7 @@ export default function SignupPage() {
                 <div className="form-control mt-4">
                   <button
                     type="submit"
-                    className="btn btn-primary btn-sm uppercase"
+                    className="btn btn-primary btn-sm  w-full"
                     disabled={isLoading || !isValid}
                   >
                     {isLoading ? (
@@ -345,10 +349,10 @@ export default function SignupPage() {
                 </div>
               </form>
 
-              <div className="divider my-2 text-xs">OR</div>
+              <div className="divider my-2 text-sm">OR</div>
 
               <div className="text-center space-y-2">
-                <p className="text-base-content/70 text-sm">
+                <p className="text-base-content/70 text-xs">
                   Already have an account?{" "}
                   <Link href="/login" className="link link-primary">
                     Sign in

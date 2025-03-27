@@ -85,9 +85,9 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
   };
 
   return (
-    <div className="card bg-base-200 shadow-xl">
+    <div className="mx-auto card bg-gray-800/45 shadow-xl max-w-6xl">
       <div className="card-body p-5">
-        <h2 className="card-title text-2xl font-bold text-center">
+        <h2 className="card-title text-2xl font-bold text-center justify-center">
           Choose Your Plan
         </h2>
         <p className="text-center text-base-content/70 mb-6">
@@ -110,7 +110,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
               onClick={() => setBillingCycle("yearly")}
             >
               Yearly
-              <span className="badge badge-sm badge-success ml-2">
+              <span className="badge badge-sm badge-soft badge-success ml-2">
                 Save upto 22%
               </span>
             </button>
@@ -123,7 +123,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
             <div
               key={plan.id}
               className={`
-                card bg-base-100 border border-base-300 hover:border-primary transition-all duration-300
+                card bg-base-100 border border-base-300 hover:border-primary transition-all duration-300 max-w-sm
                 ${plan.popular ? "border-primary shadow-md" : ""}
                 flex flex-col h-full
               `}

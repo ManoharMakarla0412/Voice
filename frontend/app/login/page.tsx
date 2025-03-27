@@ -91,7 +91,7 @@ function LoginPageContent() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <div className="card bg-base-100/45 shadow-xl">
+        <div className="card bg-gray-800/45 shadow-xl">
           <div className="card-body p-5">
             {/* Logo Section */}
             <div className="flex justify-center mb-3">
@@ -154,7 +154,7 @@ function LoginPageContent() {
               </div>
 
               <div className="form-control">
-                <label className="label py-1">
+                <label className="label py-1 flex justify-between items-center">
                   <span className="label-text text-sm">Password</span>
                   <Link
                     href="/reset-password"
@@ -193,10 +193,10 @@ function LoginPageContent() {
                 )}
               </div>
 
-              <div className="form-control mt-4">
+              <div className="form-control mt-4 w-full">
                 <button
                   type="submit"
-                  className="btn btn-primary btn-sm"
+                  className="btn btn-primary btn-sm w-full"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -208,17 +208,17 @@ function LoginPageContent() {
               </div>
             </form>
 
-            <div className="divider my-2 text-xs">OR</div>
+            <div className="divider my-2 text-sm">OR</div>
 
             <div className="text-center space-y-2">
-              <p className="text-base-content/70 text-sm">
+              <p className="text-base-content/70 text-xs">
                 Don't have an account?{" "}
                 <Link href="/signup" className="link link-primary">
                   Sign up
                 </Link>
               </p>
 
-              <div className="text-xs text-base-content/60 max-w-sm mx-auto">
+              <div className="text-xs text-base-content/60  text-nowrap mx-auto ">
                 By signing in, you agree to our{" "}
                 <Link
                   href="/terms-and-conditions"
