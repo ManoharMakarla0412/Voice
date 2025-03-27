@@ -20,48 +20,57 @@ exports.createAppointment = async (req, res) => {
     const args = toolCall.function.arguments;
     console.log('Arguments:', args);
 
-    // Validate required fields based on your model
+    // Validate required fields
     if (!args.customername || !args.typeofservice || !args.dateandtime || typeof args.dateandtime !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid arguments', details: 'fullName, problem, and dateandtime are required' });
+      return res.status(400).json({ error: 'Missing or invalid arguments', details: 'customername, typeofservice, and dateandtime are required' });
     }
 
-    // Parse "tomorrow 11 AM" to Date object
-    const today = moment();
+    // Parse dateandtime
+    const today = moment().utc(); // Use UTC for consistency
     let appointmentDateTime;
+
     if (args.dateandtime.toLowerCase().includes('tomorrow')) {
-      const timePartRaw = args.dateandtime.split('tomorrow')[1];
-      const timePart = timePartRaw && timePartRaw.trim() ? timePartRaw.trim() : '11 AM'; // Default to 11 AM
-      const hour = timePart.includes('PM') ? parseInt(timePart) + 12 : parseInt(timePart);
+      const timePartRaw = args.dateandtime.split('tomorrow')[1]?.trim();
+      let timePart = timePartRaw || '11 AM'; // Default to 11 AM if no time specified
+      console.log('Time Part Raw:', timePartRaw, 'Parsed Time Part:', timePart);
+
+      // Handle AM/PM and parse hour
+      const isPM = timePart.toUpperCase().includes('PM');
+      let hour = parseInt(timePart.replace(/[^0-9]/g, ''), 10);
+      if (isNaN(hour)) hour = 11; // Default to 11 if parsing fails
+      if (isPM && hour < 12) hour += 12; // Convert PM to 24-hour
+      if (!isPM && hour === 12) hour = 0; // Handle 12 AM
+
       appointmentDateTime = moment(today)
         .add(1, 'day')
         .set({
-          hour: hour >= 24 ? hour - 12 : hour, // Handle edge case for 12 PM
+          hour: hour,
           minute: 0,
           second: 0,
           millisecond: 0,
-        });
+        })
+        .utc(); // Ensure UTC
     } else {
-      appointmentDateTime = moment(args.dateandtime, 'YYYY-MM-DD HH:mm'); // Fallback format
+      appointmentDateTime = moment(args.dateandtime, 'YYYY-MM-DD HH:mm').utc();
     }
+
+    console.log('Parsed Appointment DateTime:', appointmentDateTime.format('YYYY-MM-DD HH:mm:ss Z'));
 
     if (!appointmentDateTime.isValid()) {
-      return res.status(400).json({ error: 'Invalid dateandtime format' });
+      return res.status(400).json({ error: 'Invalid dateandtime format', details: 'Could not parse dateandtime' });
     }
-    console.log('Appointment DateTime:', appointmentDateTime.toDate());
 
-    // Validate against business hours (8 AM - 5 PM, closed Sundays)
-    const isSunday = appointmentDateTime.day() === 0; // 0 is Sunday
-    const startHour = 8; // 8 AM
-    const endHour = 17; // 5 PM
+    // Validate against business hours (8 AM - 5 PM, closed Sundays, assuming UTC)
+    const isSunday = appointmentDateTime.day() === 0;
     const appointmentHour = appointmentDateTime.hour();
-    if (isSunday || appointmentHour < startHour || appointmentHour >= endHour) {
+    if (isSunday || appointmentHour < 8 || appointmentHour >= 17) {
       return res.status(400).json({
         error: 'Invalid appointment time',
-        details: 'Appointments must be between 8 AM and 5 PM, Monday through Saturday.',
+        details: 'Appointments must be between 8 AM and 5 PM UTC, Monday through Saturday.',
       });
     }
 
-    // Fixed 30-minute duration for all appointments
+    // Fixed 30-minute duration
     const durationMinutes = 30;
     const appointmentEndTime = moment(appointmentDateTime).add(durationMinutes, 'minutes').toDate();
 
@@ -101,9 +110,9 @@ exports.createAppointment = async (req, res) => {
       fullName: args.customername,
       problem: args.typeofservice,
       appointmentDateTime: appointmentDateTime.toDate(),
-      duration: durationMinutes, // Fixed 30 minutes
+      duration: durationMinutes,
       callId: message.call.id,
-      assistantId: message.assistant.id,
+      assistantId: message.assistant.id || 'default-assistant-id', // Fallback if missing
       timestamp: new Date(message.timestamp),
       status: 'scheduled',
     };
@@ -131,33 +140,29 @@ exports.getAvailableSlots = async (req, res) => {
       return res.status(400).json({ error: 'Date parameter is required' });
     }
 
-    const day = moment(date, 'YYYY-MM-DD');
-    if (!day.isValid() || day.day() === 0) { // 0 is Sunday
+    const day = moment(date, 'YYYY-MM-DD').utc();
+    if (!day.isValid() || day.day() === 0) {
       return res.status(400).json({
         error: 'Invalid date',
         details: 'Date must be valid and not a Sunday (closed).',
       });
     }
 
-    // Define business hours (8 AM - 5 PM)
     const start = day.clone().set({ hour: 8, minute: 0 });
     const end = day.clone().set({ hour: 17, minute: 0 });
     const slots = [];
     let current = start.clone();
 
-    // Generate 30-minute slots
     while (current.isBefore(end)) {
       slots.push(current.format('HH:mm'));
       current.add(30, 'minutes');
     }
 
-    // Fetch booked appointments for the day
     const appointments = await Appointment.find({
       appointmentDateTime: { $gte: start.toDate(), $lt: end.toDate() },
       status: 'scheduled',
     });
 
-    // Mark booked slots
     const bookedSlots = appointments.map((appt) => {
       const startTime = moment(appt.appointmentDateTime);
       const endTime = moment(appt.appointmentDateTime).add(appt.duration, 'minutes');
@@ -170,7 +175,6 @@ exports.getAvailableSlots = async (req, res) => {
       return booked;
     }).flat();
 
-    // Filter out booked slots
     const availableSlots = slots.filter((slot) => !bookedSlots.includes(slot));
 
     res.status(200).json({
