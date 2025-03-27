@@ -1,4 +1,4 @@
-const moment = require('moment-timezone'); // Updated to use moment-timezone
+const moment = require('moment-timezone');
 const Appointment = require('../models/appointmentModel');
 
 exports.createAppointment = async (req, res) => {
@@ -22,29 +22,30 @@ exports.createAppointment = async (req, res) => {
 
     // Validate required fields
     if (!args.customername || !args.typeofservice || !args.dateandtime || typeof args.dateandtime !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid arguments', details: 'fullName, problem, and dateandtime are required' });
+      return res.status(400).json({ error: 'Missing or invalid arguments', details: 'customername, typeofservice, and dateandtime are required' });
     }
 
     // Parse dateandtime with IST (UTC+5:30)
     const today = moment().tz('Asia/Kolkata'); // Current time in IST
     let appointmentDateTime;
-    const dateInput = args.dateandtime.toLowerCase().trim();
+    const dateInput = args.dateandtime.trim();
 
-    if (dateInput.includes('tomorrow')) {
+    // Handle different date formats
+    if (dateInput.toLowerCase().includes('tomorrow')) {
       const timePartRaw = dateInput.split('tomorrow')[1]?.trim();
       const timePart = timePartRaw || '11 AM'; // Default to 11 AM IST
       const isPM = timePart.toUpperCase().includes('PM');
-      let hour = parseInt(timePart.replace(/[^0-9]/g, ''), 10) || 11; // Default to 11 if parsing fails
+      let hour = parseInt(timePart.replace(/[^0-9]/g, ''), 10) || 11;
       if (isPM && hour < 12) hour += 12;
       if (!isPM && hour === 12) hour = 0;
 
       appointmentDateTime = moment(today)
         .add(1, 'day')
         .set({ hour, minute: 0, second: 0, millisecond: 0 })
-        .tz('Asia/Kolkata'); // Set to IST
-    } else if (dateInput.includes('day after tomorrow') || dateInput.includes('day-after-tomorrow')) {
+        .tz('Asia/Kolkata');
+    } else if (dateInput.toLowerCase().includes('day after tomorrow') || dateInput.toLowerCase().includes('day-after-tomorrow')) {
       const timePartRaw = dateInput.split(/day after tomorrow|day-after-tomorrow/)[1]?.trim();
-      const timePart = timePartRaw || '11 AM'; // Default to 11 AM IST
+      const timePart = timePartRaw || '11 AM';
       const isPM = timePart.toUpperCase().includes('PM');
       let hour = parseInt(timePart.replace(/[^0-9]/g, ''), 10) || 11;
       if (isPM && hour < 12) hour += 12;
@@ -53,25 +54,26 @@ exports.createAppointment = async (req, res) => {
       appointmentDateTime = moment(today)
         .add(2, 'days')
         .set({ hour, minute: 0, second: 0, millisecond: 0 })
-        .tz('Asia/Kolkata'); // Set to IST
+        .tz('Asia/Kolkata');
     } else {
-      // Try parsing explicit date formats in IST
+      // Try parsing explicit date formats, including ISO
       appointmentDateTime = moment.tz(dateInput, [
+        moment.ISO_8601,          // e.g., "2023-10-04T11:00:00"
         'YYYY-MM-DD HH:mm',       // e.g., "2025-03-29 11:00"
         'MMMM DD, YYYY HH:mm',    // e.g., "March 29, 2025 11:00"
         'MMMM DD YYYY HH:mm',     // e.g., "March 29 2025 11:00"
         'DD MMMM YYYY HH:mm',     // e.g., "29 March 2025 11:00"
         'YYYY-MM-DD h A',         // e.g., "2025-03-29 11 AM"
         'MMMM DD, YYYY h A',      // e.g., "March 29, 2025 11 AM"
-      ], 'Asia/Kolkata', true); // Strict parsing in IST
+      ], 'Asia/Kolkata'); // Parse in IST context
     }
 
-    console.log('Parsed Appointment DateTime:', appointmentDateTime.format('YYYY-MM-DD HH:mm:ss Z'));
+    console.log('Parsed Appointment DateTime:', appointmentDateTime.isValid() ? appointmentDateTime.format('YYYY-MM-DD HH:mm:ss Z') : 'Invalid');
 
     if (!appointmentDateTime.isValid()) {
       return res.status(400).json({
         error: 'Invalid dateandtime format',
-        details: 'Please specify "tomorrow", "day after tomorrow", or a date like "March 29, 2025 11 AM".',
+        details: 'Please specify "tomorrow", "day after tomorrow", or a date like "March 29, 2025 11 AM" or "2025-03-29T11:00:00".',
       });
     }
 
@@ -125,7 +127,7 @@ exports.createAppointment = async (req, res) => {
     const appointmentData = {
       fullName: args.customername,
       problem: args.typeofservice,
-      appointmentDateTime: appointmentDateTime.toDate(), // Stored as UTC in DB but parsed as IST
+      appointmentDateTime: appointmentDateTime.toDate(),
       duration: durationMinutes,
       callId: message.call.id,
       assistantId: message.assistant.id || 'default-assistant-id',
@@ -144,7 +146,7 @@ exports.createAppointment = async (req, res) => {
       appointment: appointmentData,
     });
   } catch (error) {
-    console.error('Error processing appointment:', error);
+    console.error('Error processing appointment:', error.stack);
     res.status(500).json({ error: 'Failed to process appointment', details: error.message });
   }
 };
@@ -156,7 +158,7 @@ exports.getAvailableSlots = async (req, res) => {
       return res.status(400).json({ error: 'Date parameter is required' });
     }
 
-    const day = moment.tz(date, 'YYYY-MM-DD', 'Asia/Kolkata'); // Parse date in IST
+    const day = moment.tz(date, 'YYYY-MM-DD', 'Asia/Kolkata');
     if (!day.isValid() || day.day() === 0) {
       return res.status(400).json({
         error: 'Invalid date',
@@ -164,25 +166,21 @@ exports.getAvailableSlots = async (req, res) => {
       });
     }
 
-    // Define business hours (8 AM - 5 PM IST)
     const start = day.clone().set({ hour: 8, minute: 0 });
     const end = day.clone().set({ hour: 17, minute: 0 });
     const slots = [];
     let current = start.clone();
 
-    // Generate 30-minute slots
     while (current.isBefore(end)) {
       slots.push(current.format('HH:mm'));
       current.add(30, 'minutes');
     }
 
-    // Fetch booked appointments for the day
     const appointments = await Appointment.find({
       appointmentDateTime: { $gte: start.toDate(), $lt: end.toDate() },
       status: 'scheduled',
     });
 
-    // Mark booked slots
     const bookedSlots = appointments.map((appt) => {
       const startTime = moment(appt.appointmentDateTime).tz('Asia/Kolkata');
       const endTime = moment(appt.appointmentDateTime).add(appt.duration, 'minutes').tz('Asia/Kolkata');
@@ -195,7 +193,6 @@ exports.getAvailableSlots = async (req, res) => {
       return booked;
     }).flat();
 
-    // Filter out booked slots
     const availableSlots = slots.filter((slot) => !bookedSlots.includes(slot));
 
     res.status(200).json({
