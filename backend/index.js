@@ -21,10 +21,11 @@ const app = express();
 const port = process.env.PORT || 5003;
 
 // Enable CORS for frontend requests
-app.use(
-  cors('*')
-);
-
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 // Middleware to parse JSON
 app.use(express.json());
 app.use(bodyParser.json());
