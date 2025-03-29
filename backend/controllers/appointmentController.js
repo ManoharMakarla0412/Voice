@@ -1,14 +1,23 @@
 const moment = require('moment');
 const Appointment = require('../models/appointmentModel');
 const { google } = require('googleapis');
-const path = require('path');
 
-// Load credentials and tokens
-const credentials = require("../credentials.json"); // Adjust path if needed
-const tokens = require('../token.json'); // Adjust path if needed
-const { client_secret, client_id, redirect_uris } = credentials.web;
-const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-oAuth2Client.setCredentials(tokens);
+// Google OAuth setup
+const oAuth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  'https://osaw.in/v1/voice/oauth2callback'
+);
+oAuth2Client.setCredentials({
+  access_token: process.env.GOOGLE_ACCESS_TOKEN,
+  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+});
+// Handle token refresh
+oAuth2Client.on('tokens', (tokens) => {
+  if (tokens.refresh_token) process.env.GOOGLE_REFRESH_TOKEN = tokens.refresh_token;
+  process.env.GOOGLE_ACCESS_TOKEN = tokens.access_token;
+  console.log('Tokens refreshed:', tokens);
+});
 const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
 
 exports.createAppointment = async (req, res) => {
@@ -35,10 +44,10 @@ exports.createAppointment = async (req, res) => {
     }
 
     const messages = message.artifact.messages;
-    const startTime = messages[0].time;
-    const endTime = messages[messages.length - 1].time;
+    const startTime = messages[0]?.time;
+    const endTime = messages[messages.length - 1]?.time;
     const durationMs = endTime - startTime;
-    const durationMinutes = Math.round(durationMs / 60000);
+    const durationMinutes = isNaN(durationMs) ? 60 : Math.round(durationMs / 60000); // Default to 60 if invalid
     console.log('Duration (minutes):', durationMinutes);
 
     const today = moment();
@@ -84,20 +93,24 @@ exports.createAppointment = async (req, res) => {
       summary: `${savedAppointment.fullName} - ${savedAppointment.problem}`,
       start: {
         dateTime: savedAppointment.appointmentDateTime.toISOString(),
-        timeZone: 'UTC', // Adjust timezone as needed
+        timeZone: 'Asia/Kolkata', // Adjusted to local timezone
       },
       end: {
         dateTime: new Date(savedAppointment.appointmentDateTime.getTime() + savedAppointment.duration * 60000).toISOString(),
-        timeZone: 'UTC', // Adjust timezone as needed
+        timeZone: 'Asia/Kolkata',
       },
       description: `Appointment ID: ${savedAppointment._id}`,
     };
 
-    await calendar.events.insert({
-      calendarId: 'primary', // Your default calendar
-      resource: event,
-    });
-    console.log('Event added to Google Calendar');
+    try {
+      await calendar.events.insert({
+        calendarId: 'primary',
+        resource: event,
+      });
+      console.log('Event added to Google Calendar');
+    } catch (calendarError) {
+      console.error('Failed to add event to Google Calendar:', calendarError);
+    }
 
     res.status(200).json({
       message: 'Appointment booked successfully',
