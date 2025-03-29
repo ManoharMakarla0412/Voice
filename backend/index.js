@@ -16,6 +16,7 @@ const connectDB = require("./config/db"); // MongoDB connection
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path"); // Import path module
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5003;
