@@ -1,5 +1,15 @@
 const moment = require('moment');
 const Appointment = require('../models/appointmentModel');
+const { google } = require('googleapis');
+const path = require('path');
+
+// Load credentials and tokens
+const credentials = require("../credentials.json"); // Adjust path if needed
+const tokens = require('../token.json'); // Adjust path if needed
+const { client_secret, client_id, redirect_uris } = credentials.web;
+const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+oAuth2Client.setCredentials(tokens);
+const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
 
 exports.createAppointment = async (req, res) => {
   console.log("Received Request:", JSON.stringify(req.body, null, 2));
@@ -20,12 +30,10 @@ exports.createAppointment = async (req, res) => {
     const args = toolCall.function.arguments;
     console.log('Arguments:', args);
 
-    // Validate dateandtime
     if (!args.dateandtime || typeof args.dateandtime !== 'string') {
       return res.status(400).json({ error: 'Missing or invalid dateandtime argument' });
     }
 
-    // Calculate conversation duration
     const messages = message.artifact.messages;
     const startTime = messages[0].time;
     const endTime = messages[messages.length - 1].time;
@@ -33,22 +41,21 @@ exports.createAppointment = async (req, res) => {
     const durationMinutes = Math.round(durationMs / 60000);
     console.log('Duration (minutes):', durationMinutes);
 
-    // Parse "tomorrow 11 AM" to Date object
     const today = moment();
     let appointmentDateTime;
     if (args.dateandtime.toLowerCase().includes('tomorrow')) {
       const timePartRaw = args.dateandtime.split('tomorrow')[1];
-      const timePart = timePartRaw && timePartRaw.trim() ? timePartRaw.trim() : '11 AM'; // Default to 11 AM
+      const timePart = timePartRaw && timePartRaw.trim() ? timePartRaw.trim() : '11 AM';
       appointmentDateTime = moment(today)
         .add(1, 'day')
         .set({
           hour: timePart.includes('PM') ? parseInt(timePart) + 12 : parseInt(timePart),
           minute: 0,
           second: 0,
-          millisecond: 0
+          millisecond: 0,
         });
     } else {
-      appointmentDateTime = moment(args.dateandtime, 'YYYY-MM-DD HH:mm'); // Fallback format
+      appointmentDateTime = moment(args.dateandtime, 'YYYY-MM-DD HH:mm');
     }
 
     if (!appointmentDateTime.isValid()) {
@@ -56,7 +63,6 @@ exports.createAppointment = async (req, res) => {
     }
     console.log('Appointment DateTime:', appointmentDateTime.toDate());
 
-    // Structure the appointment data
     const appointmentData = {
       fullName: args.customername || 'Unknown',
       problem: args.typeofservice || 'Not specified',
@@ -65,14 +71,33 @@ exports.createAppointment = async (req, res) => {
       callId: message.call.id,
       assistantId: message.assistant.id,
       timestamp: new Date(message.timestamp),
-      status: 'scheduled'
+      status: 'scheduled',
     };
     console.log('Appointment Data:', appointmentData);
 
-    // Save to database
     const newAppointment = new Appointment(appointmentData);
     const savedAppointment = await newAppointment.save();
     console.log('Saved Appointment:', savedAppointment);
+
+    // Add to Google Calendar
+    const event = {
+      summary: `${savedAppointment.fullName} - ${savedAppointment.problem}`,
+      start: {
+        dateTime: savedAppointment.appointmentDateTime.toISOString(),
+        timeZone: 'UTC', // Adjust timezone as needed
+      },
+      end: {
+        dateTime: new Date(savedAppointment.appointmentDateTime.getTime() + savedAppointment.duration * 60000).toISOString(),
+        timeZone: 'UTC', // Adjust timezone as needed
+      },
+      description: `Appointment ID: ${savedAppointment._id}`,
+    };
+
+    await calendar.events.insert({
+      calendarId: 'primary', // Your default calendar
+      resource: event,
+    });
+    console.log('Event added to Google Calendar');
 
     res.status(200).json({
       message: 'Appointment booked successfully',
