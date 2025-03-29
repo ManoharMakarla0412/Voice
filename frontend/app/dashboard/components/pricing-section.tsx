@@ -85,7 +85,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
   };
 
   return (
-    <div className="mx-auto card bg-gray-800/45 shadow-xl max-w-6xl">
+    <div className="mx-auto card bg-base-100/30 backdrop-blur-md border-base-200/30 hover:border-base-200/40 transition-all shadow-xl max-w-6xl">
       <div className="card-body p-5">
         <h2 className="card-title text-2xl font-bold text-center justify-center">
           Choose Your Plan
@@ -96,17 +96,19 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
 
         {/* Billing toggle */}
         <div className="flex items-center justify-center mb-6">
-          <div className="tabs tabs-boxed">
+          <div className="join bg-base-200/40 backdrop-blur-sm p-1 rounded-lg">
             <button
-              className={`tab ${
-                billingCycle === "monthly" ? "tab-active" : ""
+              className={`join-item btn btn-sm ${
+                billingCycle === "monthly" ? "btn-primary" : "btn-ghost"
               }`}
               onClick={() => setBillingCycle("monthly")}
             >
               Monthly
             </button>
             <button
-              className={`tab ${billingCycle === "yearly" ? "tab-active" : ""}`}
+              className={`join-item btn btn-sm ${
+                billingCycle === "yearly" ? "btn-primary" : "btn-ghost"
+              }`}
               onClick={() => setBillingCycle("yearly")}
             >
               Yearly
@@ -123,14 +125,20 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
             <div
               key={plan.id}
               className={`
-                card bg-base-100 border border-base-300 hover:border-primary transition-all duration-300 max-w-sm
-                ${plan.popular ? "border-primary shadow-md" : ""}
+                card bg-base-100/20 backdrop-blur-md border ${
+                  plan.popular
+                    ? "border-primary/40 shadow-md"
+                    : "border-primary/20 hover:border-primary/40"
+                }
+                transition-all duration-300 max-w-sm
                 flex flex-col h-full
               `}
             >
               {plan.popular && (
                 <div className="absolute -top-3 right-4">
-                  <span className="badge badge-primary">Popular Choice</span>
+                  <span className="badge badge-primary badge-soft">
+                    Popular Choice
+                  </span>
                 </div>
               )}
 
@@ -139,7 +147,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
                 <div className="mt-1">
                   <div className="flex items-baseline">
                     <span className="text-2xl font-bold">
-                    ₹
+                      ₹
                       {billingCycle === "monthly"
                         ? plan.monthlyPrice
                         : plan.yearlyPrice}

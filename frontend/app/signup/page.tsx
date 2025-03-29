@@ -156,13 +156,13 @@ export default function SignupPage() {
         {!showSignupForm ? (
           <PricingSection onPlanSelect={handlePlanSelect} />
         ) : (
-          <div className="mx-auto card max-w-sm bg-gray-800/45 shadow-xl">
+          <div className="mx-auto card max-w-sm bg-base-100/40 backdrop-blur-md border-primary/40 hover:border-primary-60 transition-all shadow-xl">
             <div className="card-body p-5 relative">
               {/* Change plan button - positioned at the top left */}
               <div className="absolute top-2 left-2">
                 <button
                   onClick={handleChangePlan}
-                  className="btn btn-primary btn-soft  btn-xs"
+                  className="btn btn-primary btn-soft btn-xs"
                 >
                   <ArrowLeft className="h-3 w-3 mr-1" />
                   Change plan

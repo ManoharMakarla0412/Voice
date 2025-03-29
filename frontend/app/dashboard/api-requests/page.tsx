@@ -2,6 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { BASE_URL } from "../../utils/constants";
+import {
+  Search,
+  FileDown,
+  Home,
+  Code,
+  Clock,
+  ArrowLeft,
+  ArrowRight,
+  Info,
+  X,
+  ChevronDown,
+  MoreVertical,
+  AlertTriangle,
+  Copy,
+  Eye,
+  Database,
+  CheckCircle2,
+  ExternalLink,
+  Download,
+  FileJson,
+  Terminal,
+  Server,
+  ArrowUpRight,
+} from "lucide-react";
+import Link from "next/link";
 
 interface APILog {
   id: string;
@@ -22,6 +47,9 @@ export default function APILogs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [selectedLog, setSelectedLog] = useState<APILog | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const logsPerPage = 10;
 
   useEffect(() => {
@@ -67,6 +95,13 @@ export default function APILogs() {
     });
   };
 
+  // Copy to clipboard with visual feedback
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(text);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
   // Pagination logic
   const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
   const paginatedLogs = filteredLogs.slice(
@@ -74,12 +109,10 @@ export default function APILogs() {
     currentPage * logsPerPage
   );
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  // Handle double click on a row
+  const handleRowDoubleClick = (log: APILog) => {
+    setSelectedLog(log);
+    setShowModal(true);
   };
 
   // Generate pagination items
@@ -102,79 +135,30 @@ export default function APILogs() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100 p-6">
-      {/* Breadcrumb */}
-      <div className="text-sm breadcrumbs mb-6">
-        <ul>
-          <li>
-            <a href="/dashboard" className="text-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                className="w-4 h-4 mr-2 stroke-current"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                ></path>
-              </svg>
-              Dashboard
-            </a>
-          </li>
-          <li className="flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="w-4 h-4 mr-2 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-              ></path>
-            </svg>
-            API Logs
-          </li>
-        </ul>
-      </div>
-
-      <div className="max-w-[1400px] mx-auto">
-        {/* Header Card */}
-        <div className="card bg-base-200 shadow-md mb-6">
+    <div className="p-4 md:p-8">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        {/* Header with title */}
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
           <div className="card-body">
-            <div className="flex flex-col md:flex-row justify-between gap-4">
+            <div className="flex flex-col md:flex-row justify-between gap-6">
               <div>
-                <h1 className="card-title text-2xl mb-2">API Request Logs</h1>
-                <p className="text-base-content/70">
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Database className="h-6 w-6 text-primary" />
+                  API Request Logs
+                </h1>
+                <p className="text-base-content/80 mt-1">
                   Monitor and analyze your API requests and responses
                 </p>
               </div>
 
-              {/* Stats */}
-              <div className="stats shadow-sm bg-base-300">
+              {/* Improved Stats */}
+              <div className="stats bg-base-200/60 shadow-md border border-base-200/30">
                 <div className="stat">
-                  <div className="stat-figure text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      className="inline-block w-8 h-8 stroke-current"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
+                  <div className="flex items-center gap-2">
+                    <Database size={18} className="text-primary" />
+                    <div className="stat-title font-medium">Total Logs</div>
                   </div>
-                  <div className="stat-title">Total Logs</div>
-                  <div className="stat-value text-primary">{logs.length}</div>
+                  <div className="stat-value text-primary text-center">{logs.length}</div>
                 </div>
               </div>
             </div>
@@ -182,75 +166,60 @@ export default function APILogs() {
         </div>
 
         {/* Search and Filters */}
-        <div className="card bg-base-200 shadow-md mb-6">
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
           <div className="card-body">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="form-control grow max-w-xs">
-                <div className="input-group">
-                  <input
-                    type="text"
-                    placeholder="Search logs..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="input input-bordered focus:outline-primary w-full"
-                  />
-                  <button className="btn btn-square btn-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="form-control grow max-w-md">
+                <label className="input shadow-md bg-base-100/60 backdrop-blur-md flex items-center gap-2 px-3">
+                  <svg
+                    className="h-5 w-5 opacity-50"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
                       fill="none"
-                      viewBox="0 0 24 24"
                       stroke="currentColor"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <label className="label">
-                  <span className="label-text">
-                    Searching across all fields
-                  </span>
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <path d="m21 21-4.3-4.3"></path>
+                    </g>
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search across all fields..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="grow bg-transparent border-none focus:outline-none w-full"
+                  />
+                  {searchQuery && (
+                    <button
+                      className="btn btn-ghost btn-sm px-2"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </label>
               </div>
 
-              {searchQuery && (
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setSearchQuery("")}
-                >
-                  Clear search
-                </button>
-              )}
-
               <div className="grow"></div>
 
-              {/* Resource dropdown filter could be added here */}
-              <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn btn-outline m-1">
+              {/* Export dropdown with fixed z-index */}
+              <div className="dropdown dropdown-top z-50">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="btn btn-outline m-1 shadow-md"
+                >
+                  <FileDown size={16} />
                   Export
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5 ml-2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                    />
-                  </svg>
-                </label>
+                </div>
                 <ul
                   tabIndex={0}
-                  className="dropdown-content z-1 menu p-2 shadow-sm bg-base-200 rounded-box w-52"
+                  className="dropdown-content z-[100] menu p-2 shadow-lg bg-base-300/90 backdrop-blur-xl border border-base-200/40 rounded-box w-52"
                 >
                   <li>
                     <a>CSV</a>
@@ -264,35 +233,56 @@ export default function APILogs() {
           </div>
         </div>
 
+        {/* Error display */}
+        {error && (
+          <div className="alert alert-error shadow-lg border border-error/30">
+            <AlertTriangle size={18} />
+            <div>
+              <h3 className="font-bold">Error</h3>
+              <div className="text-xs">{error}</div>
+            </div>
+            <button
+              className="btn btn-sm btn-circle btn-ghost ml-auto"
+              onClick={() => setError(null)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Table Card */}
-        <div className="card bg-base-200 shadow-md overflow-hidden">
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
           <div className="card-body p-0">
+            <div className="alert alert-info bg-info/10 border-info/30 rounded-none">
+              <Info size={18} />
+              <span>Double-click on any row to view detailed information</span>
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="table table-zebra table-compact w-full">
+              <table className="table table-zebra w-full">
                 <thead>
-                  <tr className="bg-base-300">
-                    <th className="text-base-content/80 font-semibold">Time</th>
-                    <th className="text-base-content/80 font-semibold">
+                  <tr className="bg-primary/20">
+                    <th className="text-base-content/90 font-semibold text-center">
+                      Time
+                    </th>
+                    <th className="text-base-content/90 font-semibold text-center">
                       Resource
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Duration (sec)
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Method
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Status Code
-                    </th>
-                    <th className="text-base-content/80 font-semibold">
-                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-12">
+                      <td colSpan={5} className="text-center py-12">
                         <div className="flex flex-col items-center justify-center">
                           <span className="loading loading-spinner loading-lg text-primary mb-2"></span>
                           <span className="text-base-content/70">
@@ -301,180 +291,122 @@ export default function APILogs() {
                         </div>
                       </td>
                     </tr>
-                  ) : error ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-12">
-                        <div className="alert alert-error max-w-md mx-auto shadow-lg">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="stroke-current shrink-0 h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <div>
-                            <h3 className="font-bold">Error</h3>
-                            <div className="text-xs">{error}</div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
                   ) : paginatedLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-16">
+                      <td colSpan={5} className="text-center py-16">
                         <div className="flex flex-col items-center justify-center">
-                          <div className="mb-4">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="w-16 h-16 text-base-content/30"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1"
-                                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                          <div className="avatar placeholder mb-4">
+                            <div className="bg-primary/10 text-primary rounded-full w-24 h-24 flex items-center justify-center">
+                              <Database size={36} className="opacity-50" />
+                              <X size={28} className="absolute opacity-70" />
+                            </div>
                           </div>
-                          <h3 className="text-lg font-semibold text-base-content/70">
-                            No logs found
+                          <h3 className="text-lg font-semibold text-base-content/80">
+                            No API logs found
                           </h3>
                           {searchQuery && (
-                            <p className="text-base-content/50 mt-1">
-                              Try changing your search query
-                            </p>
+                            <button
+                              className="btn btn-sm btn-ghost btn-outline mt-4"
+                              onClick={() => setSearchQuery("")}
+                            >
+                              <X size={14} className="mr-1" />
+                              Clear search filters
+                            </button>
                           )}
                         </div>
                       </td>
                     </tr>
                   ) : (
                     paginatedLogs.map((log) => (
-                      <tr key={log.id} className="hover">
-                        <td className="font-mono text-xs whitespace-nowrap">
-                          {formatDate(log.time)}
+                      <tr
+                        key={log.id}
+                        className="hover backdrop-blur-sm cursor-pointer"
+                        onDoubleClick={() => handleRowDoubleClick(log)}
+                      >
+                        <td className="font-mono text-xs whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Clock size={14} className="text-base-content/60" />
+                            {formatDate(log.time)}
+                          </div>
                         </td>
-                        <td className="capitalize font-medium">
+                        <td className="capitalize font-medium text-center">
                           {log.resource || "N/A"}
                         </td>
-                        <td>
+                        <td className="text-center">
                           <div
-                            className="tooltip"
+                            className="tooltip flex justify-center"
                             data-tip={`${log.requestDurationSeconds * 1000} ms`}
                           >
-                            {log.requestDurationSeconds.toFixed(2)}
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            className={`
-                            badge text-xs font-semibold
-                            ${
-                              log.requestHttpMethod === "GET"
-                                ? "badge-primary"
-                                : ""
-                            }
-                            ${
-                              log.requestHttpMethod === "POST"
-                                ? "badge-success"
-                                : ""
-                            }
-                            ${
-                              log.requestHttpMethod === "PUT"
-                                ? "badge-warning"
-                                : ""
-                            }
-                            ${
-                              log.requestHttpMethod === "DELETE"
-                                ? "badge-error"
-                                : ""
-                            }
-                            ${
-                              !["GET", "POST", "PUT", "DELETE"].includes(
-                                log.requestHttpMethod
-                              )
-                                ? "badge-ghost"
-                                : ""
-                            }
-                          `}
-                          >
-                            {log.requestHttpMethod}
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            className="tooltip"
-                            data-tip={
-                              log.responseHttpCode >= 200 &&
-                              log.responseHttpCode < 300
-                                ? "Success"
-                                : log.responseHttpCode >= 300 &&
-                                  log.responseHttpCode < 400
-                                ? "Redirection"
-                                : log.responseHttpCode >= 400 &&
-                                  log.responseHttpCode < 500
-                                ? "Client Error"
-                                : "Server Error"
-                            }
-                          >
-                            <span
-                              className={`badge ${
-                                log.responseHttpCode >= 200 &&
-                                log.responseHttpCode < 300
-                                  ? "badge-success"
-                                  : log.responseHttpCode >= 300 &&
-                                    log.responseHttpCode < 400
-                                  ? "badge-info"
-                                  : log.responseHttpCode >= 400 &&
-                                    log.responseHttpCode < 500
-                                  ? "badge-warning"
-                                  : "badge-error"
-                              }`}
-                            >
-                              {log.responseHttpCode}
+                            <span className="font-mono badge badge-ghost badge-sm">
+                              {log.requestDurationSeconds.toFixed(2)}
                             </span>
                           </div>
                         </td>
-                        <td>
-                          <div className="dropdown dropdown-left dropdown-hover">
-                            <label
-                              tabIndex={0}
-                              className="btn btn-xs btn-ghost"
+                        <td className="text-center">
+                          <div className="flex justify-center">
+                            <div
+                              className={`
+                                badge shadow-sm
+                                ${
+                                  log.requestHttpMethod === "GET"
+                                    ? "badge-primary"
+                                    : ""
+                                }
+                                ${
+                                  log.requestHttpMethod === "POST"
+                                    ? "badge-success"
+                                    : ""
+                                }
+                                ${
+                                  log.requestHttpMethod === "PUT"
+                                    ? "badge-warning"
+                                    : ""
+                                }
+                                ${
+                                  log.requestHttpMethod === "DELETE"
+                                    ? "badge-error"
+                                    : ""
+                                }
+                                ${
+                                  !["GET", "POST", "PUT", "DELETE"].includes(
+                                    log.requestHttpMethod
+                                  )
+                                    ? "badge-ghost"
+                                    : ""
+                                }
+                              `}
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                className="w-4 h-4 stroke-current"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-                                ></path>
-                              </svg>
-                            </label>
-                            <ul
-                              tabIndex={0}
-                              className="dropdown-content z-1 menu p-2 shadow-sm bg-base-200 rounded-box w-32"
-                            >
-                              <li>
-                                <a>View Details</a>
-                              </li>
-                              <li>
-                                <a>Copy ID</a>
-                              </li>
-                            </ul>
+                              {log.requestHttpMethod}
+                            </div>
                           </div>
+                        </td>
+                        <td className="text-center">
+                          <span
+                            className={`
+                              ${
+                                log.responseHttpCode >= 200 &&
+                                log.responseHttpCode < 300
+                                  ? "text-success"
+                                  : ""
+                              }
+                              ${
+                                log.responseHttpCode >= 300 &&
+                                log.responseHttpCode < 400
+                                  ? "text-info"
+                                  : ""
+                              }
+                              ${
+                                log.responseHttpCode >= 400 &&
+                                log.responseHttpCode < 500
+                                  ? "text-warning"
+                                  : ""
+                              }
+                              ${log.responseHttpCode >= 500 ? "text-error" : ""}
+                              font-medium
+                            `}
+                          >
+                            {log.responseHttpCode}
+                          </span>
                         </td>
                       </tr>
                     ))
@@ -484,8 +416,8 @@ export default function APILogs() {
             </div>
 
             {/* Pagination */}
-            {!loading && !error && paginatedLogs.length > 0 && (
-              <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-base-300">
+            {!loading && paginatedLogs.length > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-primary/10">
                 <span className="text-base-content/70 pb-4 sm:pb-0">
                   Showing{" "}
                   {Math.min(
@@ -496,7 +428,7 @@ export default function APILogs() {
                   {filteredLogs.length} logs
                 </span>
 
-                <div className="join">
+                <div className="join shadow-md">
                   <button
                     className="join-item btn btn-sm"
                     onClick={() => setCurrentPage(1)}
@@ -506,7 +438,7 @@ export default function APILogs() {
                   </button>
                   <button
                     className="join-item btn btn-sm"
-                    onClick={handlePreviousPage}
+                    onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
                   >
                     ‹
@@ -516,7 +448,7 @@ export default function APILogs() {
                     <button
                       key={page}
                       className={`join-item btn btn-sm ${
-                        currentPage === page ? "btn-active" : ""
+                        currentPage === page ? "btn-primary" : ""
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >
@@ -526,7 +458,7 @@ export default function APILogs() {
 
                   <button
                     className="join-item btn btn-sm"
-                    onClick={handleNextPage}
+                    onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages || totalPages === 0}
                   >
                     ›
@@ -544,6 +476,342 @@ export default function APILogs() {
           </div>
         </div>
       </div>
+
+      {/* API Log Details Modal */}
+      {showModal && selectedLog && (
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/95 backdrop-blur-xl border-2 border-primary/30 shadow-xl max-w-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Server className="text-primary" size={18} />
+                <h2 className="font-bold text-lg">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`
+                        badge badge-sm shadow-sm
+                        ${
+                          selectedLog.requestHttpMethod === "GET"
+                            ? "badge-primary"
+                            : ""
+                        }
+                        ${
+                          selectedLog.requestHttpMethod === "POST"
+                            ? "badge-success"
+                            : ""
+                        }
+                        ${
+                          selectedLog.requestHttpMethod === "PUT"
+                            ? "badge-warning"
+                            : ""
+                        }
+                        ${
+                          selectedLog.requestHttpMethod === "DELETE"
+                            ? "badge-error"
+                            : ""
+                        }
+                        ${
+                          !["GET", "POST", "PUT", "DELETE"].includes(
+                            selectedLog.requestHttpMethod
+                          )
+                            ? "badge-ghost"
+                            : ""
+                        }
+                      `}
+                    >
+                      {selectedLog.requestHttpMethod}
+                    </div>
+                    API Request Details
+                  </div>
+                </h2>
+              </div>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedLog(null);
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Main Content */}
+            <div className="space-y-4">
+              {/* Summary Card */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Resource */}
+                    <div className="flex flex-col">
+                      <span className="text-xs text-base-content/70">
+                        Resource
+                      </span>
+                      <div className="font-medium flex items-center">
+                        <ArrowUpRight
+                          size={12}
+                          className="mr-1 text-base-content/70"
+                        />
+                        {selectedLog.resource || "N/A"}
+                      </div>
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="flex flex-col">
+                      <span className="text-xs text-base-content/70">
+                        Timestamp
+                      </span>
+                      <div className="font-medium">
+                        {new Date(selectedLog.time).toLocaleDateString()}{" "}
+                        <span className="text-xs opacity-70">
+                          {new Date(selectedLog.time).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="flex flex-col">
+                      <span className="text-xs text-base-content/70">
+                        Duration
+                      </span>
+                      <div className="font-medium">
+                        {selectedLog.requestDurationSeconds.toFixed(2)}s
+                        <span className="text-xs opacity-70 ml-1">
+                          (
+                          {(selectedLog.requestDurationSeconds * 1000).toFixed(
+                            0
+                          )}{" "}
+                          ms)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status - Full width */}
+                  <div className="mt-3 pt-3 border-t border-base-300/50">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-base-content/70">
+                        Status Code
+                      </span>
+                      <span
+                        className={`
+                          font-medium 
+                          ${
+                            selectedLog.responseHttpCode >= 200 &&
+                            selectedLog.responseHttpCode < 300
+                              ? "text-success"
+                              : ""
+                          }
+                          ${
+                            selectedLog.responseHttpCode >= 300 &&
+                            selectedLog.responseHttpCode < 400
+                              ? "text-info"
+                              : ""
+                          }
+                          ${
+                            selectedLog.responseHttpCode >= 400 &&
+                            selectedLog.responseHttpCode < 500
+                              ? "text-warning"
+                              : ""
+                          }
+                          ${
+                            selectedLog.responseHttpCode >= 500
+                              ? "text-error"
+                              : ""
+                          }
+                        `}
+                      >
+                        {selectedLog.responseHttpCode} -{" "}
+                        {selectedLog.responseHttpCode >= 200 &&
+                        selectedLog.responseHttpCode < 300
+                          ? "Success"
+                          : selectedLog.responseHttpCode >= 300 &&
+                            selectedLog.responseHttpCode < 400
+                          ? "Redirection"
+                          : selectedLog.responseHttpCode >= 400 &&
+                            selectedLog.responseHttpCode < 500
+                          ? "Client Error"
+                          : "Server Error"}
+                      </span>
+                    </div>
+                    <div className="w-full bg-base-100/30 h-2 rounded-full mt-2 overflow-hidden">
+                      <div
+                        className={`h-full 
+                          ${
+                            selectedLog.responseHttpCode >= 200 &&
+                            selectedLog.responseHttpCode < 300
+                              ? "bg-success"
+                              : ""
+                          }
+                          ${
+                            selectedLog.responseHttpCode >= 300 &&
+                            selectedLog.responseHttpCode < 400
+                              ? "bg-info"
+                              : ""
+                          }
+                          ${
+                            selectedLog.responseHttpCode >= 400 &&
+                            selectedLog.responseHttpCode < 500
+                              ? "bg-warning"
+                              : ""
+                          }
+                          ${
+                            selectedLog.responseHttpCode >= 500
+                              ? "bg-error"
+                              : ""
+                          }
+                        `}
+                        style={{ width: "100%" }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Details */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <h3 className="text-sm font-medium mb-2">
+                    Technical Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Request ID */}
+                    <div className="bg-base-100/20 p-2 rounded-lg">
+                      <div className="text-xs text-base-content/70 flex items-center gap-1 mb-1">
+                        <Info size={12} />
+                        Request ID
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-mono text-xs truncate max-w-[85%]">
+                          {selectedLog.id}
+                        </div>
+                        <div
+                          className="tooltip tooltip-left"
+                          data-tip="Copy to clipboard"
+                        >
+                          <button
+                            onClick={() => copyToClipboard(selectedLog.id)}
+                            className="btn btn-ghost btn-xs h-6 min-h-0 px-1"
+                          >
+                            {copied === selectedLog.id ? (
+                              <CheckCircle2
+                                size={14}
+                                className="text-success"
+                              />
+                            ) : (
+                              <Copy size={14} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Method and Resource */}
+                    <div className="bg-base-100/20 p-2 rounded-lg">
+                      <div className="text-xs text-base-content/70 flex items-center gap-1 mb-1">
+                        <Terminal size={12} />
+                        Request Details
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-mono text-xs">
+                          {selectedLog.requestHttpMethod} {selectedLog.resource}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
+                    <Clock size={12} />
+                    Request Timeline
+                  </h3>
+
+                  <ul className="timeline timeline-vertical timeline-compact timeline-snap-icon">
+                    <li>
+                      <div className="timeline-middle">
+                        <div className="badge badge-xs badge-primary"></div>
+                      </div>
+                      <div className="timeline-start text-xs text-right mr-4">
+                        {new Date(selectedLog.time).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </div>
+                      <div className="timeline-end text-xs ml-4">
+                        <span className="font-medium">Request Started</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="timeline-middle">
+                        <div className="badge badge-xs badge-secondary"></div>
+                      </div>
+                      <div className="timeline-start text-xs text-right mr-4">
+                        {new Date(
+                          new Date(selectedLog.time).getTime() +
+                            selectedLog.requestDurationSeconds * 1000
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </div>
+                      <div className="timeline-end text-xs ml-4">
+                        <span className="font-medium">Request Completed</span>
+                        <div className="text-2xs opacity-70">
+                          {selectedLog.responseHttpCode} status code
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <h3 className="text-sm font-medium mb-2">
+                    Available Actions
+                  </h3>
+                  <div className="join join-horizontal w-full">
+                    <button className="join-item btn btn-sm flex-1">
+                      <FileJson size={14} />
+                      View JSON
+                    </button>
+                    <button className="join-item btn btn-sm flex-1">
+                      <Terminal size={14} />
+                      View Headers
+                    </button>
+                    <button className="join-item btn btn-sm flex-1">
+                      <Download size={14} />
+                      Export
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal backdrop */}
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => {
+              setShowModal(false);
+              setSelectedLog(null);
+            }}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
     </div>
   );
 }

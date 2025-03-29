@@ -41,7 +41,6 @@ export default function AssistantDashboard() {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [formData, setFormData] = useState({
     name: "",
     firstMessage: "",
@@ -154,231 +153,66 @@ export default function AssistantDashboard() {
     "Set the end call message",
   ];
 
-  // Render the grid view of assistants
-  const renderGridView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {assistants.map((assistant) => (
-        <div
-          key={assistant.id}
-          className="card bg-base-100/45 shadow-xl h-full hover:shadow-2xl transition-all"
-        >
-          <div className="card-body p-0">
-            {/* Header section with gradient background */}
-            <div className="bg-gradient-to-r from-primary/10 to-base-300/20 p-5 rounded-t-xl">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="avatar placeholder online">
-                  <div className="bg-primary text-primary-content rounded-full w-12">
-                    <span>
-                      <Bot size={20} />
-                    </span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h2 className="card-title text-lg font-bold">
-                    {assistant.name}
-                  </h2>
-                  <div className="flex items-center text-xs text-base-content/70">
-                    <Calendar size={12} className="mr-1.5" />
-                    Created {new Date(assistant.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
+  return (
+    <div className="p-4 md:p-8">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        {/* Header with title */}
+        <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg">
+          <div className="card-body">
+            <div className="flex flex-col md:flex-row justify-between gap-6">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Bot className="h-6 w-6 text-primary" />
+                  AI Assistants
+                </h1>
+                <p className="text-base-content/80 mt-1">
+                  Create and manage your AI voice assistants
+                </p>
               </div>
 
-              <div className="flex items-center gap-2 mt-3">
-                <div className="badge badge-primary badge-outline py-2.5 gap-1">
-                  <Cpu size={12} />
-                  {assistant.model.model}
-                </div>
-                <div className="badge badge-secondary badge-outline py-2.5">
-                  {assistant.model.provider}
-                </div>
-              </div>
-            </div>
-
-            {/* Details section */}
-            <div className="p-5 space-y-4">
-              {assistant.firstMessage && (
-                <div className="bg-base-200/40 rounded-lg p-3">
-                  <div className="flex items-center text-sm font-medium mb-1.5">
-                    <MessageSquare size={14} className="mr-1.5 text-primary" />
-                    First Message
-                  </div>
-                  <p className="text-sm text-base-content/80 line-clamp-2">
-                    "{assistant.firstMessage}"
-                  </p>
-                </div>
-              )}
-
-              {assistant.endCallMessage && (
-                <div className="bg-base-200/40 rounded-lg p-3">
-                  <div className="flex items-center text-sm font-medium mb-1.5">
-                    <Clock size={14} className="mr-1.5 text-primary" />
-                    End Call Message
-                  </div>
-                  <p className="text-sm text-base-content/80 line-clamp-2">
-                    "{assistant.endCallMessage}"
-                  </p>
-                </div>
-              )}
-
-              <div className="card-actions justify-between mt-4 pt-3 border-t border-base-300/30">
-                <button className="btn btn-sm btn-error btn-outline gap-1">
-                  <Trash2 size={14} />
-                  Delete
-                </button>
-                <button className="btn btn-sm btn-primary gap-1">
-                  <Edit3 size={14} />
-                  Edit
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  // Render the list view of assistants
-  const renderListView = () => (
-    <div className="overflow-x-auto">
-      <table className="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Model</th>
-            <th>Created</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assistants.map((assistant) => (
-            <tr key={assistant.id} className="hover">
-              <td>
-                <div className="flex items-center gap-3">
-                  <div className="avatar placeholder">
-                    <div className="bg-primary/20 text-primary rounded-full w-8">
-                      <Bot size={14} />
+              {/* Stats */}
+              <div className="stats bg-base-200/60 shadow-md border border-base-200/30">
+                <div className="stat">
+                  <div className="flex items-center gap-2">
+                    <Bot size={18} className="text-primary" />
+                    <div className="stat-title font-medium">
+                      Total Assistants
                     </div>
                   </div>
-                  <span className="font-medium">{assistant.name}</span>
-                </div>
-              </td>
-              <td>
-                <div className="flex items-center gap-2">
-                  <div className="badge badge-primary badge-outline badge-sm gap-1">
-                    <Cpu size={10} />
-                    {assistant.model.model}
+                  <div className="stat-value text-primary text-center">
+                    {assistants.length}
                   </div>
-                  <span className="text-xs text-base-content/70">
-                    {assistant.model.provider}
-                  </span>
                 </div>
-              </td>
-              <td className="text-xs text-base-content/70">
-                {new Date(assistant.createdAt).toLocaleDateString()}
-              </td>
-              <td>
-                <div className="join">
-                  <button
-                    className="btn btn-sm btn-ghost btn-square join-item tooltip"
-                    data-tip="Edit"
-                  >
-                    <Edit3 size={14} />
-                  </button>
-                  <button
-                    className="btn btn-sm btn-ghost text-error btn-square join-item tooltip"
-                    data-tip="Delete"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen p-4 md:p-6">
-      {/* Header with view toggle */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 max-w-7xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold">Assistants</h1>
-          <p className="text-base-content/70">
-            Create and manage your AI voice assistants
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <div className="join">
-            <button
-              className={`join-item btn btn-sm ${
-                viewMode === "grid" ? "btn-active" : ""
-              }`}
-              onClick={() => setViewMode("grid")}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-              </svg>
-            </button>
-            <button
-              className={`join-item btn btn-sm ${
-                viewMode === "list" ? "btn-active" : ""
-              }`}
-              onClick={() => setViewMode("list")}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="8" y1="6" x2="21" y2="6"></line>
-                <line x1="8" y1="12" x2="21" y2="12"></line>
-                <line x1="8" y1="18" x2="21" y2="18"></line>
-                <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                <line x1="3" y1="18" x2="3.01" y2="18"></line>
-              </svg>
-            </button>
+              </div>
+            </div>
           </div>
-          <button
-            className="btn btn-primary btn-sm gap-1.5"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Plus size={16} />
-            Create Assistant
-          </button>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto">
+        {/* Action bar */}
+        <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg">
+          <div className="card-body">
+            <div className="flex flex-wrap items-center justify-end">
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => setIsModalOpen(true)}
+              >
+                <Plus size={16} />
+                Create Assistant
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Error display */}
         {error && (
-          <div className="alert alert-error mb-6">
-            <AlertTriangle size={16} />
-            <span>{error}</span>
+          <div className="alert alert-error shadow-lg border border-error/30">
+            <AlertTriangle size={18} />
+            <div>
+              <h3 className="font-bold">Error</h3>
+              <div className="text-xs">{error}</div>
+            </div>
             <button
-              className="btn btn-circle btn-ghost btn-sm"
+              className="btn btn-sm btn-circle btn-ghost ml-auto"
               onClick={() => setError(null)}
             >
               <X size={16} />
@@ -387,72 +221,171 @@ export default function AssistantDashboard() {
         )}
 
         {/* Display assistants */}
-        {loading ? (
-          <div className="flex justify-center items-center p-20">
-            <div className="flex flex-col items-center gap-3">
-              <span className="loading loading-spinner loading-lg text-primary"></span>
-              <p className="text-base-content/70">Loading assistants...</p>
+        <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg overflow-hidden">
+          <div className="card-body p-0">
+            <div className="alert alert-info bg-info/10 border-info/30 rounded-none">
+              <Terminal size={18} />
+              <span>
+                Create AI assistants that can communicate with your users via
+                voice
+              </span>
             </div>
-          </div>
-        ) : (
-          <div className="card bg-base-100/45 shadow-xl">
-            <div className="card-body p-4 md:p-6">
-              {assistants.length > 0 ? (
-                viewMode === "grid" ? (
-                  renderGridView()
-                ) : (
-                  renderListView()
-                )
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center py-20">
-                  <div className="avatar placeholder mb-6">
-                    <div className="bg-primary/10 text-primary rounded-full w-24 h-24">
-                      <Bot size={40} />
-                    </div>
-                  </div>
 
-                  <h2 className="text-2xl font-bold mb-3">No Assistants Yet</h2>
-                  <p className="text-base-content/70 max-w-md mb-8">
-                    Create your first assistant to start building your AI voice
-                    assistant experience.
-                  </p>
-
-                  <button
-                    className="btn btn-primary gap-2"
-                    onClick={() => setIsModalOpen(true)}
-                  >
-                    <Sparkles size={18} />
-                    Create Your First Assistant
-                  </button>
+            {loading ? (
+              <div className="flex justify-center items-center p-16">
+                <div className="flex flex-col items-center gap-3">
+                  <span className="loading loading-spinner loading-lg text-primary"></span>
+                  <p className="text-base-content/70">Loading assistants...</p>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : assistants.length > 0 ? (
+              <div className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {assistants.map((assistant) => (
+                    <div
+                      key={assistant.id}
+                      className="card bg-base-300/80 border-2 border-primary/30 shadow-lg flex flex-col"
+                    >
+                      {/* Header section with gradient background */}
+                      <div className="bg-primary/10 p-5 rounded-t-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="avatar avatar-placeholder">
+                            <div className="bg-primary/20 text-primary-content rounded-full w-12">
+                              <Bot size={20} />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="card-title text-lg font-bold">
+                              {assistant.name}
+                            </h2>
+                            <div className="flex items-center text-xs text-base-content/70">
+                              <Calendar size={12} className="mr-1.5" />
+                              Created{" "}
+                              {new Date(
+                                assistant.createdAt
+                              ).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                          <div className="badge badge-primary badge-outline py-2.5 gap-1">
+                            <Cpu size={12} />
+                            {assistant.model.model}
+                          </div>
+                          <div className="badge badge-secondary badge-outline py-2.5">
+                            {assistant.model.provider}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content section - Fixed height with both message blocks always present */}
+                      <div className="card-body p-5 flex-1 flex flex-col gap-4">
+                        {/* First Message - Always shown */}
+                        <div className="bg-base-100/20 rounded-lg p-3 border border-base-100/10 min-h-[85px] flex flex-col">
+                          <div className="flex items-center text-sm font-medium mb-1.5">
+                            <MessageSquare
+                              size={14}
+                              className="mr-1.5 text-primary"
+                            />
+                            First Message
+                          </div>
+                          {assistant.firstMessage ? (
+                            <p className="text-sm text-base-content/80 line-clamp-2 flex-1">
+                              "{assistant.firstMessage}"
+                            </p>
+                          ) : (
+                            <p className="text-sm text-base-content/40 italic flex-1">
+                              No first message configured
+                            </p>
+                          )}
+                        </div>
+
+                        {/* End Call Message - Always shown */}
+                        <div className="bg-base-100/20 rounded-lg p-3 border border-base-100/10 min-h-[85px] flex flex-col">
+                          <div className="flex items-center text-sm font-medium mb-1.5">
+                            <Clock size={14} className="mr-1.5 text-primary" />
+                            End Call Message
+                          </div>
+                          {assistant.endCallMessage ? (
+                            <p className="text-sm text-base-content/80 line-clamp-2 flex-1">
+                              "{assistant.endCallMessage}"
+                            </p>
+                          ) : (
+                            <p className="text-sm text-base-content/40 italic flex-1">
+                              No end call message configured
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions section - Always at the bottom */}
+                      <div className="card-actions justify-between p-4 border-t border-base-100/20 mt-auto">
+                        <button className="btn btn-sm btn-error btn-outline gap-1">
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                        <button className="btn btn-sm btn-primary gap-1">
+                          <Edit3 size={14} />
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="card-body items-center text-center py-16">
+                <div className="avatar avatar-placeholder">
+                  <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center shadow-md">
+                    <Bot className="w-12 h-12 text-primary" />
+                  </div>
+                </div>
+                <h2 className="card-title text-2xl mt-6 mb-2">
+                  No Assistants Yet
+                </h2>
+                <p className="text-base-content/70 max-w-md mb-8">
+                  Create your first assistant to start building your AI voice
+                  assistant experience.
+                </p>
+
+                <button
+                  className="btn btn-primary btn-lg"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  <Sparkles size={20} />
+                  Create Your First Assistant
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Modal for creating assistants */}
+      {/* Create Assistant Modal */}
       {isModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box bg-base-100/45 shadow-xl max-w-2xl">
-            <button
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setIsModalOpen(false)}
-            >
-              <X size={16} />
-            </button>
-
-            <h3 className="font-bold text-xl mb-2 flex items-center gap-2">
-              <Terminal size={20} className="text-primary" />
-              Create New Assistant
-            </h3>
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-primary/30 shadow-xl max-w-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Terminal className="text-primary" size={18} />
+                <h2 className="font-bold text-lg">Create New Assistant</h2>
+              </div>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
 
             <p className="text-base-content/70 mb-4">
               Configure your AI assistant in 3 simple steps
             </p>
 
             {/* Step progress */}
-            <div className="w-full bg-base-300 rounded-full h-1.5 mb-6">
+            <div className="w-full bg-base-100/30 h-1.5 mb-6 rounded-full">
               <div
                 className="bg-primary h-1.5 rounded-full transition-all"
                 style={{ width: `${(step / 3) * 100}%` }}
@@ -473,13 +406,13 @@ export default function AssistantDashboard() {
                 >
                   <div
                     className={`
-                    w-6 h-6 rounded-full flex items-center justify-center 
+                    w-6 h-6 rounded-full flex items-center justify-center
                     ${
                       step > index + 1
-                        ? "bg-success/20 text-success"
+                        ? "bg-success/20 text-success border border-success/40"
                         : step === index + 1
-                        ? "bg-primary text-base-100"
-                        : "bg-base-300 text-base-content/70"
+                        ? "bg-primary/20 text-primary border border-primary/40"
+                        : "bg-base-300/30 text-base-content/70 border border-base-100/20"
                     }
                   `}
                   >
@@ -508,7 +441,7 @@ export default function AssistantDashboard() {
                     placeholder="Enter a name for your assistant"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="input input-bordered w-full bg-base-200/50"
+                    className="input input-bordered w-full"
                   />
                   <label className="label">
                     <span className="label-text-alt text-base-content/70">
@@ -536,7 +469,7 @@ export default function AssistantDashboard() {
                       onChange={(e) =>
                         handleInputChange("firstMessage", e.target.value)
                       }
-                      className="input input-bordered w-full bg-base-200/50"
+                      className="input input-bordered w-full"
                     />
                     <label className="label">
                       <span className="label-text-alt text-base-content/70">
@@ -561,7 +494,7 @@ export default function AssistantDashboard() {
                       onChange={(e) =>
                         handleInputChange("systemPrompt", e.target.value)
                       }
-                      className="textarea textarea-bordered min-h-[150px] w-full bg-base-200/50"
+                      className="textarea textarea-bordered min-h-[150px] w-full"
                     ></textarea>
                     <label className="label">
                       <span className="label-text-alt text-base-content/70">
@@ -587,7 +520,7 @@ export default function AssistantDashboard() {
                     onChange={(e) =>
                       handleInputChange("endCallMessage", e.target.value)
                     }
-                    className="input input-bordered w-full bg-base-200/50"
+                    className="input input-bordered w-full"
                   />
                   <label className="label">
                     <span className="label-text-alt text-base-content/70">
@@ -602,7 +535,7 @@ export default function AssistantDashboard() {
 
             <div className="flex justify-between items-center mt-6">
               <button
-                className="btn btn-outline btn-sm gap-1"
+                className="btn btn-outline btn-sm"
                 onClick={handleBack}
                 disabled={step === 1}
               >
@@ -620,7 +553,7 @@ export default function AssistantDashboard() {
 
                 {step < 3 ? (
                   <button
-                    className="btn btn-primary btn-sm gap-1"
+                    className="btn btn-primary btn-sm"
                     onClick={handleNext}
                     disabled={
                       (step === 1 && !formData.name) ||
@@ -633,7 +566,7 @@ export default function AssistantDashboard() {
                   </button>
                 ) : (
                   <button
-                    className="btn btn-primary btn-sm gap-1"
+                    className="btn btn-primary btn-sm"
                     onClick={createAssistant}
                     disabled={!formData.endCallMessage}
                   >
@@ -644,11 +577,18 @@ export default function AssistantDashboard() {
               </div>
             </div>
           </div>
-          <div
+
+          {/* Modal backdrop */}
+          <form
+            method="dialog"
             className="modal-backdrop"
-            onClick={() => setIsModalOpen(false)}
-          ></div>
-        </div>
+            onClick={() => {
+              setIsModalOpen(false);
+            }}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
       )}
     </div>
   );

@@ -2,6 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../../utils/constants";
+import {
+  PhoneCall,
+  Search,
+  Filter,
+  Copy,
+  Home,
+  Download,
+  FileText,
+  X,
+  AlertTriangle,
+  DollarSign,
+  Clock,
+  Info,
+  User,
+  Box,
+  FileAudio,
+  MessageSquare,
+  Calendar,
+  ExternalLink,
+  Download as DownloadIcon,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+import Link from "next/link";
 
 // Define the interface for call logs
 interface CallLog {
@@ -21,6 +45,9 @@ const CallLogs = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [selectedLog, setSelectedLog] = useState<CallLog | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const logsPerPage = 10;
 
   useEffect(() => {
@@ -46,6 +73,13 @@ const CallLogs = () => {
 
     fetchCallLogs();
   }, []);
+
+  // Copy to clipboard with visual feedback
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(text);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   // Filter logs based on search query
   const filteredLogs = callLogs.filter((log) => {
@@ -99,102 +133,72 @@ const CallLogs = () => {
     return items;
   };
 
-  return (
-    <div className="min-h-screen bg-base-100 p-6">
-      {/* Breadcrumb */}
-      <div className="text-sm breadcrumbs mb-6">
-        <ul>
-          <li>
-            <a href="/dashboard" className="text-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                className="w-4 h-4 mr-2 stroke-current"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                ></path>
-              </svg>
-              Dashboard
-            </a>
-          </li>
-          <li className="flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="w-4 h-4 mr-2 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-              ></path>
-            </svg>
-            Call Logs
-          </li>
-        </ul>
-      </div>
+  // Handle double click on a row
+  const handleRowDoubleClick = (log: CallLog) => {
+    setSelectedLog(log);
+    setShowModal(true);
+  };
 
-      <div className="max-w-[1400px] mx-auto">
-        {/* Header Card */}
-        <div className="card bg-base-200 shadow-md mb-6">
+  // Get status badge for call end reason
+  const getStatusBadge = (reason: string) => {
+    if (reason === "caller-hung-up") {
+      return (
+        <div className="badge badge-success gap-1">
+          <CheckCircle2 size={12} />
+          {reason.replace(/-/g, " ")}
+        </div>
+      );
+    }
+    if (reason === "customer-ended-call") {
+      return (
+        <div className="badge badge-error gap-1">
+          <XCircle size={12} />
+          {reason.replace(/-/g, " ")}
+        </div>
+      );
+    }
+    return (
+      <div className="badge badge-info gap-1">
+        <Info size={12} />
+        {reason.replace(/-/g, " ")}
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-4 md:p-8">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        {/* Header with title only (removed breadcrumbs) */}
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
           <div className="card-body">
-            <div className="flex flex-col md:flex-row justify-between gap-4">
+            <div className="flex flex-col md:flex-row justify-between gap-6">
               <div>
-                <h1 className="card-title text-2xl mb-2">Call Logs</h1>
-                <p className="text-base-content/70">
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <PhoneCall className="h-6 w-6 text-primary" />
+                  Call Logs
+                </h1>
+                <p className="text-base-content/80 mt-1">
                   Track and analyze your voice assistant interactions
                 </p>
               </div>
 
-              {/* Stats */}
-              <div className="stats shadow-sm bg-base-300">
+              {/* Improved Stats */}
+              <div className="stats bg-base-200/60 shadow-md border border-base-200/30">
                 <div className="stat">
-                  <div className="stat-figure text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      className="inline-block w-8 h-8 stroke-current"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      ></path>
-                    </svg>
+                  <div className="flex items-center gap-2">
+                    <PhoneCall size={18} className="text-primary" />
+                    <div className="stat-title font-medium">Total Calls</div>
                   </div>
-                  <div className="stat-title">Total Calls</div>
-                  <div className="stat-value text-primary">
+                  <div className="stat-value text-primary text-center justify-center">
                     {callLogs.length}
                   </div>
                 </div>
                 <div className="stat">
-                  <div className="stat-figure text-secondary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      className="inline-block w-8 h-8 stroke-current"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
+                  <div className="flex items-center gap-2">
+                    <DollarSign size={18} className="text-success" />
+                    <div className="stat-title font-medium">Total Cost</div>
                   </div>
-                  <div className="stat-title">Total Cost</div>
-                  <div className="stat-value text-secondary">
-                    $
+                  <div className="stat-value text-success">
                     {callLogs
                       .reduce((sum, log) => sum + log.cost, 0)
                       .toFixed(2)}
@@ -206,75 +210,60 @@ const CallLogs = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="card bg-base-200 shadow-md mb-6">
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
           <div className="card-body">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="form-control grow max-w-xs">
-                <div className="input-group">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="form-control grow max-w-md">
+                <label className="input shadow-md bg-base-100/60 backdrop-blur-md flex items-center gap-2 px-3">
+                  <svg
+                    className="h-5 w-5 opacity-50"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <path d="m21 21-4.3-4.3"></path>
+                    </g>
+                  </svg>
                   <input
-                    type="text"
+                    type="text" // Changed from "search" to "text" to remove browser's native X button
                     placeholder="Search calls..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="input input-bordered focus:outline-primary w-full"
+                    className="grow bg-transparent border-none focus:outline-none w-full"
                   />
-                  <button className="btn btn-square btn-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  {searchQuery && (
+                    <button
+                      className="btn btn-ghost btn-sm px-2"
+                      onClick={() => setSearchQuery("")}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <label className="label">
-                  <span className="label-text">
-                    Search by ID, assistant, type or reason
-                  </span>
+                      <X size={16} />
+                    </button>
+                  )}
                 </label>
               </div>
 
-              {searchQuery && (
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setSearchQuery("")}
-                >
-                  Clear search
-                </button>
-              )}
-
               <div className="grow"></div>
 
-              {/* Call type filter */}
-              <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn btn-outline m-1">
+              {/* Call type filter with fixed z-index */}
+              <div className="dropdown dropdown-top z-50">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="btn btn-outline m-1 shadow-md"
+                >
+                  <Filter size={16} />
                   Filter by type
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5 ml-2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
-                    />
-                  </svg>
-                </label>
+                </div>
                 <ul
                   tabIndex={0}
-                  className="dropdown-content z-1 menu p-2 shadow-sm bg-base-200 rounded-box w-52"
+                  className="dropdown-content z-[100] menu p-2 shadow-lg bg-base-300/90 backdrop-blur-xl border border-base-200/40 rounded-box w-52"
                 >
                   <li>
                     <a>All Types</a>
@@ -294,42 +283,65 @@ const CallLogs = () => {
           </div>
         </div>
 
+        {/* Error display */}
+        {error && (
+          <div className="alert alert-error shadow-lg border border-error/30">
+            <AlertTriangle size={18} />
+            <div>
+              <h3 className="font-bold">Error</h3>
+              <div className="text-xs">{error}</div>
+            </div>
+            <button
+              className="btn btn-sm btn-circle btn-ghost ml-auto"
+              onClick={() => setError(null)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Table Card */}
-        <div className="card bg-base-200 shadow-md overflow-hidden">
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
           <div className="card-body p-0">
+            <div className="alert alert-info bg-info/10 border-info/30 rounded-none">
+              <Info size={18} />
+              <span>Double-click on any row to view detailed information</span>
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="table table-zebra table-compact w-full">
+              <table className="table table-zebra w-full">
                 <thead>
-                  <tr className="bg-base-300">
-                    <th className="text-base-content/80 font-semibold">Type</th>
-                    <th className="text-base-content/80 font-semibold">
+                  <tr className="bg-primary/20">
+                    <th className="text-base-content/90 font-semibold text-center">
+                      Type
+                    </th>
+                    <th className="text-base-content/90 font-semibold text-center">
                       Call ID
                     </th>
-                    <th className="text-base-content/80 font-semibold">Cost</th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
+                      Cost
+                    </th>
+                    <th className="text-base-content/90 font-semibold text-center">
                       Ended Reason
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Assistant
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Phone Number
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Start Time
                     </th>
-                    <th className="text-base-content/80 font-semibold">
+                    <th className="text-base-content/90 font-semibold text-center">
                       Duration
-                    </th>
-                    <th className="text-base-content/80 font-semibold">
-                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-12">
+                      <td colSpan={8} className="text-center py-12">
                         <div className="flex flex-col items-center justify-center">
                           <span className="loading loading-spinner loading-lg text-primary mb-2"></span>
                           <span className="text-base-content/70">
@@ -338,74 +350,42 @@ const CallLogs = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : error ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-12">
-                        <div className="alert alert-error max-w-md mx-auto shadow-lg">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="stroke-current shrink-0 h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <div>
-                            <h3 className="font-bold">Error</h3>
-                            <div className="text-xs">{error}</div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
                   ) : paginatedLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-16">
+                      <td colSpan={8} className="text-center py-16">
                         <div className="flex flex-col items-center justify-center">
-                          <div className="mb-4">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="w-16 h-16 text-base-content/30"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1"
-                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1"
-                                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5"
-                              />
-                            </svg>
+                          <div className="avatar avatar-placeholder mb-4">
+                            <div className="bg-primary/10 text-primary rounded-full w-24 h-24 flex items-center justify-center">
+                              <PhoneCall size={36} className="opacity-50" />
+                              <X size={28} className="absolute opacity-70" />
+                            </div>
                           </div>
-                          <h3 className="text-lg font-semibold text-base-content/70">
+                          <h3 className="text-lg font-semibold text-base-content/80">
                             No call logs found
                           </h3>
                           {searchQuery && (
-                            <p className="text-base-content/50 mt-1">
-                              Try changing your search query
-                            </p>
+                            <button
+                              className="btn btn-sm btn-ghost btn-outline mt-4"
+                              onClick={() => setSearchQuery("")}
+                            >
+                              <X size={14} className="mr-1" />
+                              Clear search filters
+                            </button>
                           )}
                         </div>
                       </td>
                     </tr>
                   ) : (
                     paginatedLogs.map((log) => (
-                      <tr key={log.id} className="hover">
+                      <tr
+                        key={log.id}
+                        className="hover backdrop-blur-sm cursor-pointer"
+                        onDoubleClick={() => handleRowDoubleClick(log)}
+                      >
                         <td>
                           <div
                             className={`
-                            badge 
+                            badge shadow-sm
                             ${log.type === "webCall" ? "badge-info" : ""}
                             ${log.type === "inbound" ? "badge-success" : ""}
                             ${log.type === "outbound" ? "badge-warning" : ""}
@@ -426,66 +406,56 @@ const CallLogs = () => {
                             <span className="truncate max-w-[100px]">
                               {log.id}
                             </span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(log.id);
-                                // Optional: Show a tooltip or toast for feedback
-                              }}
-                              className="btn btn-ghost btn-xs"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                            <div className="tooltip" data-tip="Copy ID">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyToClipboard(log.id);
+                                }}
+                                className="btn btn-ghost btn-xs"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </button>
+                                {copied === log.id ? (
+                                  <span className="text-success text-xs flex items-center">
+                                    Copied!
+                                  </span>
+                                ) : (
+                                  <Copy size={14} />
+                                )}
+                              </button>
+                            </div>
                           </div>
                         </td>
                         <td>
-                          <div className="font-mono">
+                          <div className="font-mono text-success">
                             ${log.cost.toFixed(2)}
                           </div>
                         </td>
                         <td>
-                          <div
+                          <span
                             className={`
-                            badge badge-outline
                             ${
                               log.endedReason === "caller-hung-up"
-                                ? "badge-success"
+                                ? "text-success"
                                 : ""
                             }
                             ${
                               log.endedReason === "disconnected"
-                                ? "badge-error"
+                                ? "text-error"
                                 : ""
                             }
                             ${
-                              log.endedReason === "completed"
-                                ? "badge-info"
-                                : ""
+                              log.endedReason === "completed" ? "text-info" : ""
                             }
+                            font-medium
                           `}
                           >
                             {log.endedReason.replace(/-/g, " ")}
-                          </div>
+                          </span>
                         </td>
                         <td>
                           {log.assistantId ? (
-                            <div
-                              className="tooltip"
-                              data-tip="View assistant details"
-                            >
-                              <button className="btn btn-ghost btn-xs">
+                            <div className="tooltip" data-tip={log.assistantId}>
+                              <button className="btn btn-ghost btn-xs btn-outline bg-base-200/40">
                                 {log.assistantId.substring(0, 8)}...
                               </button>
                             </div>
@@ -494,54 +464,30 @@ const CallLogs = () => {
                           )}
                         </td>
                         <td>
-                          <span className="text-base-content/50">N/A</span>
+                          <span className="text-base-content/60">N/A</span>
                         </td>
                         <td>
                           <div
                             className="tooltip"
                             data-tip={new Date(log.startedAt).toLocaleString()}
                           >
-                            {new Date(log.startedAt).toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            <div className="flex items-center gap-1">
+                              <Clock
+                                size={14}
+                                className="text-base-content/60"
+                              />
+                              {new Date(log.startedAt).toLocaleString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
                           </div>
                         </td>
                         <td>
-                          <div className="font-mono">
+                          <div className="font-mono badge badge-ghost badge-sm text-nowrap">
                             {getCallDuration(log.startedAt, log.endedAt)}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="dropdown dropdown-left dropdown-hover">
-                            <button className="btn btn-square btn-ghost btn-xs">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                className="w-4 h-4 stroke-current"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-                                ></path>
-                              </svg>
-                            </button>
-                            <ul className="dropdown-content z-1 menu p-2 shadow-sm bg-base-200 rounded-box w-32">
-                              <li>
-                                <a>View Details</a>
-                              </li>
-                              <li>
-                                <a>Download Recording</a>
-                              </li>
-                              <li>
-                                <a>View Transcript</a>
-                              </li>
-                            </ul>
                           </div>
                         </td>
                       </tr>
@@ -552,8 +498,8 @@ const CallLogs = () => {
             </div>
 
             {/* Pagination */}
-            {!loading && !error && paginatedLogs.length > 0 && (
-              <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-base-300">
+            {!loading && paginatedLogs.length > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-primary/10">
                 <span className="text-base-content/70 pb-4 sm:pb-0">
                   Showing{" "}
                   {Math.min(
@@ -564,7 +510,7 @@ const CallLogs = () => {
                   {filteredLogs.length} calls
                 </span>
 
-                <div className="join">
+                <div className="join shadow-md">
                   <button
                     className="join-item btn btn-sm"
                     onClick={() => setCurrentPage(1)}
@@ -584,7 +530,7 @@ const CallLogs = () => {
                     <button
                       key={page}
                       className={`join-item btn btn-sm ${
-                        currentPage === page ? "btn-active" : ""
+                        currentPage === page ? "btn-primary" : ""
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >
@@ -612,6 +558,293 @@ const CallLogs = () => {
           </div>
         </div>
       </div>
+
+      {/* Call Details Modal with Better Layout */}
+      {showModal && selectedLog && (
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/95 backdrop-blur-xl border-2 border-primary/30 shadow-xl max-w-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <PhoneCall className="text-primary" size={18} />
+                <h2 className="font-bold text-lg">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`
+                  badge badge-sm shadow-sm
+                  ${selectedLog.type === "webCall" ? "badge-info" : ""}
+                  ${selectedLog.type === "inbound" ? "badge-success" : ""}
+                  ${selectedLog.type === "outbound" ? "badge-warning" : ""}
+                  ${
+                    !["webCall", "inbound", "outbound"].includes(
+                      selectedLog.type
+                    )
+                      ? "badge-ghost"
+                      : ""
+                  }
+                `}
+                    >
+                      {selectedLog.type === "webCall"
+                        ? "Web"
+                        : selectedLog.type}
+                    </div>
+                    Call Details
+                  </div>
+                </h2>
+              </div>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedLog(null);
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Main Content */}
+            <div className="space-y-4">
+              {/* Summary Card */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Duration */}
+                    <div className="flex flex-col">
+                      <span className="text-xs text-base-content/70">
+                        Duration
+                      </span>
+                      <div className="font-medium flex items-center">
+                        <Clock
+                          size={12}
+                          className="mr-1 text-base-content/70"
+                        />
+                        {getCallDuration(
+                          selectedLog.startedAt,
+                          selectedLog.endedAt
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="flex flex-col">
+                      <span className="text-xs text-base-content/70">
+                        Start Time
+                      </span>
+                      <div className="font-medium">
+                        {new Date(selectedLog.startedAt).toLocaleDateString()}{" "}
+                        <span className="text-xs opacity-70">
+                          {new Date(selectedLog.startedAt).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cost */}
+                    <div className="flex flex-col">
+                      <span className="text-xs text-base-content/70">Cost</span>
+                      <div className="font-medium text-success">
+                        ${selectedLog.cost.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status - Full width */}
+                  <div className="mt-3 pt-3 border-t border-base-300/50">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-base-content/70">
+                        Status
+                      </span>
+                      <span
+                        className={`
+                          font-medium ${
+                            selectedLog.endedReason === "caller-hung-up"
+                              ? "text-success"
+                              : selectedLog.endedReason === "disconnected"
+                              ? "text-error"
+                              : "text-info"
+                          }
+                        `}
+                      >
+                        {selectedLog.endedReason.replace(/-/g, " ")}
+                      </span>
+                    </div>
+                    <div className="w-full bg-base-100/30 h-2 rounded-full mt-2 overflow-hidden">
+                      <div
+                        className={`h-full ${
+                          selectedLog.endedReason === "caller-hung-up"
+                            ? "bg-success"
+                            : selectedLog.endedReason === "disconnected"
+                            ? "bg-error"
+                            : "bg-info"
+                        }`}
+                        style={{ width: "100%" }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Details */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <h3 className="text-sm font-medium mb-2">
+                    Technical Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Call ID */}
+                    <div className="bg-base-100/20 p-2 rounded-lg">
+                      <div className="text-xs text-base-content/70 flex items-center gap-1 mb-1">
+                        <Info size={12} />
+                        Call ID
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-mono text-xs truncate max-w-[85%]">
+                          {selectedLog.id}
+                        </div>
+                        <div
+                          className="tooltip tooltip-left"
+                          data-tip="Copy to clipboard"
+                        >
+                          <button
+                            onClick={() => copyToClipboard(selectedLog.id)}
+                            className="btn btn-ghost btn-xs h-6 min-h-0 px-1"
+                          >
+                            {copied === selectedLog.id ? (
+                              <CheckCircle2
+                                size={14}
+                                className="text-success"
+                              />
+                            ) : (
+                              <Copy size={14} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Assistant */}
+                    <div className="bg-base-100/20 p-2 rounded-lg">
+                      <div className="text-xs text-base-content/70 flex items-center gap-1 mb-1">
+                        <User size={12} />
+                        Assistant
+                      </div>
+                      <div className="flex items-center justify-between">
+                        {selectedLog.assistantId ? (
+                          <>
+                            <div className="font-mono text-xs truncate max-w-[85%]">
+                              {selectedLog.assistantId}
+                            </div>
+                            <div
+                              className="tooltip tooltip-left"
+                              data-tip="View details"
+                            >
+                              <button className="btn btn-ghost btn-xs h-6 min-h-0 px-1">
+                                <ExternalLink size={14} />
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-base-content/50">
+                            Not available
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
+                    <Clock size={12} />
+                    Call Timeline
+                  </h3>
+
+                  <ul className="timeline timeline-vertical timeline-compact timeline-snap-icon">
+                    <li>
+                      <div className="timeline-middle">
+                        <div className="badge badge-xs badge-primary"></div>
+                      </div>
+                      <div className="timeline-start text-xs text-right mr-4">
+                        {new Date(selectedLog.startedAt).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </div>
+                      <div className="timeline-end text-xs ml-4">
+                        <span className="font-medium">Call Started</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="timeline-middle">
+                        <div className="badge badge-xs badge-secondary"></div>
+                      </div>
+                      <div className="timeline-start text-xs text-right mr-4">
+                        {new Date(selectedLog.endedAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                      <div className="timeline-end text-xs ml-4">
+                        <span className="font-medium">Call Ended</span>
+                        <div className="text-2xs opacity-70">
+                          {selectedLog.endedReason.replace(/-/g, " ")}
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="card bg-base-200/30 shadow-sm">
+                <div className="card-body p-3">
+                  <h3 className="text-sm font-medium mb-2">
+                    Available Actions
+                  </h3>
+                  <div className="join join-horizontal w-full">
+                    <button className="join-item btn btn-sm flex-1">
+                      <FileAudio size={14} />
+                      Recording
+                    </button>
+                    <button className="join-item btn btn-sm flex-1">
+                      <MessageSquare size={14} />
+                      Transcript
+                    </button>
+                    <button className="join-item btn btn-sm flex-1">
+                      <DownloadIcon size={14} />
+                      Export
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal backdrop */}
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => {
+              setShowModal(false);
+              setSelectedLog(null);
+            }}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
     </div>
   );
 };

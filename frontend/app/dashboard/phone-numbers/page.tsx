@@ -13,6 +13,7 @@ import {
   LayoutGrid,
   List,
   X,
+  Info,
 } from "lucide-react";
 import { BASE_URL } from "../../utils/constants";
 
@@ -142,77 +143,80 @@ export default function PhoneNumberManager() {
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {phoneNumbers.map((phone) => (
-        <div key={phone.id} className="card bg-base-100 shadow-xl">
-          <div className="card-body p-0">
-            {/* Header section */}
-            <div className="bg-base-300/30 p-4 rounded-t-xl">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="card-title text-lg">{phone.number}</h2>
-                  <p className="text-sm text-base-content/70">{phone.name}</p>
+        <div
+          key={phone.id}
+          className="card bg-base-300/80 border-2 border-primary/30 shadow-lg flex flex-col m-2"
+        >
+          {/* Header section */}
+          <div className="bg-primary/10 p-4 rounded-t-lg border-b border-base-200/30">
+            <div className="flex items-center gap-3">
+              <div className="avatar avatar-placeholder">
+                <div className="bg-primary/20 text-primary rounded-full w-12">
+                  <Phone size={20} />
                 </div>
-                <button
-                  onClick={() => handleDelete(phone.id)}
-                  className="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
-                >
-                  <Trash2 size={16} />
-                </button>
               </div>
-
-              <div className="mt-3 flex items-center gap-2 bg-base-300/50 rounded-md px-3 py-2 text-sm overflow-hidden">
-                <span className="truncate text-xs text-base-content/70">
-                  {phone.id}
-                </span>
-                <button
-                  className="btn btn-ghost btn-xs hover:bg-base-300 ml-auto"
-                  onClick={() => copyToClipboard(phone.id)}
-                >
-                  {copiedId === phone.id ? (
-                    <span className="text-success text-xs flex items-center">
-                      <span className="mr-1">Copied!</span>
-                      <Check size={14} />
-                    </span>
-                  ) : (
-                    <Copy size={14} />
-                  )}
-                </button>
+              <div className="flex-1">
+                <h2 className="card-title text-lg">{phone.number}</h2>
+                <p className="text-sm text-base-content/70">{phone.name}</p>
               </div>
             </div>
 
-            {/* Inbound settings */}
-            <div className="p-4">
-              <h3 className="font-medium mb-2">Inbound Settings</h3>
-              <p className="text-xs text-base-content/70 mb-4">
-                Assign an assistant to this phone number to handle incoming
-                calls.
-              </p>
+            <div className="mt-3 flex items-center gap-2 bg-base-200/60 rounded-md px-3 py-2 text-sm overflow-hidden shadow-sm">
+              <span className="truncate text-xs text-base-content/70">
+                {phone.id}
+              </span>
+              <button
+                className="btn btn-ghost btn-xs hover:bg-base-300/50 ml-auto"
+                onClick={() => copyToClipboard(phone.id)}
+              >
+                {copiedId === phone.id ? (
+                  <span className="text-success text-xs flex items-center">
+                    <span className="mr-1">Copied!</span>
+                    <Check size={14} />
+                  </span>
+                ) : (
+                  <Copy size={14} />
+                )}
+              </button>
+            </div>
+          </div>
 
-              <div className="space-y-3">
-                {/* Phone number display */}
-                <div>
-                  <label className="label label-text text-xs py-0">
-                    Inbound Phone Number
-                  </label>
-                  <div className="flex rounded-md overflow-hidden border border-base-300 mt-1">
-                    <div className="px-3 py-2 bg-base-200 border-r border-base-300">
-                      🇺🇸
-                    </div>
-                    <input
-                      value={phone.number}
-                      disabled
-                      className="flex-1 input input-sm input-bordered rounded-none bg-base-100/50 border-0"
-                    />
-                    <div className="px-3 py-2 text-success">✓</div>
+          {/* Card body with settings - flex-1 ensures equal height */}
+          <div className="card-body p-5 flex-1">
+            <h3 className="font-medium text-base-content">Inbound Settings</h3>
+            <p className="text-xs text-base-content/70 mb-4">
+              Assign an assistant to this phone number to handle incoming calls.
+            </p>
+
+            <div className="space-y-4 flex-1">
+              {/* Phone number display */}
+              <div>
+                <label className="label label-text text-xs py-0">
+                  Inbound Phone Number
+                </label>
+                <div className="join w-full mt-1 shadow-sm">
+                  <div className="join-item flex items-center px-3 bg-base-200/80 h-8">
+                    🇺🇸
+                  </div>
+                  <input
+                    value={phone.number}
+                    disabled
+                    className="join-item input input-sm h-8 flex-1 bg-base-100/60"
+                  />
+                  <div className="join-item flex items-center px-3 bg-base-200/80 text-success h-8">
+                    <Check size={14} />
                   </div>
                 </div>
+              </div>
 
-                {/* Assistant selector */}
-                <div>
-                  <label className="label label-text text-xs py-0">
-                    Assistant
-                  </label>
+              {/* Assistant selector */}
+              <div>
+                <label className="label label-text text-xs py-0">
+                  Assistant
+                </label>
+                <div className="join w-full mt-1 shadow-sm">
                   <select
-                    className="select select-bordered select-sm w-full mt-1"
+                    className="select select-sm h-8 w-full bg-base-100/90 border border-base-200/50"
                     value={phone.assistantId}
                     onChange={(e) =>
                       handleAssistantChange(phone.id, e.target.value)
@@ -228,61 +232,69 @@ export default function PhoneNumberManager() {
                     ))}
                   </select>
                 </div>
+              </div>
 
-                {/* Squad section */}
-                <div>
-                  <label className="label label-text text-xs py-0">Squad</label>
-                  <div className="alert alert-warning mt-1 py-2 text-xs">
-                    <AlertTriangle size={14} />
-                    <span>
-                      No squads available.{" "}
-                      <a className="link link-primary">Create a squad</a> to
-                      enable this feature.
-                    </span>
-                  </div>
+              {/* Squad section */}
+              <div>
+                <label className="label label-text text-xs py-0">Squad</label>
+                <div className="alert alert-warning bg-warning/10 border-warning/30 mt-1 py-2 text-xs shadow-sm">
+                  <AlertTriangle size={14} />
+                  <span>
+                    No squads available.{" "}
+                    <a className="link link-primary">Create a squad</a> to
+                    enable this feature.
+                  </span>
                 </div>
+              </div>
 
-                {/* Fallback destination */}
-                <div>
-                  <label className="label label-text text-xs py-0">
-                    Fallback Destination
-                    <span className="label-text-alt text-xs text-base-content/60">
-                      Optional
-                    </span>
-                  </label>
-                  <div className="flex rounded-md overflow-hidden border border-base-300 mt-1">
-                    <div className="dropdown dropdown-hover">
-                      <div
-                        tabIndex={0}
-                        role="button"
-                        className="px-3 py-2 bg-base-200 border-r border-base-300 flex items-center"
-                      >
-                        <span className="mr-1">🇺🇸</span>
-                        <ChevronDown size={14} />
-                      </div>
-                      <ul
-                        tabIndex={0}
-                        className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-                      >
-                        <li>
-                          <a>🇺🇸 United States</a>
-                        </li>
-                        <li>
-                          <a>🇬🇧 United Kingdom</a>
-                        </li>
-                        <li>
-                          <a>🇨🇦 Canada</a>
-                        </li>
-                      </ul>
+              {/* Fallback destination */}
+              <div>
+                <label className="label label-text text-xs py-0">
+                  Fallback Destination
+                  <span className="label-text-alt text-xs text-base-content/60">
+                    Optional
+                  </span>
+                </label>
+                <div className="join w-full mt-1 shadow-sm">
+                  <div className="dropdown dropdown-hover">
+                    <div
+                      tabIndex={0}
+                      role="button"
+                      className="join-item flex items-center px-3 bg-base-200/80 h-8"
+                    >
+                      <span className="mr-1">🇺🇸</span>
+                      <ChevronDown size={14} />
                     </div>
-                    <input
-                      placeholder="Enter a phone number"
-                      className="flex-1 input input-sm input-bordered rounded-none bg-base-100/50 border-0"
-                    />
+                    <ul
+                      tabIndex={0}
+                      className="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100/90 border border-base-200/60 rounded-box w-52"
+                    >
+                      <li>
+                        <a>🇺🇸 United States</a>
+                      </li>
+                      <li>
+                        <a>🇬🇧 United Kingdom</a>
+                      </li>
+                      <li>
+                        <a>🇨🇦 Canada</a>
+                      </li>
+                    </ul>
                   </div>
+                  <input
+                    placeholder="Enter a phone number"
+                    className="join-item input input-sm h-8 flex-1 bg-base-100/60"
+                  />
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Card Actions - always at bottom */}
+          <div className="card-actions justify-end p-4 border-t border-base-100/20 mt-auto">
+            <button className="btn btn-sm btn-error btn-outline gap-1">
+              <Trash2 size={14} />
+              Delete Number
+            </button>
           </div>
         </div>
       ))}
@@ -294,26 +306,34 @@ export default function PhoneNumberManager() {
     <div className="overflow-x-auto">
       <table className="table table-zebra w-full">
         <thead>
-          <tr>
-            <th>Phone Number</th>
-            <th>Name</th>
-            <th>Assistant</th>
-            <th>Actions</th>
+          <tr className="bg-primary/20">
+            <th className="text-base-content/90 font-semibold text-center">
+              Phone Number
+            </th>
+            <th className="text-base-content/90 font-semibold text-center">
+              Name
+            </th>
+            <th className="text-base-content/90 font-semibold text-center">
+              Assistant
+            </th>
+            <th className="text-base-content/90 font-semibold text-center">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
           {phoneNumbers.map((phone) => (
-            <tr key={phone.id} className="hover">
-              <td>
-                <div className="flex items-center gap-2">
+            <tr key={phone.id} className="hover backdrop-blur-sm">
+              <td className="text-center">
+                <div className="flex items-center gap-2 justify-center">
                   <div className="badge badge-sm">🇺🇸</div>
-                  <span>{phone.number}</span>
+                  <span className="font-medium">{phone.number}</span>
                 </div>
               </td>
-              <td>{phone.name}</td>
-              <td>
+              <td className="text-center">{phone.name}</td>
+              <td className="text-center">
                 <select
-                  className="select select-bordered select-xs w-full max-w-xs"
+                  className="select select-bordered select-xs w-full max-w-xs bg-base-100/70"
                   value={phone.assistantId}
                   onChange={(e) =>
                     handleAssistantChange(phone.id, e.target.value)
@@ -329,8 +349,8 @@ export default function PhoneNumberManager() {
                   ))}
                 </select>
               </td>
-              <td>
-                <div className="flex gap-2">
+              <td className="text-center">
+                <div className="flex gap-2 justify-center">
                   <button
                     className="btn btn-ghost btn-xs tooltip"
                     data-tip="Copy ID"
@@ -359,128 +379,188 @@ export default function PhoneNumberManager() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-base-200 p-8 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-base-200 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header with view toggle */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-          <h1 className="text-2xl font-bold">Phone Numbers</h1>
-          <div className="flex gap-2">
-            <div className="join mr-2">
-              <button
-                className={`join-item btn btn-sm ${
-                  viewMode === "grid" ? "btn-active" : ""
-                }`}
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                className={`join-item btn btn-sm ${
-                  viewMode === "list" ? "btn-active" : ""
-                }`}
-                onClick={() => setViewMode("list")}
-              >
-                <List size={16} />
-              </button>
+    <div className="p-4 md:p-8">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        {/* Header with title and stats */}
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
+          <div className="card-body">
+            <div className="flex flex-col md:flex-row justify-between gap-6">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Phone className="h-6 w-6 text-primary" />
+                  Phone Numbers
+                </h1>
+                <p className="text-base-content/80 mt-1">
+                  Manage phone numbers for your AI voice assistants
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="stats bg-base-200/60 shadow-md border border-base-200/30">
+                <div className="stat">
+                  <div className="flex items-center gap-2">
+                    <Phone size={18} className="text-primary" />
+                    <div className="stat-title font-medium">Total Numbers</div>
+                  </div>
+                  <div className="stat-value text-primary text-center">
+                    {phoneNumbers.length}
+                  </div>
+                </div>
+              </div>
             </div>
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="btn btn-primary btn-sm"
-            >
-              <Plus size={16} />
-              Import Number
-            </button>
           </div>
         </div>
 
+        {/* Action bar */}
+        <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
+          <div className="card-body">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="grow"></div>
+
+              <div className="join mr-2 shadow-sm">
+                <button
+                  className={`join-item btn btn-sm ${
+                    viewMode === "grid" ? "btn-primary" : "btn-ghost"
+                  }`}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid size={16} />
+                </button>
+                <button
+                  className={`join-item btn btn-sm ${
+                    viewMode === "list" ? "btn-primary" : "btn-ghost"
+                  }`}
+                  onClick={() => setViewMode("list")}
+                >
+                  <List size={16} />
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="btn btn-primary btn-sm"
+              >
+                <Plus size={16} />
+                Import Number
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Error display */}
         {error && (
-          <div className="alert alert-error mb-6">
+          <div className="alert alert-error shadow-lg border border-error/30">
             <AlertTriangle size={18} />
-            <span>{error}</span>
+            <div>
+              <h3 className="font-bold">Error</h3>
+              <div className="text-xs">{error}</div>
+            </div>
             <button
-              onClick={() => setError(null)}
               className="btn btn-sm btn-circle btn-ghost ml-auto"
+              onClick={() => setError(null)}
             >
               <X size={16} />
             </button>
           </div>
         )}
 
-        {phoneNumbers.length === 0 && !isLoading ? (
-          // Empty state
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body items-center text-center p-8">
-              <div className="avatar placeholder mb-4">
-                <div className="bg-base-300 text-base-content rounded-full w-24">
-                  <span className="text-3xl">
-                    <Phone size={36} />
+        {/* Phone Numbers content */}
+        <div className="card bg-base-200/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
+          <div className="card-body p-0">
+            <div className="alert alert-info bg-info/10 border-info/30 rounded-none">
+              <Info size={18} />
+              <span>
+                Connect phone numbers to your AI assistants to enable voice
+                communication
+              </span>
+            </div>
+
+            {phoneNumbers.length === 0 ? (
+              // Empty state
+              <div className="card-body items-center text-center py-16">
+                <div className="avatar avatar-placeholder">
+                  <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center shadow-md">
+                    <Phone className="w-12 h-12 text-primary" />
+                  </div>
+                </div>
+                <h2 className="card-title text-2xl mt-6 mb-2">
+                  No Phone Numbers Yet
+                </h2>
+                <p className="text-base-content/70 max-w-md mb-8">
+                  Assistants are able to be connected to phone numbers for
+                  calls. You can import from Twilio, vonage, or buy one directly
+                  for use with your assistants.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => setShowImportModal(true)}
+                    className="btn btn-primary"
+                  >
+                    <Plus size={16} />
+                    Import Number
+                  </button>
+                  <button className="btn btn-ghost">
+                    <ExternalLink size={16} />
+                    Documentation
+                  </button>
+                </div>
+                <div className="alert alert-warning bg-warning/10 border-warning/30 mt-8 text-sm shadow-md">
+                  <AlertTriangle size={16} />
+                  <span>
+                    Please add{" "}
+                    <a href="#" className="link link-primary font-medium">
+                      Card Details
+                    </a>{" "}
+                    to Buy a Number
                   </span>
                 </div>
               </div>
-              <h2 className="card-title text-2xl mb-2">No Phone Numbers Yet</h2>
-              <p className="mb-6 text-base-content/70 max-w-md">
-                Assistants are able to be connected to phone numbers for calls.
-                You can import from Twilio, vonage, or buy one directly for use
-                with your assistants.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="btn btn-primary"
-                >
-                  <Plus size={16} />
-                  Import Number
-                </button>
-                <button className="btn btn-ghost">
-                  <ExternalLink size={16} />
-                  Documentation
-                </button>
+            ) : (
+              // Phone numbers list
+              <div className="p-0">
+                {viewMode === "grid" ? renderGridView() : renderListView()}
               </div>
-              <div className="alert alert-warning mt-6 text-sm">
-                <AlertTriangle size={16} />
-                <span>
-                  Please add{" "}
-                  <a href="#" className="link link-hover">
-                    Card Details
-                  </a>{" "}
-                  to Buy a Number
-                </span>
-              </div>
-            </div>
+            )}
           </div>
-        ) : (
-          // Phone numbers with toggle view
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body p-4">
-              {viewMode === "grid" ? renderGridView() : renderListView()}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Import Modal with DaisyUI */}
       {showImportModal && (
-        <div className="modal modal-open">
-          <div className="modal-box bg-base-100">
-            <h3 className="font-bold text-xl flex items-center gap-2">
-              <Phone size={20} />
-              Import Phone Number
-            </h3>
-            <p className="py-2 text-sm text-base-content/70">
-              Import your phone number from Twilio
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/95 backdrop-blur-xl border-2 border-primary/30 shadow-xl max-w-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Phone className="text-primary" size={18} />
+                <h2 className="font-bold text-lg">Import Phone Number</h2>
+              </div>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setShowImportModal(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-base-content/70 mb-4">
+              Import your existing phone number from Twilio to use with your AI
+              assistants
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Twilio Phone Number</span>
+                  <span className="label-text font-medium">
+                    Twilio Phone Number
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
                 </label>
                 <input
                   type="text"
@@ -491,11 +571,19 @@ export default function PhoneNumberManager() {
                   placeholder="+14156021922"
                   required
                 />
+                <label className="label">
+                  <span className="label-text-alt text-base-content/70">
+                    Enter the full phone number including country code
+                  </span>
+                </label>
               </div>
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Twilio Account SID</span>
+                  <span className="label-text font-medium">
+                    Twilio Account SID
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
                 </label>
                 <input
                   type="text"
@@ -510,7 +598,10 @@ export default function PhoneNumberManager() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Twilio Auth Token</span>
+                  <span className="label-text font-medium">
+                    Twilio Auth Token
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
                 </label>
                 <input
                   type="password"
@@ -525,7 +616,8 @@ export default function PhoneNumberManager() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Label</span>
+                  <span className="label-text font-medium">Label</span>
+                  <span className="label-text-alt text-error">Required</span>
                 </label>
                 <input
                   type="text"
@@ -536,19 +628,26 @@ export default function PhoneNumberManager() {
                   placeholder="Sales Line"
                   required
                 />
+                <label className="label">
+                  <span className="label-text-alt text-base-content/70">
+                    A friendly name to identify this phone number
+                  </span>
+                </label>
               </div>
 
-              <div className="modal-action">
+              <div className="divider my-2"></div>
+
+              <div className="flex justify-end items-center mt-4">
                 <button
                   type="button"
                   onClick={() => setShowImportModal(false)}
-                  className="btn"
+                  className="btn btn-ghost btn-sm mr-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -560,11 +659,12 @@ export default function PhoneNumberManager() {
               </div>
             </form>
           </div>
-          <div
-            className="modal-backdrop"
-            onClick={() => setShowImportModal(false)}
-          ></div>
-        </div>
+
+          {/* Modal backdrop */}
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowImportModal(false)}>close</button>
+          </form>
+        </dialog>
       )}
     </div>
   );

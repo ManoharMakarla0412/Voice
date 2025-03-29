@@ -91,7 +91,7 @@ function LoginPageContent() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <div className="card bg-gray-800/45 shadow-xl">
+        <div className="card bg-base-100/40 backdrop-blur-md border-primary/30 hover:border-primary/60 transition-all shadow-xl">
           <div className="card-body p-5">
             {/* Logo Section */}
             <div className="flex justify-center mb-3">
