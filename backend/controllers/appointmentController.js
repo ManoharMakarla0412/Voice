@@ -1,6 +1,7 @@
 const moment = require('moment');
 const Appointment = require('../models/appointmentModel');
 const { google } = require('googleapis');
+const fs = require('fs'); // For persisting tokens (optional)
 
 // Google OAuth setup
 const oAuth2Client = new google.auth.OAuth2(
@@ -8,20 +9,37 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_SECRET,
   'https://osaw.in/v1/voice/oauth2callback'
 );
+
+// Set initial credentials from environment variables
 oAuth2Client.setCredentials({
   access_token: process.env.GOOGLE_ACCESS_TOKEN,
   refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
 });
-// Handle token refresh
+
+// Handle token refresh and persist new tokens
 oAuth2Client.on('tokens', (tokens) => {
-  if (tokens.refresh_token) process.env.GOOGLE_REFRESH_TOKEN = tokens.refresh_token;
+  console.log('New tokens received:', tokens);
   process.env.GOOGLE_ACCESS_TOKEN = tokens.access_token;
-  console.log('Tokens refreshed:', tokens);
+  if (tokens.refresh_token) process.env.GOOGLE_REFRESH_TOKEN = tokens.refresh_token;
+  // Persist tokens to a file (optional, exclude from Git)
+  try {
+    fs.writeFileSync('/home/azureuser/Voice/backend/tokens.json', JSON.stringify(tokens, null, 2));
+    console.log('Tokens saved to tokens.json');
+  } catch (err) {
+    console.error('Failed to save tokens:', err);
+  }
 });
+
 const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
 
 exports.createAppointment = async (req, res) => {
   console.log("Received Request:", JSON.stringify(req.body, null, 2));
+  console.log('OAuth2 Credentials:', {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    accessToken: process.env.GOOGLE_ACCESS_TOKEN,
+    refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+  });
 
   try {
     const { message } = req.body;
@@ -93,7 +111,7 @@ exports.createAppointment = async (req, res) => {
       summary: `${savedAppointment.fullName} - ${savedAppointment.problem}`,
       start: {
         dateTime: savedAppointment.appointmentDateTime.toISOString(),
-        timeZone: 'Asia/Kolkata', // Adjusted to local timezone
+        timeZone: 'Asia/Kolkata', // Adjust to your timezone
       },
       end: {
         dateTime: new Date(savedAppointment.appointmentDateTime.getTime() + savedAppointment.duration * 60000).toISOString(),
