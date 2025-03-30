@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
   registrationDate: { type: Date, default: Date.now }, // When the user registered
   billingCycleDays: { type: Number, default: 30 }, // Default to 30, updated based on billing
   lastBillingDate: { type: Date }, // Track the last billing date
+  subscriptionId: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
 });
 
 const User = mongoose.model("User", userSchema);

@@ -2,31 +2,17 @@
 
 import { useEffect, useState } from "react";
 import {
-  Loader2,
   TrendingUp,
-  TrendingDown,
   Clock,
-  User,
   Phone,
-  Calendar,
   CheckCircle,
-  XCircle,
-  Timer,
   Smile,
   BarChart3,
-  PieChart,
-  Activity,
-  Users,
-  CalendarCheck,
-  MessageSquare,
-  BrainCircuit,
   Save,
   BarChart,
   PhoneCall,
-  PhoneMissed,
-  HelpCircle,
 } from "lucide-react";
-import { Line, Pie, Bar, Doughnut } from "react-chartjs-2";
+import { Line, Pie, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -88,32 +74,6 @@ const numberOfCallsData = {
   ],
 };
 
-// Call Types Breakdown
-const callTypesData = {
-  labels: [
-    "Appointment Booking",
-    "Rescheduling",
-    "Cancellation",
-    "General Inquiry",
-    "Emergency",
-    "Follow-up",
-  ],
-  datasets: [
-    {
-      data: [40, 20, 10, 15, 5, 10],
-      backgroundColor: [
-        "rgba(16, 185, 129, 0.8)",
-        "rgba(59, 130, 246, 0.8)",
-        "rgba(249, 115, 22, 0.8)",
-        "rgba(168, 85, 247, 0.8)",
-        "rgba(236, 72, 153, 0.8)",
-        "rgba(245, 158, 11, 0.8)",
-      ],
-      borderWidth: 0,
-    },
-  ],
-};
-
 // Time Saved Data
 const timeSavedData = {
   labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
@@ -125,22 +85,6 @@ const timeSavedData = {
       backgroundColor: "rgba(16, 185, 129, 0.2)",
       fill: true,
       tension: 0.4,
-    },
-  ],
-};
-
-// AI Resolution Rate
-const aiResolutionData = {
-  labels: ["Resolved by AI", "Transferred to Human", "Follow-up Required"],
-  datasets: [
-    {
-      data: [75, 15, 10],
-      backgroundColor: [
-        "rgba(16, 185, 129, 0.8)",
-        "rgba(249, 115, 22, 0.8)",
-        "rgba(59, 130, 246, 0.8)",
-      ],
-      borderWidth: 0,
     },
   ],
 };
@@ -260,44 +204,6 @@ const standardBarOptions = {
   },
 };
 
-const horizontalBarOptions = {
-  indexAxis: "y" as const,
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: { enabled: true },
-  },
-  scales: {
-    x: {
-      grid: { color: "rgba(156, 163, 175, 0.1)" },
-      ticks: { color: "#9ca3af" },
-    },
-    y: {
-      grid: { display: false },
-      ticks: { color: "#9ca3af" },
-    },
-  },
-};
-
-const doughnutOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: "bottom" as const,
-      labels: {
-        color: "#9ca3af",
-        boxWidth: 12,
-        padding: 8,
-        font: { size: 11 },
-      },
-    },
-    tooltip: { enabled: true },
-  },
-  cutout: "65%",
-};
-
 const areaChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -373,12 +279,12 @@ export default function Dashboard() {
               .map((_, i) => (
                 <div
                   key={i}
-                  className="card bg-base-200 shadow-lg h-[250px] animate-pulse"
+                  className="card bg-gray-800/60 shadow-lg h-[250px] animate-pulse"
                 >
                   <div className="card-body p-5">
-                    <div className="h-4 w-2/3 bg-base-300 rounded-full mb-4"></div>
-                    <div className="h-8 w-1/2 bg-base-300 rounded-full mb-6"></div>
-                    <div className="h-32 bg-base-300 rounded-lg"></div>
+                    <div className="h-4 w-2/3 bg-base-300/50 rounded-full mb-4"></div>
+                    <div className="h-8 w-1/2 bg-base-300/50 rounded-full mb-6"></div>
+                    <div className="h-32 bg-base-300/50 rounded-lg"></div>
                   </div>
                 </div>
               ))}
@@ -408,10 +314,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Key Stats - Row 1 - Smaller cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* Key Stats - Row 1 - Smaller cards (with AI Resolution Rate removed) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {/* Total Calls */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
+              <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex justify-between">
                     <div className="flex flex-col">
@@ -433,7 +339,7 @@ export default function Dashboard() {
               </div>
 
               {/* Call Minutes */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
+              <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex justify-between">
                     <div className="flex flex-col">
@@ -454,45 +360,8 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* AI Resolution Rate */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
-                <div className="card-body p-5">
-                  <div className="flex justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium flex items-center gap-1">
-                        <BrainCircuit size={16} className="text-primary" />
-                        AI Resolution Rate
-                      </span>
-                      <span className="mt-2 text-2xl font-bold">75%</span>
-                    </div>
-                    <div className="badge badge-sm badge-success gap-1 h-6">
-                      <TrendingUp size={12} />
-                      <span>5%</span>
-                    </div>
-                  </div>
-                  <div className="h-20 mt-3">
-                    <Pie
-                      data={{
-                        labels: ["Resolved", "Transfer"],
-                        datasets: [
-                          {
-                            data: [75, 25],
-                            backgroundColor: [
-                              "rgba(16, 185, 129, 0.8)",
-                              "rgba(249, 115, 22, 0.8)",
-                            ],
-                            borderWidth: 0,
-                          },
-                        ],
-                      }}
-                      options={miniChartOptions}
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Time Saved */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
+              <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex justify-between">
                     <div className="flex flex-col">
@@ -514,50 +383,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Row 2 - Call Types + AI Resolution */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Call Types */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
-                <div className="card-body p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BarChart className="text-primary" size={18} />
-                    <h3 className="font-bold text-lg">Call Type Breakdown</h3>
-                  </div>
-                  <div className="h-[250px] flex items-center justify-center">
-                    <Pie data={callTypesData} options={pieChartOptions} />
-                  </div>
-                  <div className="flex justify-between text-xs text-base-content/70 mt-4">
-                    <span>Total Calls: 218</span>
-                    <span>Most Common: Appointment Booking (40%)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* AI Resolution */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
-                <div className="card-body p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BrainCircuit className="text-primary" size={18} />
-                    <h3 className="font-bold text-lg">
-                      AI Resolution Breakdown
-                    </h3>
-                  </div>
-                  <div className="h-[250px] flex items-center justify-center">
-                    <Doughnut
-                      data={aiResolutionData}
-                      options={doughnutOptions}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-base-content/70 mt-4">
-                    <span>Total Calls: 218</span>
-                    <span>AI Resolution: 75%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Row 3 - Time Saved Chart (full width) */}
-            <div className="card bg-base-200 shadow-lg border border-base-300/50 mb-6">
+            <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg mb-6">
               <div className="card-body p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Save className="text-primary" size={18} />
@@ -578,7 +405,7 @@ export default function Dashboard() {
             {/* Row 4 - Two Column Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Customer Satisfaction */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
+              <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Smile className="text-primary" size={18} />
@@ -595,7 +422,7 @@ export default function Dashboard() {
               </div>
 
               {/* Peak Call Hours */}
-              <div className="card bg-base-200 shadow-lg border border-base-300/50">
+              <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Clock className="text-primary" size={18} />
@@ -613,7 +440,7 @@ export default function Dashboard() {
             </div>
 
             {/* Row 5 - Call Volume and Performance - KEEPING AS REQUESTED */}
-            <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg p-4">
+            <div className="card bg-gray-800/60  shadow-lg p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Phone className="text-primary" size={20} />
                 <h2 className="text-xl font-bold">Call Analytics</h2>
@@ -621,7 +448,7 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Call Volume */}
-                <div className="card bg-base-200 shadow-lg">
+                <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                   <div className="card-body p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <BarChart3 className="text-primary" size={18} />
@@ -638,7 +465,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Call Performance */}
-                <div className="card bg-base-200 shadow-lg">
+                <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                   <div className="card-body p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <CheckCircle className="text-primary" size={18} />

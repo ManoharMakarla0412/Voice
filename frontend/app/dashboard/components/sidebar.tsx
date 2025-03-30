@@ -59,13 +59,13 @@ const sidebarNavItems = [
     icon: Network,
   },
   {
-    title: "Chat History",
-    href: "/dashboard/chats",
+    title: "Payments",
+    href: "/dashboard/payment",
     icon: MessageSquare,
   },
   {
-    title: "Settings",
-    href: "/dashboard/settings",
+    title: "Profile",
+    href: "/dashboard/profile",
     icon: Settings,
   },
   {
