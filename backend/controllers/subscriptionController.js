@@ -98,4 +98,29 @@ const addMinutes = async (req, res) => {
   }
 };
 
-module.exports = { changePlan, addMinutes };
+const getSubscriptionById = async (req, res) => {
+  try {
+    const subscription = await Subscription.findById(req.params.id);
+    
+    if (!subscription) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Subscription not found"
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: { subscription }
+    });
+  } catch (error) {
+    console.error("Error fetching subscription:", error.message);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch subscription",
+      error: error.message
+    });
+  }
+};
+
+module.exports = { changePlan, addMinutes, getSubscriptionById };
