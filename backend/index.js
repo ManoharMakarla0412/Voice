@@ -11,6 +11,8 @@ const phonenumberRoutes = require('./routes/phoneNumberRoute');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const paymentRoutes = require('./routes/phonepeRoutes');
 const eventRoutes = require("./routes/eventRoutes");
+const planRoutes = require("./routes/planRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const { scheduleBillingEmails } = require("./utils/billingEmailScheduler");
 const connectDB = require("./config/db"); // MongoDB connection
 const bodyParser = require("body-parser");
@@ -36,6 +38,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Use user, assistant, twilio, and knowledge base routes
 app.use("/user", userRoutes);
 app.use("/assistant", assistantRoutes);
+app.use("/api/plans", planRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 app.use("/twilio", twilioRoutes);
 app.use('/api', knowledgebaseRoute);
 app.use('/api/calls', callRoutes);
