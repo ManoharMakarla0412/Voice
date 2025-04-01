@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 
+const baseurl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
+
 // Define TypeScript interfaces
 export interface Feature {
   title: string;
@@ -51,34 +53,35 @@ const useSubscription = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch user's subscription data
-  const fetchSubscription = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/subscription/current", {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+// Fetch user's subscription data
+const fetchSubscription = async () => {
+  try {
+    setLoading(true);
+    const response = await fetch(`${baseurl}/api/subscription/`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
+      },
+    });
 
-      if (!response.ok) throw new Error("Failed to fetch subscription");
+    if (!response.ok) throw new Error("Failed to fetch subscription");
 
-      const data = await response.json();
-      setSubscription(data.data.subscription);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const data = await response.json();
+    setSubscription(data.data.subscription);
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Fetch available plans
   const fetchPlans = async () => {
     try {
-      const response = await fetch("/api/plans", {
+      const response = await fetch(`${baseurl}/api/plans`, {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
         },
       });
 
@@ -98,12 +101,12 @@ const useSubscription = () => {
   ): Promise<ChangeResult> => {
     try {
       setLoading(true);
-      const response = await fetch("/api/subscription/change-plan", {
-        method: "POST",
+      const response = await fetch(`${baseurl}/api/subscription/change-plan`, {
+        method: "PUT", // Changed from POST to PUT to match your backend
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
         },
-        credentials: "include",
         body: JSON.stringify({ planId, billingCycle }),
       });
 
@@ -127,12 +130,12 @@ const useSubscription = () => {
   const addMinutes = async (minutes: number): Promise<ChangeResult> => {
     try {
       setLoading(true);
-      const response = await fetch("/api/subscription/add-minutes", {
-        method: "POST",
+      const response = await fetch(`${baseurl}/api/subscription/add-minutes`, {
+        method: "PUT", // Changed from POST to PUT to match your backend
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
         },
-        credentials: "include",
         body: JSON.stringify({ minutes }),
       });
 

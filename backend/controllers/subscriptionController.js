@@ -1,5 +1,36 @@
 const Subscription = require("../models/subscriptionModel");
+const User = require("../models/userModel");
 const Plan = require("../models/planModel");
+
+const getUserSubscription = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    const subscription = await Subscription.findOne({
+      userId: user._id,
+      status: "active"
+    });
+    
+    if (!subscription) {
+      return res.status(404).json({
+        status: "fail",
+        message: "No active subscription found"
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: { subscription }
+    });
+  } catch (error) {
+    console.error("Error fetching user subscription:", error.message);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch subscription",
+      error: error.message
+    });
+  }
+};
 
 const changePlan = async (req, res) => {
   try {
@@ -29,8 +60,8 @@ const changePlan = async (req, res) => {
     subscription.billingCycle = billingCycle;
     await subscription.save();
 
-    // Optionally update User model if keeping plan/billing there
-    user.plan = newPlan.name;
+    // Update User model
+    user.plan = newPlan.name.toLowerCase();
     user.billing = billingCycle;
     await user.save();
 
@@ -109,6 +140,14 @@ const getSubscriptionById = async (req, res) => {
       });
     }
 
+    // Ensure user can only access their own subscription
+    if (subscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        status: "error",
+        message: "You are not authorized to access this subscription"
+      });
+    }
+
     res.status(200).json({
       status: "success",
       data: { subscription }
@@ -123,4 +162,9 @@ const getSubscriptionById = async (req, res) => {
   }
 };
 
-module.exports = { changePlan, addMinutes, getSubscriptionById };
+module.exports = { 
+  changePlan, 
+  addMinutes, 
+  getSubscriptionById,
+  getUserSubscription 
+};
