@@ -4,108 +4,144 @@ const Plan = require("../models/planModel");
 
 const getUserSubscription = async (req, res) => {
   try {
-    const user = req.user;
-    
-    const subscription = await Subscription.findOne({
-      userId: user._id,
-      status: "active"
-    });
-    
-    if (!subscription) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No active subscription found"
-      });
-    }
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token)
+      return res
+        .status(401)
+        .json({ status: "error", message: "No token provided" });
 
-    res.status(200).json({
-      status: "success",
-      data: { subscription }
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const subscription = await Subscription.findOne({
+      userId: decoded.id,
+      status: "active",
     });
+    if (!subscription)
+      return res
+        .status(404)
+        .json({ status: "fail", message: "No active subscription" });
+
+    res.status(200).json({ status: "success", data: { subscription } });
   } catch (error) {
-    console.error("Error fetching user subscription:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to fetch subscription",
-      error: error.message
-    });
+    res
+      .status(500)
+      .json({
+        status: "error",
+        message: "Fetch subscription failed",
+        error: error.message,
+      });
   }
 };
 
 const changePlan = async (req, res) => {
   try {
-    const { planId, billingCycle } = req.body;
-    const user = req.user; // Assume auth middleware sets req.user
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token)
+      return res
+        .status(401)
+        .json({ status: "error", message: "No token provided" });
 
-    const subscription = await Subscription.findOne({
-      userId: user._id,
-      status: "active",
-    });
-    if (!subscription) {
-      return res.status(404).json({
-        status: "error",
-        message: "No active subscription found",
-      });
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const { planId, billingCycle } = req.body;
+    if (!planId || !["monthly", "yearly"].includes(billingCycle)) {
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Plan ID and valid billing cycle required",
+        });
     }
 
+    const subscription = await Subscription.findOne({
+      userId: decoded.id,
+      status: "active",
+    });
+    if (!subscription)
+      return res
+        .status(404)
+        .json({ status: "error", message: "No active subscription" });
+
     const newPlan = await Plan.findById(planId);
-    if (!newPlan) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid plan selected",
-      });
+    if (!newPlan || newPlan.monthlyPrice <= 0 || newPlan.yearlyPrice <= 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Invalid or misconfigured plan" });
+    }
+
+    const isFeatureAvailable = newPlan.features.some((f) => f[billingCycle]);
+    if (!isFeatureAvailable) {
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: `Plan '${newPlan.name}' not available for ${billingCycle} billing`,
+        });
     }
 
     subscription.planId = newPlan._id;
     subscription.billingCycle = billingCycle;
+    subscription.endDate = new Date(subscription.startDate);
+    subscription.endDate.setDate(
+      subscription.endDate.getDate() + (billingCycle === "monthly" ? 30 : 365)
+    );
     await subscription.save();
 
-    // Update User model
+    const user = await User.findById(decoded.id);
     user.plan = newPlan.name.toLowerCase();
     user.billing = billingCycle;
+    user.billingCycleDays = billingCycle === "monthly" ? 30 : 365;
     await user.save();
 
-    res.status(200).json({
-      status: "success",
-      message: "Plan updated successfully",
-      data: { subscription },
-    });
+    res
+      .status(200)
+      .json({
+        status: "success",
+        message: "Plan updated",
+        data: { subscription },
+      });
   } catch (error) {
-    console.error("Error changing plan:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to change plan",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        status: "error",
+        message: "Plan change failed",
+        error: error.message,
+      });
   }
 };
 
 const addMinutes = async (req, res) => {
   try {
-    const { minutes } = req.body;
-    const user = req.user;
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token)
+      return res
+        .status(401)
+        .json({ status: "error", message: "No token provided" });
 
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const { minutes } = req.body;
     if (!minutes || minutes <= 0) {
-      return res.status(400).json({
-        status: "error",
-        message: "Please specify a valid number of minutes",
-      });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Valid minutes required" });
     }
 
     const subscription = await Subscription.findOne({
-      userId: user._id,
+      userId: decoded.id,
       status: "active",
     });
-    if (!subscription) {
-      return res.status(404).json({
-        status: "error",
-        message: "No active subscription found",
-      });
-    }
+    if (!subscription)
+      return res
+        .status(404)
+        .json({ status: "error", message: "No active subscription" });
 
     const plan = await Plan.findById(subscription.planId);
-    const cost = minutes * plan.costPerAddOnMinute;
+    if (plan.costPerAddOnMinute <= 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Invalid plan cost configuration" });
+    }
 
+    const cost = minutes * plan.costPerAddOnMinute;
     subscription.additionalMinutes += minutes;
     subscription.addOnPurchases.push({
       minutes,
@@ -114,57 +150,57 @@ const addMinutes = async (req, res) => {
     });
     await subscription.save();
 
-    res.status(200).json({
-      status: "success",
-      message: "Additional minutes added successfully",
-      data: { subscription },
-    });
+    res
+      .status(200)
+      .json({
+        status: "success",
+        message: "Minutes added",
+        data: { subscription },
+      });
   } catch (error) {
-    console.error("Error adding minutes:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to add minutes",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        status: "error",
+        message: "Add minutes failed",
+        error: error.message,
+      });
   }
 };
 
 const getSubscriptionById = async (req, res) => {
   try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token)
+      return res
+        .status(401)
+        .json({ status: "error", message: "No token provided" });
+
+    const decoded = jwt.verify(token, process.env.SECRET);
     const subscription = await Subscription.findById(req.params.id);
-    
-    if (!subscription) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Subscription not found"
-      });
+    if (!subscription)
+      return res
+        .status(404)
+        .json({ status: "fail", message: "Subscription not found" });
+    if (subscription.userId.toString() !== decoded.id.toString()) {
+      return res.status(403).json({ status: "error", message: "Unauthorized" });
     }
 
-    // Ensure user can only access their own subscription
-    if (subscription.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        status: "error",
-        message: "You are not authorized to access this subscription"
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: { subscription }
-    });
+    res.status(200).json({ status: "success", data: { subscription } });
   } catch (error) {
-    console.error("Error fetching subscription:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to fetch subscription",
-      error: error.message
-    });
+    res
+      .status(500)
+      .json({
+        status: "error",
+        message: "Fetch subscription failed",
+        error: error.message,
+      });
   }
 };
 
-module.exports = { 
-  changePlan, 
-  addMinutes, 
+module.exports = {
+  changePlan,
+  addMinutes,
   getSubscriptionById,
-  getUserSubscription 
+  getUserSubscription,
 };

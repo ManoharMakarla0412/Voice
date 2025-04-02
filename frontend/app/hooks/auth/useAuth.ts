@@ -25,32 +25,29 @@ export const useSignUp = () => {
       const response = await fetch(`${BASE_URL}/user/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        let errorMessage = "Signup failed";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          // Fallback to default message if parsing fails
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Signup failed");
       }
 
-      return response.json();
+      const result = await response.json();
+      sessionStorage.setItem("auth_token", result.data.token);
+      return result;
     },
   });
 };
 
-// Other hooks remain unchanged for this purpose
 export const useResendOTP = () => {
   return useMutation({
     mutationFn: async ({ email }: { email: string }) => {
       const response = await fetch(`${BASE_URL}/auth/resend-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email }),
       });
       if (!response.ok) {
@@ -68,10 +65,12 @@ export const useVerifyOTP = () => {
       const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!response.ok) {
-        throw new Error("OTP verification failed");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "OTP verification failed");
       }
       return response.json();
     },
@@ -84,12 +83,17 @@ export const useLogin = () => {
       const response = await fetch(`${BASE_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
       }
-      return response.json();
+
+      const result = await response.json();
+      sessionStorage.setItem("auth_token", result.data.token);
+      return result;
     },
   });
 };
@@ -99,7 +103,9 @@ async function completeProfile(profileData: any) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionStorage.getItem("auth_token")}`,
     },
+    credentials: "include",
     body: JSON.stringify(profileData),
   });
 

@@ -70,7 +70,7 @@ const sidebarNavItems = [
   },
   {
     title: "Billing",
-    href: "/dashboard/billing",
+    href: "/dashboard/subscription",
     icon: CreditCard,
   },
 ];

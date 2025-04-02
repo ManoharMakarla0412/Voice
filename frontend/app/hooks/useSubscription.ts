@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 
 const baseurl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
 
-// Define TypeScript interfaces
 export interface Feature {
   title: string;
   monthly: boolean;
@@ -34,12 +33,11 @@ export interface Subscription {
   userId: string;
   planId: string;
   billingCycle: "monthly" | "yearly";
-  status: "active" | "canceled" | "expired";
+  status: "active" | "canceled" | "pending";
   additionalMinutes: number;
   addOnPurchases: AddOnPurchase[];
-  nextBillingDate?: string | Date;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
+  startDate: string | Date;
+  endDate: string | Date;
 }
 
 export interface ChangeResult {
@@ -53,39 +51,69 @@ const useSubscription = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-// Fetch user's subscription data
-const fetchSubscription = async () => {
-  try {
-    setLoading(true);
-    const response = await fetch(`${baseurl}/api/subscription/`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
-      },
-    });
+  const fetchSubscription = async () => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem("auth_token");
+      if (!token) throw new Error("No authentication token found");
 
-    if (!response.ok) throw new Error("Failed to fetch subscription");
+      const userResponse = await fetch(`${baseurl}/user/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        throw new Error(errorData.message || "Failed to fetch user profile");
+      }
 
-    const data = await response.json();
-    setSubscription(data.data.subscription);
-  } catch (err: any) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      const userData = await userResponse.json();
+      const subscriptionId = userData.data.user.subscriptionId;
+      if (!subscriptionId) throw new Error("No subscription linked to user");
 
-  // Fetch available plans
+      const subResponse = await fetch(
+        `${baseurl}/api/subscription/${subscriptionId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
+      if (!subResponse.ok) {
+        const errorData = await subResponse.json();
+        throw new Error(errorData.message || "Failed to fetch subscription");
+      }
+
+      const subData = await subResponse.json();
+      setSubscription(subData.data.subscription);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchPlans = async () => {
     try {
+      const token = sessionStorage.getItem("auth_token");
+      if (!token) throw new Error("No authentication token found");
+
       const response = await fetch(`${baseurl}/api/plans`, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       });
-
-      if (!response.ok) throw new Error("Failed to fetch plans");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch plans");
+      }
 
       const data = await response.json();
       setPlans(data.data.plans);
@@ -94,19 +122,22 @@ const fetchSubscription = async () => {
     }
   };
 
-  // Change plan
   const changePlan = async (
     planId: string,
     billingCycle: "monthly" | "yearly"
   ): Promise<ChangeResult> => {
     try {
       setLoading(true);
+      const token = sessionStorage.getItem("auth_token");
+      if (!token) throw new Error("No authentication token found");
+
       const response = await fetch(`${baseurl}/api/subscription/change-plan`, {
-        method: "PUT", // Changed from POST to PUT to match your backend
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ planId, billingCycle }),
       });
 
@@ -126,16 +157,19 @@ const fetchSubscription = async () => {
     }
   };
 
-  // Add minutes
   const addMinutes = async (minutes: number): Promise<ChangeResult> => {
     try {
       setLoading(true);
+      const token = sessionStorage.getItem("auth_token");
+      if (!token) throw new Error("No authentication token found");
+
       const response = await fetch(`${baseurl}/api/subscription/add-minutes`, {
-        method: "PUT", // Changed from POST to PUT to match your backend
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ minutes }),
       });
 
@@ -155,7 +189,6 @@ const fetchSubscription = async () => {
     }
   };
 
-  // Load subscription and plans on mount
   useEffect(() => {
     fetchSubscription();
     fetchPlans();
