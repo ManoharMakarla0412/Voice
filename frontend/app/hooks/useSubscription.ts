@@ -72,6 +72,7 @@ const useSubscription = () => {
 
       const userData = await userResponse.json();
       const subscriptionId = userData.data.user.subscriptionId;
+      console.log("Subscription ID:", subscriptionId);
       if (!subscriptionId) throw new Error("No subscription linked to user");
 
       const subResponse = await fetch(

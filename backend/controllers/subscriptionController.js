@@ -1,6 +1,7 @@
 const Subscription = require("../models/subscriptionModel");
 const User = require("../models/userModel");
 const Plan = require("../models/planModel");
+const jwt = require("jsonwebtoken"); //
 
 const getUserSubscription = async (req, res) => {
   try {

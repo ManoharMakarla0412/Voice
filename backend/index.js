@@ -1,5 +1,5 @@
 const express = require("express");
-const mongoose = require("mongoose");
+//const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoute");
 const assistantRoutes = require("./routes/assistantRoutes");
 const twilioRoutes = require("./routes/twilioRoute");
@@ -24,9 +24,10 @@ const port = process.env.PORT || 5003;
 
 // Enable CORS for frontend requests
 app.use(cors({
-  origin: '*',
+  origin: "http://localhost:3000", // Replace with your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true 
 }));
 // Middleware to parse JSON
 app.use(express.json());
