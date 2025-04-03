@@ -75,7 +75,7 @@ const { authenticateToken } = require("../utils/auth");
 
 /**
  * @swagger
- * /api/twilio/add-number:
+ * /twilio/add-number:
  *   post:
  *     summary: Add a Twilio phone number
  *     tags: [Twilio]
@@ -146,7 +146,7 @@ router.post("/add-number", authenticateToken, addTwilioNumber);
 
 /**
  * @swagger
- * /api/twilio/list-numbers:
+ * /twilio/list-numbers:
  *   get:
  *     summary: List all Twilio numbers
  *     tags: [Twilio]

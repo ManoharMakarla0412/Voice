@@ -186,7 +186,7 @@ const {
 
 /**
  * @swagger
- * /api/user/signup:
+ * /user/signup:
  *   post:
  *     summary: Register a new user
  *     tags: [User]
@@ -280,7 +280,7 @@ router.post("/signup", signup);
 
 /**
  * @swagger
- * /api/user/login:
+ * /user/login:
  *   post:
  *     summary: Login user
  *     tags: [User]
@@ -369,7 +369,7 @@ router.post("/login", login);
 
 /**
  * @swagger
- * /api/user/forgot-password:
+ * /user/forgot-password:
  *   post:
  *     summary: Request password reset
  *     tags: [User]
@@ -445,7 +445,7 @@ router.post("/forgot-password", forgotPassword);
 
 /**
  * @swagger
- * /api/user/me:
+ * /user/me:
  *   get:
  *     summary: Get current user profile
  *     tags: [User]
@@ -517,7 +517,7 @@ router.get("/me", getCurrentUser);
 
 /**
  * @swagger
- * /api/user/allusers:
+ * /user/allusers:
  *   get:
  *     summary: Get all users
  *     tags: [User]

@@ -102,7 +102,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/phonenumber/createphonenumber:
+ * /phonenumber/createphonenumber:
  *   post:
  *     summary: Create a new phone number
  *     tags: [PhoneNumber]
@@ -169,7 +169,7 @@ router.post("/createphonenumber", createPhoneNumber);
 
 /**
  * @swagger
- * /api/phonenumber/getphonenumbers:
+ * /phonenumber/getphonenumbers:
  *   get:
  *     summary: Get all phone numbers
  *     tags: [PhoneNumber]

@@ -46,7 +46,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/knowledgebase/upload:
+ * /api/upload:
  *   post:
  *     summary: Upload a PDF document to the knowledgebase
  *     tags: [Knowledgebase]
@@ -130,7 +130,7 @@ router.post("/upload", upload.single("file"), uploadPdf); // Handle file upload
 
 /**
  * @swagger
- * /api/knowledgebase/pdfs:
+ * /api/pdfs:
  *   get:
  *     summary: Get all uploaded PDFs
  *     tags: [Knowledgebase]

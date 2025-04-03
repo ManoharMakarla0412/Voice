@@ -56,7 +56,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/logs/logs:
+ * /logs/logs:
  *   get:
  *     summary: Retrieve all logs from VAPI
  *     tags: [Logs]

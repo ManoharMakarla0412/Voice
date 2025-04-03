@@ -107,7 +107,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/phonepe/create-order:
+ * /phonepe/create-order:
  *   post:
  *     summary: Create a new payment order
  *     tags: [PhonePe]
@@ -150,7 +150,7 @@ router.post("/create-order", paymentController.createOrder);
 
 /**
  * @swagger
- * /api/phonepe/status:
+ * /phonepe/status:
  *   post:
  *     summary: Check payment status
  *     tags: [PhonePe]

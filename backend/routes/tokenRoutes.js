@@ -76,7 +76,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/token/calendly:
+ * /token/calendly:
  *   post:
  *     summary: Exchange authorization code for OAuth tokens
  *     tags: [Token]

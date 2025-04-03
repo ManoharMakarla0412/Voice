@@ -142,7 +142,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/call/create:
+ * /api/calls/create:
  *   post:
  *     summary: Create a new outbound call
  *     tags: [Call]
@@ -206,7 +206,7 @@ router.post("/create", createCall);
 
 /**
  * @swagger
- * /api/call/logs:
+ * /api/calls/logs:
  *   get:
  *     summary: Get call logs
  *     tags: [Call]

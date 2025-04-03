@@ -2,14 +2,23 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import useSubscription from "../../hooks/useSubscription";
+
 const SubscriptionPage = () => {
-  const { subscription, plans, loading, error, changePlan, addMinutes } =
-    useSubscription();
+  const {
+    subscription,
+    plans,
+    loading,
+    error,
+    changePlan,
+    addMinutes,
+    consumedMinutes,
+    availableMinutes,
+    totalMinutes,
+    totalCost,
+  } = useSubscription();
 
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
-    "monthly"
-  );
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [minutes, setMinutes] = useState<number>(10);
   const [changeStatus, setChangeStatus] = useState({
     message: "",
@@ -22,7 +31,6 @@ const SubscriptionPage = () => {
 
   const router = useRouter();
 
-  // Handle plan change
   const handlePlanChange = async () => {
     if (!selectedPlan) {
       setChangeStatus({ message: "Please select a plan", success: false });
@@ -30,18 +38,13 @@ const SubscriptionPage = () => {
     }
 
     const result = await changePlan(selectedPlan, billingCycle);
-    setChangeStatus({
-      message: result.message,
-      success: result.success,
-    });
+    setChangeStatus({ message: result.message, success: result.success });
 
     if (result.success) {
-      // Reset selected plan after successful change
       setSelectedPlan(null);
     }
   };
 
-  // Handle adding minutes
   const handleAddMinutes = async () => {
     if (!minutes || minutes <= 0) {
       setAddStatus({
@@ -52,18 +55,13 @@ const SubscriptionPage = () => {
     }
 
     const result = await addMinutes(minutes);
-    setAddStatus({
-      message: result.message,
-      success: result.success,
-    });
+    setAddStatus({ message: result.message, success: result.success });
 
     if (result.success) {
-      // Reset minutes after successful addition
       setMinutes(10);
     }
   };
 
-  // Helper function to calculate cost for add-on minutes
   const calculateAddOnCost = () => {
     if (!subscription || !minutes) return 0;
     const currentPlan = plans.find((p) => p._id === subscription.planId);
@@ -71,7 +69,6 @@ const SubscriptionPage = () => {
     return (currentPlan.costPerAddOnMinute * minutes).toFixed(2);
   };
 
-  // Show loading state
   if (loading && !subscription) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -80,7 +77,6 @@ const SubscriptionPage = () => {
     );
   }
 
-  // Show error state
   if (error && !subscription) {
     return (
       <div className="alert alert-error">
@@ -104,7 +100,6 @@ const SubscriptionPage = () => {
     );
   }
 
-  // Finding current plan details
   const currentPlan =
     subscription && plans.length > 0
       ? plans.find((p) => p._id === subscription.planId)
@@ -114,20 +109,15 @@ const SubscriptionPage = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Your Subscription</h1>
 
-      {/* Current Subscription Details */}
       {subscription && currentPlan && (
         <div className="card bg-base-100 shadow-xl mb-8">
           <div className="card-body">
-            <h2 className="card-title text-xl">
-              Current Plan: {currentPlan.name}
-            </h2>
+            <h2 className="card-title text-xl">Current Plan: {currentPlan.name}</h2>
             <div className="divider"></div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="font-semibold">Billing Cycle:</p>
                 <p className="capitalize">{subscription.billingCycle}</p>
-
                 <p className="font-semibold mt-4">Price:</p>
                 <p>
                   $
@@ -136,22 +126,21 @@ const SubscriptionPage = () => {
                     : currentPlan.yearlyPrice.toFixed(2)}{" "}
                   / {subscription.billingCycle === "monthly" ? "month" : "year"}
                 </p>
-
-                <p className="font-semibold mt-4">Minutes Included:</p>
-                <p>{currentPlan.minutesIncluded} minutes</p>
-
-                <p className="font-semibold mt-4">Additional Minutes:</p>
-                <p>{subscription.additionalMinutes || 0} minutes</p>
+                <p className="font-semibold mt-4">Total Minutes:</p>
+                <p>{totalMinutes} minutes</p>
+                <p className="font-semibold mt-4">Consumed Minutes:</p>
+                <p>{consumedMinutes.toFixed(2)} minutes</p>
+                <p className="font-semibold mt-4">Available Minutes:</p>
+                <p>{availableMinutes.toFixed(2)} minutes</p>
+                <p className="font-semibold mt-4">Total Cost:</p>
+                <p>${totalCost.toFixed(2)}</p>
               </div>
-
               <div>
                 <p className="font-semibold">Features:</p>
                 <ul className="list-disc ml-5">
                   {currentPlan.features
                     .filter((f) =>
-                      subscription.billingCycle === "monthly"
-                        ? f.monthly
-                        : f.yearly
+                      subscription.billingCycle === "monthly" ? f.monthly : f.yearly
                     )
                     .map((feature, idx) => (
                       <li key={idx}>{feature.title}</li>
@@ -163,13 +152,10 @@ const SubscriptionPage = () => {
         </div>
       )}
 
-      {/* Upgrade Plan Section */}
       <div className="card bg-base-100 shadow-xl mb-8">
         <div className="card-body">
           <h2 className="card-title text-xl">Upgrade Your Plan</h2>
           <div className="divider"></div>
-
-          {/* Billing Cycle Toggle */}
           <div className="form-control w-full max-w-xs mb-4">
             <label className="label">
               <span className="label-text">Billing Cycle</span>
@@ -193,8 +179,6 @@ const SubscriptionPage = () => {
               </button>
             </div>
           </div>
-
-          {/* Plan Selection */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {plans.map((plan) => (
               <div
@@ -214,15 +198,11 @@ const SubscriptionPage = () => {
                       ? plan.monthlyPrice.toFixed(2) + "/mo"
                       : plan.yearlyPrice.toFixed(2) + "/yr"}
                   </p>
-                  <p className="text-sm">
-                    {plan.minutesIncluded} minutes included
-                  </p>
+                  <p className="text-sm">{plan.minutesIncluded} minutes included</p>
                   <div className="divider my-2"></div>
                   <ul className="space-y-1">
                     {plan.features
-                      .filter((f) =>
-                        billingCycle === "monthly" ? f.monthly : f.yearly
-                      )
+                      .filter((f) => (billingCycle === "monthly" ? f.monthly : f.yearly))
                       .map((feature, idx) => (
                         <li key={idx} className="flex items-center gap-2">
                           <svg
@@ -247,13 +227,9 @@ const SubscriptionPage = () => {
               </div>
             ))}
           </div>
-
-          {/* Plan change status message */}
           {changeStatus.message && (
             <div
-              className={`alert ${
-                changeStatus.success ? "alert-success" : "alert-error"
-              } mb-4`}
+              className={`alert ${changeStatus.success ? "alert-success" : "alert-error"} mb-4`}
             >
               <div>
                 {changeStatus.success ? (
@@ -275,7 +251,7 @@ const SubscriptionPage = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     className="stroke-current flex-shrink-0 h-6 w-6"
                     fill="none"
-                    viewBox="0 24 24"
+                    viewBox="0 0 24 24"
                   >
                     <path
                       strokeLinecap="round"
@@ -289,28 +265,22 @@ const SubscriptionPage = () => {
               </div>
             </div>
           )}
-
-          {/* Change Plan Button */}
           <div className="card-actions justify-end">
             <button
               className="btn btn-primary"
               onClick={handlePlanChange}
               disabled={!selectedPlan || subscription?.planId === selectedPlan}
             >
-              {subscription?.planId === selectedPlan
-                ? "Current Plan"
-                : "Change Plan"}
+              {subscription?.planId === selectedPlan ? "Current Plan" : "Change Plan"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Add-On Minutes Section */}
       <div className="card bg-base-100 shadow-xl mb-8">
         <div className="card-body">
           <h2 className="card-title text-xl">Purchase Add-On Minutes</h2>
           <div className="divider"></div>
-
           <div className="flex flex-col md:flex-row gap-4 md:items-end">
             <div className="form-control">
               <label className="label">
@@ -324,7 +294,6 @@ const SubscriptionPage = () => {
                 min="1"
               />
             </div>
-
             {subscription && currentPlan && (
               <div className="stats shadow">
                 <div className="stat">
@@ -335,20 +304,14 @@ const SubscriptionPage = () => {
                 </div>
                 <div className="stat">
                   <div className="stat-title">Total Cost</div>
-                  <div className="stat-value text-lg">
-                    ${calculateAddOnCost()}
-                  </div>
+                  <div className="stat-value text-lg">${calculateAddOnCost()}</div>
                 </div>
               </div>
             )}
           </div>
-
-          {/* Add minutes status message */}
           {addStatus.message && (
             <div
-              className={`alert ${
-                addStatus.success ? "alert-success" : "alert-error"
-              } mt-4`}
+              className={`alert ${addStatus.success ? "alert-success" : "alert-error"} mt-4`}
             >
               <div>
                 {addStatus.success ? (
@@ -384,8 +347,6 @@ const SubscriptionPage = () => {
               </div>
             </div>
           )}
-
-          {/* Add Minutes Button */}
           <div className="card-actions justify-end mt-4">
             <button
               className="btn btn-primary"
@@ -398,13 +359,11 @@ const SubscriptionPage = () => {
         </div>
       </div>
 
-      {/* Purchase History */}
       {subscription?.addOnPurchases && subscription.addOnPurchases.length > 0 && (
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
             <h2 className="card-title text-xl">Purchase History</h2>
             <div className="divider"></div>
-
             <div className="overflow-x-auto">
               <table className="table table-zebra">
                 <thead>
@@ -417,9 +376,7 @@ const SubscriptionPage = () => {
                 <tbody>
                   {subscription.addOnPurchases.map((purchase, idx) => (
                     <tr key={idx}>
-                      <td>
-                        {new Date(purchase.purchaseDate).toLocaleDateString()}
-                      </td>
+                      <td>{new Date(purchase.purchaseDate).toLocaleDateString()}</td>
                       <td>{purchase.minutes}</td>
                       <td>${purchase.price.toFixed(2)}</td>
                     </tr>

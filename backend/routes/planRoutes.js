@@ -89,7 +89,7 @@ const { getAllPlans, getPlanById } = require("../controllers/planController");
 
 /**
  * @swagger
- * /api/plan:
+ * /api/plans:
  *   get:
  *     summary: Get all available plans
  *     tags: [Plan]
@@ -133,7 +133,7 @@ router.get("/", getAllPlans);
 
 /**
  * @swagger
- * /api/plan/{id}:
+ * /api/plans/{id}:
  *   get:
  *     summary: Get plan by ID
  *     tags: [Plan]

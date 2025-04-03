@@ -38,6 +38,15 @@ export interface Subscription {
   addOnPurchases: AddOnPurchase[];
   startDate: string | Date;
   endDate: string | Date;
+  minutesIncluded: number; // Added from Plan
+}
+
+export interface SubscriptionData {
+  subscription: Subscription;
+  consumedMinutes: number;
+  availableMinutes: number;
+  totalMinutes: number;
+  totalCost: number;
 }
 
 export interface ChangeResult {
@@ -46,7 +55,7 @@ export interface ChangeResult {
 }
 
 const useSubscription = () => {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +66,7 @@ const useSubscription = () => {
       const token = sessionStorage.getItem("auth_token");
       if (!token) throw new Error("No authentication token found");
 
-      const userResponse = await fetch(`${baseurl}/user/me`, {
+      const response = await fetch(`${baseurl}/api/subscription/with-minutes`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -65,33 +74,13 @@ const useSubscription = () => {
         },
         credentials: "include",
       });
-      if (!userResponse.ok) {
-        const errorData = await userResponse.json();
-        throw new Error(errorData.message || "Failed to fetch user profile");
-      }
-
-      const userData = await userResponse.json();
-      const subscriptionId = userData.data.user.subscriptionId;
-      console.log("Subscription ID:", subscriptionId);
-      if (!subscriptionId) throw new Error("No subscription linked to user");
-
-      const subResponse = await fetch(
-        `${baseurl}/api/subscription/${subscriptionId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        }
-      );
-      if (!subResponse.ok) {
-        const errorData = await subResponse.json();
+      if (!response.ok) {
+        const errorData = await response.json();
         throw new Error(errorData.message || "Failed to fetch subscription");
       }
 
-      const subData = await subResponse.json();
-      setSubscription(subData.data.subscription);
+      const data = await response.json();
+      setSubscriptionData(data.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -148,7 +137,7 @@ const useSubscription = () => {
       }
 
       const data = await response.json();
-      setSubscription(data.data.subscription);
+      setSubscriptionData(prev => prev ? { ...prev, subscription: data.data.subscription } : null);
       return { success: true, message: "Plan updated successfully" };
     } catch (err: any) {
       setError(err.message);
@@ -180,7 +169,7 @@ const useSubscription = () => {
       }
 
       const data = await response.json();
-      setSubscription(data.data.subscription);
+      setSubscriptionData(prev => prev ? { ...prev, subscription: data.data.subscription } : null);
       return { success: true, message: "Minutes added successfully" };
     } catch (err: any) {
       setError(err.message);
@@ -196,13 +185,17 @@ const useSubscription = () => {
   }, []);
 
   return {
-    subscription,
+    subscription: subscriptionData?.subscription || null,
     plans,
     loading,
     error,
     changePlan,
     addMinutes,
     refreshSubscription: fetchSubscription,
+    consumedMinutes: subscriptionData?.consumedMinutes || 0,
+    availableMinutes: subscriptionData?.availableMinutes || 0,
+    totalMinutes: subscriptionData?.totalMinutes || 0,
+    totalCost: subscriptionData?.totalCost || 0,
   };
 };
 

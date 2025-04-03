@@ -112,7 +112,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/event/create-event:
+ * /event/create-event:
  *   post:
  *     summary: Create a new calendar event
  *     tags: [Event]

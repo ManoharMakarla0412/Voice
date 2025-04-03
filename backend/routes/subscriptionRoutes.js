@@ -5,6 +5,7 @@ const {
   addMinutes,
   getSubscriptionById,
   getUserSubscription,
+  getUserSubscriptionWithMinutes,
 } = require("../controllers/subscriptionController");
 
 /**
@@ -191,6 +192,8 @@ const {
  *                   example: Error details
  */
 router.get("/", getUserSubscription);
+
+router.get("/with-minutes", getUserSubscriptionWithMinutes);
 
 /**
  * @swagger

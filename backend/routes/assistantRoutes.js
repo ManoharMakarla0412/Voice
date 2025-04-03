@@ -189,7 +189,7 @@ const { authenticateToken } = require("../utils/auth");
 
 /**
  * @swagger
- * /api/assistant/create:
+ * /assistant/create:
  *   post:
  *     summary: Create a new AI assistant
  *     tags: [Assistant]
@@ -249,7 +249,7 @@ router.post("/create", authenticateToken, createAssistant);
 
 /**
  * @swagger
- * /api/assistant/get:
+ * /assistant/get:
  *   get:
  *     summary: Get all assistants from VAPI
  *     tags: [Assistant]
@@ -279,7 +279,7 @@ router.get("/get", getAssistant);
 
 /**
  * @swagger
- * /api/assistant/update:
+ * /assistant/update:
  *   put:
  *     summary: Update an existing assistant
  *     tags: [Assistant]
