@@ -27,7 +27,7 @@ const port = process.env.PORT || 5003;
 // Enable CORS for frontend requests
 app.use(
   cors({
-    origin: ["http://localhost:3000","http://localhost:5003"],
+    origin: ["http://localhost:3000","http://localhost:5003","https://app.elidepro.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
