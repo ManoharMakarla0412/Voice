@@ -1,7 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react"; 
-import { BASE_URL } from "../../utils/constants";
-import io, { Socket } from "socket.io-client";
+import React, { useState, useEffect } from "react";
+import io from "socket.io-client"; // Removed unused Socket type import
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,14 +13,16 @@ import {
   ListFilter,
   UserCircle,
   Phone,
-  AlertCircle,
   CheckCircle,
   XCircle,
   File,
   MessageSquare,
 } from "lucide-react";
 
-// Define types for props and state
+// Define BASE_URL directly or import from a constants file
+const BASE_URL = "http://localhost:5003"; // Adjust as per your backend
+
+// Define event and appointment data interfaces
 interface Event {
   id: string;
   title: string;
@@ -32,7 +33,7 @@ interface Event {
   patientName: string;
   patientId: string;
   appointmentType: string;
-  status: string;
+  status: "scheduled" | "completed" | "cancelled";
   phoneNumber: string;
   isNewPatient: boolean;
 }
@@ -43,18 +44,18 @@ interface AppointmentData {
   fullName: string;
   appointmentDateTime: string;
   duration: number;
-  status: string;
+  status: "scheduled" | "completed" | "cancelled";
 }
 
-const Calendar: React.FC = () => {
-  const [currentDate, setCurrentDate] = useState<Date>(new Date("2025-01-10"));
+const Calendar = () => {
+  const [currentDate, setCurrentDate] = useState(new Date("2025-01-10"));
   const [view, setView] = useState<"month" | "week" | "day" | "agenda">("month");
-  const [showEventModal, setShowEventModal] = useState<boolean>(false);
+  const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
 
-  // Ensure socket is typed
-  const socket: Socket = io(`${BASE_URL}`, {
+  // Initialize socket
+  const socket = io(BASE_URL, {
     withCredentials: true,
     extraHeaders: {
       "Content-Type": "application/json",
@@ -77,7 +78,7 @@ const Calendar: React.FC = () => {
         patientId: `PT-${Math.floor(Math.random() * 10000)}`,
         appointmentType: appointmentData.problem,
         status: appointmentData.status,
-        phoneNumber: "(555) 000-0000", // Placeholder; update if available
+        phoneNumber: "(555) 000-0000",
         isNewPatient: false,
       };
       setEvents((prev) => [...prev, newEvent]);
@@ -85,53 +86,57 @@ const Calendar: React.FC = () => {
 
     return () => {
       socket.off("appointmentCreated");
-      socket.disconnect();
     };
   }, [socket]);
 
-  const getDaysInMonth = (date: Date): Date[] => {
+  const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const days: Date[] = [];
-    for (let i = 0; i < firstDay.getDay(); i++)
+    for (let i = 0; i < firstDay.getDay(); i++) {
       days.unshift(new Date(year, month, -i));
-    for (let i = 1; i <= lastDay.getDate(); i++)
+    }
+    for (let i = 1; i <= lastDay.getDate(); i++) {
       days.push(new Date(year, month, i));
+    }
     const remainingDays = 42 - days.length;
-    for (let i = 1; i <= remainingDays; i++)
+    for (let i = 1; i <= remainingDays; i++) {
       days.push(new Date(year, month + 1, i));
+    }
     return days;
   };
 
-  const getWeekDays = (date: Date): Date[] => {
-    const days = [];
+  const getWeekDays = (date: Date) => {
+    const days: Date[] = [];
     const sunday = new Date(date);
     sunday.setDate(date.getDate() - date.getDay());
-    for (let i = 0; i < 7; i++)
+    for (let i = 0; i < 7; i++) {
       days.push(
         new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + i)
       );
+    }
     return days;
   };
 
-  const getHours = (): number[] => Array.from({ length: 24 }, (_, i) => i);
+  const getHours = () => Array.from({ length: 24 }, (_, i) => i);
 
-  const formatDate = (date: Date): string =>
+  const formatDate = (date: Date) =>
     new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
     }).format(date);
 
-  const formatMonthYear = (date: Date): string =>
-    new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(
-      date
-    );
+  const formatMonthYear = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    }).format(date);
 
-  const getEventsForDate = (date: Date): Event[] => {
-    return events.filter((event) => {
+  const getEventsForDate = (date: Date) =>
+    events.filter((event) => {
       const eventStart = new Date(event.start);
       const eventEnd = event.end ? new Date(event.end) : eventStart;
       const compareDate = new Date(date).setHours(0, 0, 0, 0);
@@ -139,14 +144,13 @@ const Calendar: React.FC = () => {
       const compareEnd = new Date(eventEnd).setHours(0, 0, 0, 0);
       return compareDate >= compareStart && compareDate <= compareEnd;
     });
-  };
 
-  const handleEventClick = (event: Event): void => {
+  const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
     setShowEventModal(true);
   };
 
-  const renderMonthView = (): JSX.Element => {
+  const renderMonthView = () => {
     const days = getDaysInMonth(currentDate);
     const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return (
@@ -202,7 +206,7 @@ const Calendar: React.FC = () => {
     );
   };
 
-  const renderWeekView = (): JSX.Element => {
+  const renderWeekView = () => {
     const days = getWeekDays(currentDate);
     const hours = getHours();
     return (
@@ -279,7 +283,7 @@ const Calendar: React.FC = () => {
     );
   };
 
-  const renderDayView = (): JSX.Element => {
+  const renderDayView = () => {
     const hours = getHours();
     const events = getEventsForDate(currentDate);
     return (
@@ -331,12 +335,10 @@ const Calendar: React.FC = () => {
                             )}
                             <div className="text-xs text-primary-content/90 mt-auto flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              <span>
-                                {eventDate.toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
+                              {eventDate.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </div>
                           </div>
                         </div>
@@ -351,7 +353,7 @@ const Calendar: React.FC = () => {
     );
   };
 
-  const renderAgendaView = (): JSX.Element => {
+  const renderAgendaView = () => {
     const sortedEvents = [...events].sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
     );
@@ -401,13 +403,11 @@ const Calendar: React.FC = () => {
                       {endDate && (
                         <div className="mt-2 text-xs text-base-content/90 flex items-center gap-1">
                           <Clock size={12} />
-                          <span>
-                            Until {endDate.toLocaleDateString()} at{" "}
-                            {endDate.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                          Until {endDate.toLocaleDateString()} at{" "}
+                          {endDate.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </div>
                       )}
                     </div>
@@ -421,7 +421,7 @@ const Calendar: React.FC = () => {
     );
   };
 
-  const renderEventModal = (): JSX.Element | null => {
+  const renderEventModal = () => {
     if (!showEventModal) return null;
     return (
       <dialog open className="modal">
@@ -503,12 +503,11 @@ const Calendar: React.FC = () => {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                      {selectedEvent.end
-                        ? ` - ${new Date(selectedEvent.end).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}`
-                        : ""}
+                      {selectedEvent.end &&
+                        ` - ${new Date(selectedEvent.end).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`}
                     </p>
                   </div>
                   <div className="mt-3">
@@ -588,9 +587,13 @@ const Calendar: React.FC = () => {
                   className="join-item btn btn-sm btn-square"
                   onClick={() => {
                     const newDate = new Date(currentDate);
-                    if (view === "month") newDate.setMonth(newDate.getMonth() - 1);
-                    else if (view === "week") newDate.setDate(newDate.getDate() - 7);
-                    else newDate.setDate(newDate.getDate() - 1);
+                    if (view === "month") {
+                      newDate.setMonth(newDate.getMonth() - 1);
+                    } else if (view === "week") {
+                      newDate.setDate(newDate.getDate() - 7);
+                    } else {
+                      newDate.setDate(newDate.getDate() - 1);
+                    }
                     setCurrentDate(newDate);
                   }}
                 >
@@ -600,9 +603,13 @@ const Calendar: React.FC = () => {
                   className="join-item btn btn-sm btn-square"
                   onClick={() => {
                     const newDate = new Date(currentDate);
-                    if (view === "month") newDate.setMonth(newDate.getMonth() + 1);
-                    else if (view === "week") newDate.setDate(newDate.getDate() + 7);
-                    else newDate.setDate(newDate.getDate() + 1);
+                    if (view === "month") {
+                      newDate.setMonth(newDate.getMonth() + 1);
+                    } else if (view === "week") {
+                      newDate.setDate(newDate.getDate() + 7);
+                    } else {
+                      newDate.setDate(newDate.getDate() + 1);
+                    }
                     setCurrentDate(newDate);
                   }}
                 >
@@ -622,10 +629,10 @@ const Calendar: React.FC = () => {
         <div className="flex justify-end">
           <div className="join shadow-md">
             {[
-              { id: "month" as "month" | "day" | "week" | "agenda", icon: <LayoutGrid size={16} /> },
-              { id: "week" as "month" | "day" | "week" | "agenda", icon: <CalendarViewIcon size={16} /> },
-              { id: "day" as "month" | "day" | "week" | "agenda", icon: <List size={16} /> },
-              { id: "agenda" as "month" | "day" | "week" | "agenda", icon: <ListFilter size={16} /> },
+              { id: "month" as const, icon: <LayoutGrid size={16} /> },
+              { id: "week" as const, icon: <CalendarViewIcon size={16} /> },
+              { id: "day" as const, icon: <List size={16} /> },
+              { id: "agenda" as const, icon: <ListFilter size={16} /> },
             ].map((v) => (
               <button
                 key={v.id}
