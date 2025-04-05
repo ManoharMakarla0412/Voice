@@ -1,18 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; 
+import { BASE_URL } from "../../utils/constants";
+import io, { Socket } from "socket.io-client";
 import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
   Clock,
-  Home,
   Plus,
   LayoutGrid,
   List,
   Calendar as CalendarViewIcon,
   ListFilter,
-  Trash2,
-  Edit3,
   UserCircle,
   Phone,
   AlertCircle,
@@ -21,9 +20,9 @@ import {
   File,
   MessageSquare,
 } from "lucide-react";
-import Link from "next/link";
 
-interface CalendarEvent {
+// Define types for props and state
+interface Event {
   id: string;
   title: string;
   start: string;
@@ -33,268 +32,126 @@ interface CalendarEvent {
   patientName: string;
   patientId: string;
   appointmentType: string;
-  status: "confirmed" | "completed" | "cancelled" | "no-show" | "rescheduled";
+  status: string;
   phoneNumber: string;
-  notes?: string;
   isNewPatient: boolean;
 }
 
-const mockEvents: CalendarEvent[] = [
-  {
-    id: "1",
-    title: "Regular Cleaning & Check-up",
-    patientName: "Sarah Johnson",
-    patientId: "PT-10254",
-    appointmentType: "Routine Cleaning",
-    status: "confirmed",
-    phoneNumber: "(555) 123-4567",
-    start: "2025-01-03T09:00:00",
-    end: "2025-01-03T10:00:00",
-    color: "bg-primary",
-    description: "Bi-annual cleaning and routine dental check-up",
-    isNewPatient: false,
-  },
-  {
-    id: "2",
-    title: "Wisdom Tooth Consultation",
-    patientName: "Michael Chen",
-    patientId: "PT-10342",
-    appointmentType: "Consultation",
-    status: "confirmed",
-    phoneNumber: "(555) 987-6543",
-    start: "2025-01-08T14:30:00",
-    end: "2025-01-08T15:15:00",
-    color: "bg-info",
-    description:
-      "Initial consultation for wisdom tooth extraction - patient reports pain in lower right quadrant",
-    notes: "Patient has dental anxiety, may need additional time",
-    isNewPatient: true,
-  },
-  {
-    id: "3",
-    title: "Dental Crown Fitting",
-    patientName: "Amelia Rodriguez",
-    patientId: "PT-09871",
-    appointmentType: "Prosthodontics",
-    status: "rescheduled",
-    phoneNumber: "(555) 234-5678",
-    start: "2025-01-11T11:00:00",
-    end: "2025-01-11T12:30:00",
-    color: "bg-warning",
-    description: "Final crown fitting for tooth #19",
-    isNewPatient: false,
-  },
-  {
-    id: "4",
-    title: "Root Canal Treatment",
-    patientName: "David Thompson",
-    patientId: "PT-10111",
-    appointmentType: "Endodontic Therapy",
-    status: "confirmed",
-    phoneNumber: "(555) 345-6789",
-    start: "2025-01-13T13:00:00",
-    end: "2025-01-13T14:30:00",
-    color: "bg-success",
-    description: "Root canal treatment for tooth #30",
-    notes: "Patient reported severe pain yesterday, moved up from next week",
-    isNewPatient: false,
-  },
-  {
-    id: "5",
-    title: "Invisalign Consultation",
-    patientName: "Emma Wilson",
-    patientId: "PT-10476",
-    appointmentType: "Orthodontic Consultation",
-    status: "confirmed",
-    phoneNumber: "(555) 456-7890",
-    start: "2025-01-17T10:00:00",
-    end: "2025-01-17T11:00:00",
-    color: "bg-error",
-    description: "Initial consultation for Invisalign treatment",
-    isNewPatient: true,
-  },
-  {
-    id: "6",
-    title: "Full Mouth Reconstruction",
-    patientName: "Robert Smith",
-    patientId: "PT-09245",
-    appointmentType: "Complex Restorative",
-    status: "confirmed",
-    phoneNumber: "(555) 567-8901",
-    start: "2025-01-19T09:00:00",
-    end: "2025-01-19T12:00:00",
-    color: "bg-primary",
-    description: "Ongoing full mouth reconstruction - session 3 of 5",
-    notes: "Patient needs breaks every 30 minutes due to TMJ issues",
-    isNewPatient: false,
-  },
-  {
-    id: "7",
-    title: "Emergency - Broken Tooth",
-    patientName: "Olivia Davis",
-    patientId: "PT-10522",
-    appointmentType: "Emergency",
-    status: "completed",
-    phoneNumber: "(555) 678-9012",
-    start: "2025-01-23T15:00:00",
-    end: "2025-01-23T16:00:00",
-    color: "bg-error",
-    description: "Emergency appointment for fractured tooth #8",
-    notes: "Patient called reporting broken front tooth from sports injury",
-    isNewPatient: true,
-  },
-  {
-    id: "8",
-    title: "Teeth Whitening",
-    patientName: "James Wilson",
-    patientId: "PT-10128",
-    appointmentType: "Cosmetic",
-    status: "confirmed",
-    phoneNumber: "(555) 789-0123",
-    start: "2025-01-23T10:00:00",
-    end: "2025-01-23T11:30:00",
-    color: "bg-info",
-    description: "In-office professional teeth whitening procedure",
-    isNewPatient: false,
-  },
-  {
-    id: "9",
-    title: "Periodontal Treatment",
-    patientName: "Sophia Martinez",
-    patientId: "PT-09637",
-    appointmentType: "Periodontal Therapy",
-    status: "no-show",
-    phoneNumber: "(555) 890-1234",
-    start: "2025-01-16T14:00:00",
-    end: "2025-01-16T15:30:00",
-    color: "bg-neutral",
-    description: "Deep cleaning and scaling for periodontal disease",
-    notes: "Second no-show for this patient",
-    isNewPatient: false,
-  },
-  {
-    id: "10",
-    title: "Child's First Visit",
-    patientName: "Noah Brown (Child)",
-    patientId: "PT-10611",
-    appointmentType: "Pediatric",
-    status: "confirmed",
-    phoneNumber: "(555) 901-2345",
-    start: "2025-01-14T09:30:00",
-    end: "2025-01-14T10:30:00",
-    color: "bg-success",
-    description: "First dental visit for 4-year-old child",
-    notes: "Parent mentioned child is nervous about visit",
-    isNewPatient: true,
-  },
-];
+interface AppointmentData {
+  callId: string;
+  problem: string;
+  fullName: string;
+  appointmentDateTime: string;
+  duration: number;
+  status: string;
+}
 
-const Calendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date("2025-01-10"));
-  const [view, setView] = useState<"month" | "week" | "day" | "agenda">(
-    "month"
-  );
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
-  );
+const Calendar: React.FC = () => {
+  const [currentDate, setCurrentDate] = useState<Date>(new Date("2025-01-10"));
+  const [view, setView] = useState<"month" | "week" | "day" | "agenda">("month");
+  const [showEventModal, setShowEventModal] = useState<boolean>(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
 
-  const getDaysInMonth = (date: Date) => {
+  // Ensure socket is typed
+  const socket: Socket = io(`${BASE_URL}`, {
+    withCredentials: true,
+    extraHeaders: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  useEffect(() => {
+    socket.on("appointmentCreated", (appointmentData: AppointmentData) => {
+      const newEvent: Event = {
+        id: appointmentData.callId,
+        title: `${appointmentData.problem} - ${appointmentData.fullName}`,
+        start: appointmentData.appointmentDateTime,
+        end: new Date(
+          new Date(appointmentData.appointmentDateTime).getTime() +
+            appointmentData.duration * 60000
+        ).toISOString(),
+        color: "bg-primary",
+        description: appointmentData.problem,
+        patientName: appointmentData.fullName,
+        patientId: `PT-${Math.floor(Math.random() * 10000)}`,
+        appointmentType: appointmentData.problem,
+        status: appointmentData.status,
+        phoneNumber: "(555) 000-0000", // Placeholder; update if available
+        isNewPatient: false,
+      };
+      setEvents((prev) => [...prev, newEvent]);
+    });
+
+    return () => {
+      socket.off("appointmentCreated");
+      socket.disconnect();
+    };
+  }, [socket]);
+
+  const getDaysInMonth = (date: Date): Date[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const days = [];
-
-    // Add previous month's days
-    for (let i = 0; i < firstDay.getDay(); i++) {
-      const day = new Date(year, month, -i);
-      days.unshift(day);
-    }
-
-    // Add current month's days
-    for (let i = 1; i <= lastDay.getDate(); i++) {
+    const days: Date[] = [];
+    for (let i = 0; i < firstDay.getDay(); i++)
+      days.unshift(new Date(year, month, -i));
+    for (let i = 1; i <= lastDay.getDate(); i++)
       days.push(new Date(year, month, i));
-    }
-
-    // Add next month's days
     const remainingDays = 42 - days.length;
-    for (let i = 1; i <= remainingDays; i++) {
+    for (let i = 1; i <= remainingDays; i++)
       days.push(new Date(year, month + 1, i));
-    }
-
     return days;
   };
 
-  const getWeekDays = (date: Date) => {
+  const getWeekDays = (date: Date): Date[] => {
     const days = [];
     const sunday = new Date(date);
     sunday.setDate(date.getDate() - date.getDay());
-
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i++)
       days.push(
         new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + i)
       );
-    }
-
     return days;
   };
 
-  const getHours = () => {
-    const hours = [];
-    for (let i = 0; i < 24; i++) {
-      hours.push(i);
-    }
-    return hours;
-  };
+  const getHours = (): number[] => Array.from({ length: 24 }, (_, i) => i);
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
+  const formatDate = (date: Date): string =>
+    new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
     }).format(date);
-  };
 
-  const formatMonthYear = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      year: "numeric",
-    }).format(date);
-  };
+  const formatMonthYear = (date: Date): string =>
+    new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(
+      date
+    );
 
-  const getEventsForDate = (date: Date) => {
-    return mockEvents.filter((event) => {
+  const getEventsForDate = (date: Date): Event[] => {
+    return events.filter((event) => {
       const eventStart = new Date(event.start);
       const eventEnd = event.end ? new Date(event.end) : eventStart;
-
-      // Set time to midnight for date-only comparison
-      const compareDate = new Date(date);
-      compareDate.setHours(0, 0, 0, 0);
-
-      const compareStart = new Date(eventStart);
-      compareStart.setHours(0, 0, 0, 0);
-
-      const compareEnd = new Date(eventEnd);
-      compareEnd.setHours(0, 0, 0, 0);
-
+      const compareDate = new Date(date).setHours(0, 0, 0, 0);
+      const compareStart = new Date(eventStart).setHours(0, 0, 0, 0);
+      const compareEnd = new Date(eventEnd).setHours(0, 0, 0, 0);
       return compareDate >= compareStart && compareDate <= compareEnd;
     });
   };
 
-  const handleEventClick = (event: CalendarEvent) => {
+  const handleEventClick = (event: Event): void => {
     setSelectedEvent(event);
     setShowEventModal(true);
   };
 
-  const renderMonthView = () => {
+  const renderMonthView = (): JSX.Element => {
     const days = getDaysInMonth(currentDate);
     const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
     return (
       <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
         <div className="card-body p-0">
-          {/* Calendar header */}
           <div className="grid grid-cols-7 bg-primary/20 backdrop-blur-md">
             {weekDays.map((day) => (
               <div key={day} className="p-3 text-sm font-medium text-center">
@@ -302,68 +159,40 @@ const Calendar = () => {
               </div>
             ))}
           </div>
-
-          {/* Calendar days */}
           <div className="grid grid-cols-7">
             {days.map((day, index) => {
               const events = getEventsForDate(day);
               const isOtherMonth = day.getMonth() !== currentDate.getMonth();
               const isToday = day.toDateString() === new Date().toDateString();
-
               return (
                 <div
                   key={index}
-                  className={`
-                    min-h-28 p-1 border-b border-r border-base-200/50 transition-colors relative
-                    ${isOtherMonth ? "bg-base-200/40" : "hover:bg-base-200/30"}
-                    ${
-                      isToday
-                        ? "bg-primary/20 ring-1 ring-inset ring-primary/50"
-                        : ""
-                    }
-                  `}
+                  className={`min-h-28 p-1 border-b border-r border-base-200/50 transition-colors relative ${
+                    isOtherMonth ? "bg-base-200/40" : "hover:bg-base-200/30"
+                  } ${isToday ? "bg-primary/20 ring-1 ring-inset ring-primary/50" : ""}`}
                 >
                   <div
-                    className={`
-                    p-1 text-sm font-medium flex justify-center items-center w-6 h-6 rounded-full mb-1 shadow-sm
-                    ${
+                    className={`p-1 text-sm font-medium flex justify-center items-center w-6 h-6 rounded-full mb-1 shadow-sm ${
                       isToday
                         ? "bg-primary text-primary-content"
                         : isOtherMonth
                         ? "text-base-content/30"
                         : "text-base-content/90 bg-base-200/50"
-                    }
-                  `}
+                    }`}
                   >
                     {day.getDate()}
                   </div>
-
                   <div className="space-y-1 max-h-[80px] overflow-y-auto scrollbar-thin scrollbar-thumb-base-300/70 pr-1">
-                    {events.length > 0 &&
-                      events.map((event) => (
-                        <div
-                          key={event.id}
-                          onClick={() => handleEventClick(event)}
-                          className={`
-                          text-xs p-1.5 rounded text-primary-content truncate shadow-md cursor-pointer
-                          transition-all duration-200 hover:translate-y-[-1px] hover:shadow-lg
-                          ${event.color} border border-white/20
-                        `}
-                        >
-                          {event.title}
-                        </div>
-                      ))}
+                    {events.map((event) => (
+                      <div
+                        key={event.id}
+                        onClick={() => handleEventClick(event)}
+                        className={`${event.color} text-xs p-1.5 rounded text-primary-content truncate shadow-md cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:shadow-lg border border-white/20`}
+                      >
+                        {event.title}
+                      </div>
+                    ))}
                   </div>
-
-                  {/* Add event indicator for empty slots */}
-                  {events.length === 0 && !isOtherMonth && (
-                    <button
-                      className="absolute bottom-1 right-1 opacity-0 hover:opacity-100 btn btn-circle btn-xs btn-primary btn-outline"
-                      onClick={() => setShowEventModal(true)}
-                    >
-                      <Plus size={12} />
-                    </button>
-                  )}
                 </div>
               );
             })}
@@ -373,14 +202,12 @@ const Calendar = () => {
     );
   };
 
-  const renderWeekView = () => {
+  const renderWeekView = (): JSX.Element => {
     const days = getWeekDays(currentDate);
     const hours = getHours();
-
     return (
       <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
         <div className="card-body p-0">
-          {/* Week header */}
           <div className="grid grid-cols-8 bg-primary/20 backdrop-blur-md">
             <div className="p-3 text-sm font-medium border-r border-base-200/50">
               Time
@@ -390,23 +217,15 @@ const Calendar = () => {
               return (
                 <div
                   key={index}
-                  className={`
-                    p-3 text-sm font-medium text-center
-                    ${isToday ? "bg-primary/20" : ""}
-                  `}
+                  className={`p-3 text-sm font-medium text-center ${isToday ? "bg-primary/20" : ""}`}
                 >
                   <div className="font-medium">
                     {day.toLocaleDateString("en-US", { weekday: "short" })}
                   </div>
                   <div
-                    className={`
-                    mt-1 text-lg font-bold flex justify-center items-center w-8 h-8 rounded-full mx-auto shadow-sm
-                    ${
-                      isToday
-                        ? "bg-primary text-primary-content"
-                        : "bg-base-200/50"
-                    }
-                  `}
+                    className={`mt-1 text-lg font-bold flex justify-center items-center w-8 h-8 rounded-full mx-auto shadow-sm ${
+                      isToday ? "bg-primary text-primary-content" : "bg-base-200/50"
+                    }`}
                   >
                     {day.getDate()}
                   </div>
@@ -414,26 +233,20 @@ const Calendar = () => {
               );
             })}
           </div>
-
-          {/* Week hours and events */}
           <div className="overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-base-300/70">
             {hours.map((hour) => (
               <div key={hour} className="grid grid-cols-8">
                 <div className="p-2 text-sm font-medium text-base-content/90 border-r border-base-200/50 bg-base-200/30">
                   {hour.toString().padStart(2, "0")}:00
                 </div>
-
                 {days.map((day, dayIndex) => {
-                  const isToday =
-                    day.toDateString() === new Date().toDateString();
+                  const isToday = day.toDateString() === new Date().toDateString();
                   return (
                     <div
                       key={`${hour}-${dayIndex}`}
-                      className={`
-                        min-h-16 border-r border-b border-base-200/50 p-1 relative
-                        ${isToday ? "bg-primary/10" : ""}
-                        transition-colors duration-200 hover:bg-base-200/30
-                      `}
+                      className={`min-h-16 border-r border-b border-base-200/50 p-1 relative ${
+                        isToday ? "bg-primary/10" : ""
+                      } transition-colors duration-200 hover:bg-base-200/30`}
                     >
                       {getEventsForDate(day).map((event) => {
                         const eventDate = new Date(event.start);
@@ -442,24 +255,13 @@ const Calendar = () => {
                             <div
                               key={event.id}
                               onClick={() => handleEventClick(event)}
-                              className={`
-                                text-xs p-2 rounded-md shadow-md h-full text-primary-content
-                                transform transition-all duration-200 hover:translate-y-[-1px] hover:shadow-lg
-                                ${event.color} cursor-pointer border-l-4 border-l-white/30
-                              `}
+                              className={`${event.color} text-xs p-2 rounded-md shadow-md h-full text-primary-content transform transition-all duration-200 hover:translate-y-[-1px] hover:shadow-lg cursor-pointer border-l-4 border-l-white/30`}
                             >
                               <div className="font-medium">{event.title}</div>
                               <div className="text-primary-content/90 mt-1 text-[10px] flex items-center">
                                 <Clock size={10} className="mr-1" />
-                                {eventDate
-                                  .getHours()
-                                  .toString()
-                                  .padStart(2, "0")}
-                                :
-                                {eventDate
-                                  .getMinutes()
-                                  .toString()
-                                  .padStart(2, "0")}
+                                {eventDate.getHours().toString().padStart(2, "0")}:
+                                {eventDate.getMinutes().toString().padStart(2, "0")}
                               </div>
                             </div>
                           );
@@ -477,14 +279,12 @@ const Calendar = () => {
     );
   };
 
-  const renderDayView = () => {
+  const renderDayView = (): JSX.Element => {
     const hours = getHours();
     const events = getEventsForDate(currentDate);
-
     return (
       <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
         <div className="card-body p-0">
-          {/* Day header */}
           <div className="bg-primary/20 backdrop-blur-md p-4 text-center border-b border-base-200/50">
             <div className="text-lg font-medium">
               {formatDate(currentDate)} -{" "}
@@ -494,8 +294,6 @@ const Calendar = () => {
               {events.length} {events.length === 1 ? "event" : "events"} today
             </div>
           </div>
-
-          {/* Day hours and events */}
           <div className="overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-base-300/70">
             {hours.map((hour) => (
               <div
@@ -507,34 +305,20 @@ const Calendar = () => {
                 </div>
                 <div className="p-1 min-h-[60px] relative hover:bg-base-200/30 transition-colors">
                   {events
-                    .filter(
-                      (event) => new Date(event.start).getHours() === hour
-                    )
+                    .filter((event) => new Date(event.start).getHours() === hour)
                     .map((event) => {
                       const eventDate = new Date(event.start);
                       const durationMinutes = event.end
-                        ? (new Date(event.end).getTime() -
-                            eventDate.getTime()) /
+                        ? (new Date(event.end).getTime() - eventDate.getTime()) /
                           (1000 * 60)
                         : 60;
-                      const heightInPixels = Math.max(
-                        (durationMinutes / 60) * 60,
-                        30
-                      );
-
+                      const heightInPixels = Math.max((durationMinutes / 60) * 60, 30);
                       return (
                         <div
                           key={event.id}
                           onClick={() => handleEventClick(event)}
-                          className={`
-                            absolute rounded-md p-2 left-1 right-1 shadow-md 
-                            ${event.color} border-l-4 border-l-white/30 cursor-pointer
-                            transition-transform hover:translate-y-[-1px] hover:shadow-lg
-                          `}
-                          style={{
-                            minHeight: `${heightInPixels}px`,
-                            zIndex: 10,
-                          }}
+                          className={`${event.color} absolute rounded-md p-2 left-1 right-1 shadow-md border-l-4 border-l-white/30 cursor-pointer transition-transform hover:translate-y-[-1px] hover:shadow-lg`}
+                          style={{ minHeight: `${heightInPixels}px`, zIndex: 10 }}
                         >
                           <div className="flex flex-col h-full">
                             <h3 className="font-medium text-primary-content text-sm line-clamp-1">
@@ -567,15 +351,13 @@ const Calendar = () => {
     );
   };
 
-  const renderAgendaView = () => {
-    const sortedEvents = [...mockEvents].sort(
+  const renderAgendaView = (): JSX.Element => {
+    const sortedEvents = [...events].sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
     );
-
     return (
       <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
         <div className="card-body p-0">
-          {/* Agenda header */}
           <div className="bg-primary/20 backdrop-blur-md p-4 border-b border-base-200/50 flex justify-between items-center">
             <h3 className="font-medium">All Events ({sortedEvents.length})</h3>
             <div className="join">
@@ -585,13 +367,10 @@ const Calendar = () => {
               <button className="join-item btn btn-sm btn-ghost">Today</button>
             </div>
           </div>
-
-          {/* Agenda list */}
           <div className="divide-y divide-base-200/50">
             {sortedEvents.map((event) => {
               const startDate = new Date(event.start);
               const endDate = event.end ? new Date(event.end) : null;
-
               return (
                 <div
                   key={event.id}
@@ -600,13 +379,9 @@ const Calendar = () => {
                 >
                   <div className="flex items-start gap-4">
                     <div className="text-center min-w-16">
-                      <div className="text-2xl font-bold">
-                        {startDate.getDate()}
-                      </div>
+                      <div className="text-2xl font-bold">{startDate.getDate()}</div>
                       <div className="text-xs text-base-content/90">
-                        {startDate.toLocaleString("default", {
-                          month: "short",
-                        })}
+                        {startDate.toLocaleString("default", { month: "short" })}
                       </div>
                       <div className="text-xs mt-1 badge badge-sm badge-primary">
                         {startDate.toLocaleTimeString([], {
@@ -615,21 +390,14 @@ const Calendar = () => {
                         })}
                       </div>
                     </div>
-
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <div
-                          className={`w-3 h-3 rounded-full ${event.color.replace(
-                            "bg-",
-                            "bg-"
-                          )}`}
-                        ></div>
+                        <div className={`w-3 h-3 rounded-full ${event.color}`}></div>
                         <h3 className="font-medium text-base">{event.title}</h3>
                       </div>
                       <p className="text-sm text-base-content/90 mt-1 line-clamp-2">
                         {event.description}
                       </p>
-
                       {endDate && (
                         <div className="mt-2 text-xs text-base-content/90 flex items-center gap-1">
                           <Clock size={12} />
@@ -653,18 +421,15 @@ const Calendar = () => {
     );
   };
 
-  const renderEventModal = () => {
+  const renderEventModal = (): JSX.Element | null => {
     if (!showEventModal) return null;
-
     return (
       <dialog open className="modal">
         <div className="modal-box bg-base-300/95 backdrop-blur-xl border-2 border-primary/30 shadow-xl">
           <h3 className="font-bold text-xl flex items-center gap-2">
             {selectedEvent ? (
               <>
-                <div
-                  className={`w-5 h-5 rounded-full ${selectedEvent.color}`}
-                ></div>
+                <div className={`w-5 h-5 rounded-full ${selectedEvent.color}`}></div>
                 {selectedEvent.title}
               </>
             ) : (
@@ -674,22 +439,17 @@ const Calendar = () => {
               </>
             )}
           </h3>
-
           {selectedEvent && (
             <div className="py-4">
-              {/* Patient Information */}
               <div className="card bg-base-200/40 shadow-sm mb-3">
                 <div className="card-body p-3">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <UserCircle size={16} className="text-primary" />
                     Patient Information
                   </h4>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                     <div>
-                      <p className="text-sm font-medium">
-                        {selectedEvent.patientName}
-                      </p>
+                      <p className="text-sm font-medium">{selectedEvent.patientName}</p>
                       <p className="text-xs text-base-content/70">
                         ID: {selectedEvent.patientId}
                       </p>
@@ -708,110 +468,75 @@ const Calendar = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Appointment Details */}
               <div className="card bg-base-200/40 shadow-sm mb-3">
                 <div className="card-body p-3">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <CalendarIcon size={16} className="text-primary" />
                     Appointment Details
                   </h4>
-
                   <div className="flex items-center gap-2 mt-2">
                     <div
                       className={`badge ${
-                        selectedEvent.status === "confirmed"
+                        selectedEvent.status === "scheduled"
                           ? "badge-primary"
                           : selectedEvent.status === "completed"
                           ? "badge-success"
-                          : selectedEvent.status === "cancelled"
-                          ? "badge-error"
-                          : selectedEvent.status === "no-show"
-                          ? "badge-warning"
-                          : "badge-info"
+                          : "badge-error"
                       }`}
                     >
-                      {selectedEvent.status.replace("-", " ")}
+                      {selectedEvent.status}
                     </div>
                     <div className="badge badge-outline badge-ghost">
                       {selectedEvent.appointmentType}
                     </div>
                   </div>
-
                   <div className="bg-base-100/30 p-2 rounded-md mt-2">
                     <p className="text-xs flex items-center gap-1">
                       <Clock size={14} />
-                      {new Date(selectedEvent.start).toLocaleDateString(
-                        "en-US",
-                        {
-                          weekday: "long",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
+                      {new Date(selectedEvent.start).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                      })}{" "}
                       {" · "}
                       {new Date(selectedEvent.start).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                      {selectedEvent.end ? (
-                        <>
-                          {" "}
-                          -{" "}
-                          {new Date(selectedEvent.end).toLocaleTimeString([], {
+                      {selectedEvent.end
+                        ? ` - ${new Date(selectedEvent.end).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
-                          })}
-                        </>
-                      ) : (
-                        ""
-                      )}
+                          })}`
+                        : ""}
                     </p>
                   </div>
-
                   <div className="mt-3">
                     <p className="text-xs text-base-content/90 font-medium">
                       Description:
                     </p>
                     <p className="text-sm mt-1">{selectedEvent.description}</p>
                   </div>
-
-                  {selectedEvent.notes && (
-                    <div className="mt-3 bg-warning/10 border border-warning/30 p-2 rounded-md">
-                      <p className="text-xs text-base-content/90 font-medium flex items-center gap-1">
-                        <AlertCircle size={14} className="text-warning" />
-                        Special Notes:
-                      </p>
-                      <p className="text-sm mt-1">{selectedEvent.notes}</p>
-                    </div>
-                  )}
                 </div>
               </div>
-
-              {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 mt-4">
                 <button className="btn btn-sm btn-outline flex-1 shadow-sm">
-                  <Edit3 size={16} /> Edit
-                </button>
-                <button className="btn btn-sm bg-success/70 hover:bg-success text-white flex-1 shadow-sm">
                   <CheckCircle size={16} /> Check In
                 </button>
                 <button className="btn btn-sm btn-error btn-outline flex-1 shadow-sm">
                   <XCircle size={16} /> Cancel
                 </button>
               </div>
-
               <div className="flex gap-2 mt-2">
-                <button className="btn btn-sm btn-ghost flex-1 btn-sm">
+                <button className="btn btn-sm btn-ghost flex-1">
                   <File size={16} /> View Records
                 </button>
-                <button className="btn btn-sm btn-ghost flex-1 btn-sm">
+                <button className="btn btn-sm btn-ghost flex-1">
                   <MessageSquare size={16} /> Send Reminder
                 </button>
               </div>
             </div>
           )}
-
           <div className="modal-action">
             <button
               className="btn shadow-sm"
@@ -824,7 +549,6 @@ const Calendar = () => {
             </button>
           </div>
         </div>
-
         <form method="dialog" className="modal-backdrop">
           <button
             onClick={() => {
@@ -842,19 +566,16 @@ const Calendar = () => {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header with title */}
         <div className="card bg-base-300/80 backdrop-blur-xl p-5 border-2 border-primary/30 shadow-lg">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <CalendarIcon className="h-6 w-6 text-primary" /> Dental
-                Appointments
+                <CalendarIcon className="h-6 w-6 text-primary" /> Dental Appointments
               </h1>
               <p className="text-base-content/70 mt-1">
                 Manage and schedule your patient appointments
               </p>
             </div>
-
             <div className="flex flex-wrap gap-2">
               <div className="join shadow-md">
                 <button
@@ -867,13 +588,9 @@ const Calendar = () => {
                   className="join-item btn btn-sm btn-square"
                   onClick={() => {
                     const newDate = new Date(currentDate);
-                    if (view === "month") {
-                      newDate.setMonth(newDate.getMonth() - 1);
-                    } else if (view === "week") {
-                      newDate.setDate(newDate.getDate() - 7);
-                    } else {
-                      newDate.setDate(newDate.getDate() - 1);
-                    }
+                    if (view === "month") newDate.setMonth(newDate.getMonth() - 1);
+                    else if (view === "week") newDate.setDate(newDate.getDate() - 7);
+                    else newDate.setDate(newDate.getDate() - 1);
                     setCurrentDate(newDate);
                   }}
                 >
@@ -883,13 +600,9 @@ const Calendar = () => {
                   className="join-item btn btn-sm btn-square"
                   onClick={() => {
                     const newDate = new Date(currentDate);
-                    if (view === "month") {
-                      newDate.setMonth(newDate.getMonth() + 1);
-                    } else if (view === "week") {
-                      newDate.setDate(newDate.getDate() + 7);
-                    } else {
-                      newDate.setDate(newDate.getDate() + 1);
-                    }
+                    if (view === "month") newDate.setMonth(newDate.getMonth() + 1);
+                    else if (view === "week") newDate.setDate(newDate.getDate() + 7);
+                    else newDate.setDate(newDate.getDate() + 1);
                     setCurrentDate(newDate);
                   }}
                 >
@@ -899,7 +612,6 @@ const Calendar = () => {
               <span className="badge badge-lg bg-base-200/60 font-medium shadow-sm">
                 {formatMonthYear(currentDate)}
               </span>
-
               <button className="btn btn-primary btn-sm ml-auto shadow-md">
                 <Plus size={16} />
                 New Appointment
@@ -907,24 +619,20 @@ const Calendar = () => {
             </div>
           </div>
         </div>
-
-        {/* View selector */}
         <div className="flex justify-end">
           <div className="join shadow-md">
             {[
-              { id: "month", icon: <LayoutGrid size={16} /> },
-              { id: "week", icon: <CalendarViewIcon size={16} /> },
-              { id: "day", icon: <List size={16} /> },
-              { id: "agenda", icon: <ListFilter size={16} /> },
+              { id: "month" as "month" | "day" | "week" | "agenda", icon: <LayoutGrid size={16} /> },
+              { id: "week" as "month" | "day" | "week" | "agenda", icon: <CalendarViewIcon size={16} /> },
+              { id: "day" as "month" | "day" | "week" | "agenda", icon: <List size={16} /> },
+              { id: "agenda" as "month" | "day" | "week" | "agenda", icon: <ListFilter size={16} /> },
             ].map((v) => (
               <button
                 key={v.id}
                 className={`join-item btn btn-sm ${
                   view === v.id ? "btn-primary" : "btn-ghost bg-base-200/50"
                 }`}
-                onClick={() =>
-                  setView(v.id as "month" | "week" | "day" | "agenda")
-                }
+                onClick={() => setView(v.id)}
               >
                 {v.icon}
                 <span className="capitalize">{v.id}</span>
@@ -932,15 +640,11 @@ const Calendar = () => {
             ))}
           </div>
         </div>
-
-        {/* Calendar view */}
         {view === "month" && renderMonthView()}
         {view === "week" && renderWeekView()}
         {view === "day" && renderDayView()}
         {view === "agenda" && renderAgendaView()}
       </div>
-
-      {/* Event modal */}
       {renderEventModal()}
     </div>
   );

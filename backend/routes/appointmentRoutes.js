@@ -4,7 +4,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/appointment/book:
+ * /api/appointments/book:
  *   post:
  *     summary: Book a new appointment
  *     tags: [Appointment]
@@ -76,54 +76,11 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Appointment booked successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Appointment booked successfully
- *                 appointment:
- *                   $ref: '#/components/schemas/Appointment'
  *       400:
  *         description: Invalid request data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Invalid tool-calls message
  *       500:
  *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Failed to process appointment
- *                 details:
- *                   type: string
  */
 router.post("/book", createAppointment);
-
-/**
- * @swagger
- * /api/appointment/available-slots:
- *   get:
- *     summary: Get available appointment slots
- *     tags: [Appointment]
- *     description: Returns a list of available time slots for appointments
- *     responses:
- *       200:
- *         description: List of available slots
- *       500:
- *         description: Server error
- */
-// router.get('/available-slots', getAvailableSlots);
 
 module.exports = router;
