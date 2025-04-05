@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { BASE_URL } from "../../utils/constants";
 import io from "socket.io-client"; // Removed unused Socket type import
 import {
   ChevronLeft,
@@ -19,8 +20,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-// Define BASE_URL directly or import from a constants file
-const BASE_URL = "http://localhost:5003"; // Adjust as per your backend
 
 // Define event and appointment data interfaces
 interface Event {
