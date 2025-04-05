@@ -20,11 +20,9 @@ import {
 } from "lucide-react";
 
 // Define Socket.IO URL and path
-// import { BASE_URL } from "../../utils/constants";
-const BASE_URL = "https://osaw.in"; // Base URL for production
+const SOCKET_URL = "https://osaw.in"; // Base URL
 const SOCKET_PATH = "/v1/voice/socket.io"; // Matches backend deployment
 
-// Define event and appointment data interfaces
 interface Event {
   id: string;
   title: string;
@@ -56,20 +54,21 @@ const Calendar = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
 
-  // Initialize Socket.IO with specific path and WebSocket transport
-  const socket = io(BASE_URL, {
+  // Initialize Socket.IO with fallback to polling
+  const socket = io(SOCKET_URL, {
     path: SOCKET_PATH,
     withCredentials: true,
-    transports: ["websocket"], // Prefer WebSocket over polling
+    transports: ["websocket", "polling"], // Allow fallback to polling
+    reconnection: true, // Attempt to reconnect on failure
+    reconnectionAttempts: 5, // Number of reconnection attempts
+    reconnectionDelay: 1000, // Delay between attempts
   });
 
   useEffect(() => {
-    // Log connection status
     socket.on("connect", () => {
-      console.log("Socket.IO connected to", BASE_URL + SOCKET_PATH);
+      console.log("Socket.IO connected to", SOCKET_URL + SOCKET_PATH);
     });
 
-    // Handle new appointment events
     socket.on("appointmentCreated", (appointmentData: AppointmentData) => {
       console.log("Received appointmentCreated:", appointmentData);
       const newEvent: Event = {
@@ -92,16 +91,24 @@ const Calendar = () => {
       setEvents((prev) => [...prev, newEvent]);
     });
 
-    // Log connection errors
     socket.on("connect_error", (error) => {
-      console.error("Socket.IO connection error:", error.message);
+      console.error("Socket.IO connection error:", error.message, error);
     });
 
-    // Cleanup
+    socket.on("reconnect_attempt", (attempt) => {
+      console.log("Reconnection attempt:", attempt);
+    });
+
+    socket.on("reconnect_failed", () => {
+      console.error("Socket.IO reconnection failed after all attempts");
+    });
+
     return () => {
       socket.off("connect");
       socket.off("appointmentCreated");
       socket.off("connect_error");
+      socket.off("reconnect_attempt");
+      socket.off("reconnect_failed");
     };
   }, [socket]);
 
@@ -546,7 +553,7 @@ const Calendar = () => {
                 <button className="btn btn-sm btn-ghost flex-1">
                   <File size={16} /> View Records
                 </button>
-                <button className="btn btn/dashboardm btn-ghost flex-1">
+                <button className="btn btn-sm btn-ghost flex-1">
                   <MessageSquare size={16} /> Send Reminder
                 </button>
               </div>
