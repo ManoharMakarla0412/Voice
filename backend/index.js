@@ -1,4 +1,9 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const path = require("path");
 const userRoutes = require("./routes/userRoute");
 const assistantRoutes = require("./routes/assistantRoutes");
 const twilioRoutes = require("./routes/twilioRoute");
@@ -14,12 +19,7 @@ const planRoutes = require("./routes/planRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const { scheduleBillingEmails } = require("./utils/billingEmailScheduler");
 const connectDB = require("./config/db");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const path = require("path");
 const { swaggerUi, swaggerSpecs } = require("./swagger/swagger");
-const http = require("http");
-const { Server } = require("socket.io");
 
 const app = express();
 const port = process.env.PORT || 5003;
@@ -29,18 +29,20 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000", "https://app.elidepro.com"],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   },
+  path: "/v1/voice/socket.io", // Serve Socket.IO under /v1/voice
 });
-
-// Pass io to routes that need it (e.g., appointmentRoutes)
 app.set("io", io);
 
-// Enable CORS
+
+
+// CORS middleware for Express (consistent with Socket.IO)
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5003", "https://app.elidepro.com"],
+    origin: ["http://localhost:3000", "https://app.elidepro.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -70,17 +72,23 @@ app.use("/api/events", eventRoutes);
 // Swagger UI
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { explorer: true }));
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB with error handling
+connectDB().catch((error) => {
+  console.error("Failed to connect to MongoDB:", error);
+  process.exit(1);
+});
 
 // Start cron scheduler
 scheduleBillingEmails();
 console.log("Billing email scheduler started");
 
-// Start server
+// Start server with error handling
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
+  console.log(`Socket.IO available at http://localhost:${port}/socket.io`);
+}).on("error", (error) => {
+  console.error("Server startup error:", error);
 });
 
-module.exports = { app, io }; // Export io for use in controllers if needed
+module.exports = { app, io };

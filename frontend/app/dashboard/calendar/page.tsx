@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { BASE_URL } from "../../utils/constants";
-import io from "socket.io-client"; // Removed unused Socket type import
+import io from "socket.io-client";
 import {
   ChevronLeft,
   ChevronRight,
@@ -20,6 +19,10 @@ import {
   MessageSquare,
 } from "lucide-react";
 
+// Define Socket.IO URL and path
+// import { BASE_URL } from "../../utils/constants";
+const BASE_URL = "https://osaw.in"; // Base URL for production
+const SOCKET_PATH = "/v1/voice/socket.io"; // Matches backend deployment
 
 // Define event and appointment data interfaces
 interface Event {
@@ -53,16 +56,22 @@ const Calendar = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
 
-  // Initialize socket
+  // Initialize Socket.IO with specific path and WebSocket transport
   const socket = io(BASE_URL, {
+    path: SOCKET_PATH,
     withCredentials: true,
-    extraHeaders: {
-      "Content-Type": "application/json",
-    },
+    transports: ["websocket"], // Prefer WebSocket over polling
   });
 
   useEffect(() => {
+    // Log connection status
+    socket.on("connect", () => {
+      console.log("Socket.IO connected to", BASE_URL + SOCKET_PATH);
+    });
+
+    // Handle new appointment events
     socket.on("appointmentCreated", (appointmentData: AppointmentData) => {
+      console.log("Received appointmentCreated:", appointmentData);
       const newEvent: Event = {
         id: appointmentData.callId,
         title: `${appointmentData.problem} - ${appointmentData.fullName}`,
@@ -83,8 +92,16 @@ const Calendar = () => {
       setEvents((prev) => [...prev, newEvent]);
     });
 
+    // Log connection errors
+    socket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error.message);
+    });
+
+    // Cleanup
     return () => {
+      socket.off("connect");
       socket.off("appointmentCreated");
+      socket.off("connect_error");
     };
   }, [socket]);
 
@@ -529,7 +546,7 @@ const Calendar = () => {
                 <button className="btn btn-sm btn-ghost flex-1">
                   <File size={16} /> View Records
                 </button>
-                <button className="btn btn-sm btn-ghost flex-1">
+                <button className="btn btn/dashboardm btn-ghost flex-1">
                   <MessageSquare size={16} /> Send Reminder
                 </button>
               </div>
@@ -568,7 +585,8 @@ const Calendar = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <CalendarIcon className="h-6 w-6 text-primary" /> Dental Appointments
+                <CalendarIcon className="h-6 w-6 text-primary" />
+                Dental Appointments
               </h1>
               <p className="text-base-content/70 mt-1">
                 Manage and schedule your patient appointments
