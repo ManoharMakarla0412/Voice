@@ -4,6 +4,8 @@ const Appointment = require("../models/appointmentModel");
 exports.createAppointment = async (req, res) => {
   try {
     const { message } = req.body;
+    const userId = req.user.id; // Assuming user ID comes from JWT middleware
+
     if (!message) return res.status(400).json({ error: "No message provided" });
     if (message.type !== "tool-calls") return res.status(400).json({ error: "Invalid message type" });
     if (!message.toolCalls || !message.toolCalls.length) return res.status(400).json({ error: "No tool calls found" });
@@ -44,6 +46,7 @@ exports.createAppointment = async (req, res) => {
     if (!appointmentDateTime.isValid()) return res.status(400).json({ error: "Invalid dateandtime format" });
 
     const appointmentData = {
+      userId, // Add userId here
       fullName: args.customername || "Unknown",
       problem: args.typeofservice || "Not specified",
       appointmentDateTime: appointmentDateTime.toDate(),
@@ -58,7 +61,6 @@ exports.createAppointment = async (req, res) => {
 
     const newAppointment = new Appointment(appointmentData);
     const savedAppointment = await newAppointment.save();
-console.log("Appointment saved:", savedAppointment);
 
     res.status(200).json({
       message: "Appointment booked successfully",
@@ -74,9 +76,10 @@ console.log("Appointment saved:", savedAppointment);
 
 exports.getLatestAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find()
-      .sort({ timestamp: -1 }) // Latest first
-      .limit(10); // Limit to recent ones for demo
+    const userId = req.user.id; // Get user ID from JWT middleware
+    const appointments = await Appointment.find({ userId })
+      .sort({ timestamp: -1 })
+      .limit(10);
     res.status(200).json(appointments);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch appointments", details: error.message });

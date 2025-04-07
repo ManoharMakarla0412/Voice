@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
  *     Appointment:
  *       type: object
  *       required:
+ *         - userId
  *         - fullName
  *         - problem
  *         - appointmentDateTime
@@ -16,6 +17,9 @@ const mongoose = require("mongoose");
  *         _id:
  *           type: string
  *           description: The auto-generated id of the appointment
+ *         userId:
+ *           type: string
+ *           description: ID of the user who owns this appointment
  *         fullName:
  *           type: string
  *           description: Full name of the customer
@@ -54,6 +58,7 @@ const mongoose = require("mongoose");
  *           description: Timestamp when the record was last updated
  *       example:
  *         _id: 61dbae02eedde007e86ce1b3
+ *         userId: 61dba123eedde007e86ce1a2
  *         fullName: John Doe
  *         problem: Medical consultation
  *         appointmentDateTime: 2023-04-01T14:00:00.000Z
@@ -67,6 +72,7 @@ const mongoose = require("mongoose");
  */
 const appointmentSchema = new mongoose.Schema(
   {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     fullName: { type: String, required: true },
     problem: { type: String, required: true },
     appointmentDateTime: { type: Date, required: true },
