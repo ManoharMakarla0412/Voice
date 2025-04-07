@@ -61,6 +61,8 @@ exports.createAppointment = async (req, res) => {
 
     const newAppointment = new Appointment(appointmentData);
     const savedAppointment = await newAppointment.save();
+    console.log("Appointment saved:", savedAppointment);
+    
 
     res.status(200).json({
       message: "Appointment booked successfully",
