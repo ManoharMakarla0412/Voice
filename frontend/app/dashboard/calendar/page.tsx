@@ -19,10 +19,12 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-// Define Socket.IO URL and path
-const SOCKET_URL = "https://osaw.in"; // Base URL
-const SOCKET_PATH = "/v1/voice/socket.io"; // Matches backend deployment
+// // Define Socket.IO URL and path
+// const SOCKET_URL = "https://osaw.in"; // Base URL
+// const SOCKET_PATH = "/v1/voice/socket.io"; // Matches backend deployment
 
+const SOCKET_URL = "https://osaw.in/v1/voice"; // Correct base URL
+const SOCKET_PATH = "/socket.io"; // Matches server's default Socket.IO path
 interface Event {
   id: string;
   title: string;

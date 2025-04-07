@@ -29,8 +29,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
       "https://app.elidepro.com",
+      "http://localhost:3000",
       "http://localhost:5003",
       "https://mighty-driven-dragon.ngrok-free.app",
     ],
