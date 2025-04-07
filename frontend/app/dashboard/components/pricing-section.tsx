@@ -32,8 +32,8 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "basic",
       name: "Basic",
-      monthlyPrice: 20,
-      yearlyPrice: 110000,
+      monthlyPrice: 25,
+      yearlyPrice: 20,
       description: "Perfect for small teams and startups",
       features: [
         { title: "1 Voice Assistant", monthly: true, yearly: true },
@@ -47,8 +47,8 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "pro",
       name: "Pro",
-      monthlyPrice: 17,
-      yearlyPrice: 170000,
+      monthlyPrice: 20,
+      yearlyPrice: 17,
       description: "For growing businesses with more needs",
       popular: true,
       features: [
@@ -63,8 +63,8 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "enterprise",
       name: "Enterprise",
-      monthlyPrice: 15,
-      yearlyPrice: 280000,
+      monthlyPrice: 17,
+      yearlyPrice: 15,
       description: "For large organizations with custom needs",
       features: [
         { title: "10 Voice Assistants", monthly: true, yearly: true },
