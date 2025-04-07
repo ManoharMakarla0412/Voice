@@ -3,8 +3,10 @@ const Appointment = require("../models/appointmentModel");
 
 exports.createAppointment = async (req, res) => {
   try {
+    console.log("Request body:", req.body); // Log incoming request
     const { message } = req.body;
-    const userId = req.user.id; // Assuming user ID comes from JWT middleware
+    const userId = req.user.id; // From JWT middleware
+    console.log("User ID from token:", userId); // Verify userId
 
     if (!message) return res.status(400).json({ error: "No message provided" });
     if (message.type !== "tool-calls") return res.status(400).json({ error: "Invalid message type" });
@@ -14,6 +16,7 @@ exports.createAppointment = async (req, res) => {
     if (toolCall.function.name !== "Function_Tool") return res.status(400).json({ error: "Unexpected tool call function" });
 
     const args = toolCall.function.arguments;
+    console.log("Arguments:", args); // Log arguments
     if (!args.dateandtime || typeof args.dateandtime !== "string") return res.status(400).json({ error: "Missing or invalid dateandtime" });
 
     const messages = message.artifact?.messages;
@@ -25,6 +28,7 @@ exports.createAppointment = async (req, res) => {
 
     const durationMs = endTime - startTime;
     const durationMinutes = Math.round(durationMs / 60000);
+    console.log("Calculated duration (minutes):", durationMinutes); // Log duration
 
     const today = moment();
     let appointmentDateTime;
@@ -43,10 +47,14 @@ exports.createAppointment = async (req, res) => {
       appointmentDateTime = moment(args.dateandtime, "YYYY-MM-DD HH:mm");
     }
 
-    if (!appointmentDateTime.isValid()) return res.status(400).json({ error: "Invalid dateandtime format" });
+    if (!appointmentDateTime.isValid()) {
+      console.log("Invalid dateand FASTtime:", args.dateandtime); // Log invalid date
+      return res.status(400).json({ error: "Invalid dateandtime format" });
+    }
+    console.log("Parsed appointmentDateTime:", appointmentDateTime.toDate()); // Log parsed date
 
     const appointmentData = {
-      userId, // Add userId here
+      userId,
       fullName: args.customername || "Unknown",
       problem: args.typeofservice || "Not specified",
       appointmentDateTime: appointmentDateTime.toDate(),
@@ -59,16 +67,17 @@ exports.createAppointment = async (req, res) => {
 
     if (!appointmentData.callId) return res.status(400).json({ error: "Missing call ID" });
 
+    console.log("Appointment data before save:", appointmentData); // Log data before saving
     const newAppointment = new Appointment(appointmentData);
     const savedAppointment = await newAppointment.save();
-    console.log("Appointment saved:", savedAppointment);
-    
+    console.log("Appointment saved:", savedAppointment); // Should log if saved
 
     res.status(200).json({
       message: "Appointment booked successfully",
       appointment: appointmentData,
     });
   } catch (error) {
+    console.error("Error in createAppointment:", error); // Log full error details
     res.status(500).json({
       error: "Failed to process appointment",
       details: error.message,
@@ -78,12 +87,15 @@ exports.createAppointment = async (req, res) => {
 
 exports.getLatestAppointments = async (req, res) => {
   try {
-    const userId = req.user.id; // Get user ID from JWT middleware
+    const userId = req.user.id;
+    console.log("Fetching appointments for userId:", userId); // Log userId
     const appointments = await Appointment.find({ userId })
       .sort({ timestamp: -1 })
       .limit(10);
+    console.log("Fetched appointments:", appointments); // Log fetched data
     res.status(200).json(appointments);
   } catch (error) {
+    console.error("Error in getLatestAppointments:", error);
     res.status(500).json({ error: "Failed to fetch appointments", details: error.message });
   }
 };
