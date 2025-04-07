@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
+import { BASE_URL } from "../utils/constants";
 
-const baseurl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5003";
+const baseurl = BASE_URL || "http://localhost:5003";
 
 export interface Feature {
   title: string;
