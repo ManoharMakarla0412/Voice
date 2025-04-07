@@ -67,6 +67,8 @@ const Calendar = () => {
     reconnectionAttempts: 5, // Number of reconnection attempts
     reconnectionDelay: 1000, // Delay between attempts
   });
+  console.log("Socket.IO connecting to:", SOCKET_URL + SOCKET_PATH); // Add this line
+  console.log("Socket.IO path:", SOCKET_PATH); // Add this line 
 
   useEffect(() => {
     socket.on("connect", () => {
