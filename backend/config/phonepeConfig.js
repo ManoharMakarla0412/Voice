@@ -4,6 +4,6 @@ module.exports = {
   MERCHANT_BASE_URL: "https://api.phonepe.com/apis/hermes",
   MERCHANT_STATUS_URL: "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status",
   REDIRECT_URL: "https://osaw.in/v1/voice/api/payment/status",
-  SUCCESS_URL: "https://app.elidepro.com/dashboard/payment-success",
-  FAILURE_URL: "https://app.elidepro.com/dashboard/payment-failure",
+  SUCCESS_URL: "https://app.elidepro.com/payment-success",
+  FAILURE_URL: "https://app.elidepro.com/payment-failure",
 }; 

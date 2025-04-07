@@ -153,7 +153,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
                         : plan.yearlyPrice}
                     </span>
                     <span className="text-sm text-base-content/70 ml-1">
-                      /{billingCycle === "monthly" ? "minute" : "yr"}
+                      /{billingCycle === "monthly" ? "minute" : "minute"}
                     </span>
                   </div>
                   {billingCycle === "yearly" && (
