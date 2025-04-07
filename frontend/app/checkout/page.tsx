@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BASE_URL } from "../../utils/constants";
+import { BASE_URL } from "../utils/constants";
 import {
   CreditCard,
   DollarSign,
