@@ -69,123 +69,123 @@ app.use(
 );
 
 // Sync VAPI data on startup with default user ID
-const DEFAULT_USER_ID = "67e17813bb2f5277647a0850";
+// const DEFAULT_USER_ID = "67e17813bb2f5277647a0850";
 
-const syncVapiData = async () => {
-  try {
-    console.log("Syncing VAPI data...");
+// const syncVapiData = async () => {
+//   try {
+//     console.log("Syncing VAPI data...");
 
-    // Sync Assistants
-    const assistants = await getAssistantFromVapi();
-    for (const vapiAssistant of assistants) {
-      const existingAssistant = await Assistant.findOne({
-        vapiAssistantId: vapiAssistant.id,
-      });
-      if (!existingAssistant) {
-        const newAssistant = new Assistant({
-          userId: DEFAULT_USER_ID,
-          vapiAssistantId: vapiAssistant.id,
-          name: vapiAssistant.name,
-          firstMessage: vapiAssistant.firstMessage,
-          voicemailMessage: vapiAssistant.voicemailMessage,
-          endCallMessage: vapiAssistant.endCallMessage,
-          recordingEnabled: vapiAssistant.recordingEnabled || false,
-          voice: vapiAssistant.voice,
-          model: vapiAssistant.model,
-          updatedAt: new Date(),
-        });
-        await newAssistant.save();
-        console.log(
-          `Added new assistant: ${vapiAssistant.id} for user ${DEFAULT_USER_ID}`
-        );
-      } else if (
-        new Date(existingAssistant.updatedAt) <
-        new Date(vapiAssistant.updatedAt || vapiAssistant.createdAt)
-      ) {
-        existingAssistant.name = vapiAssistant.name;
-        existingAssistant.firstMessage = vapiAssistant.firstMessage;
-        existingAssistant.voicemailMessage = vapiAssistant.voicemailMessage;
-        existingAssistant.endCallMessage = vapiAssistant.endCallMessage;
-        existingAssistant.recordingEnabled = vapiAssistant.recordingEnabled;
-        existingAssistant.voice = vapiAssistant.voice;
-        existingAssistant.model = vapiAssistant.model;
-        existingAssistant.updatedAt = new Date();
-        await existingAssistant.save();
-        console.log(`Updated assistant: ${vapiAssistant.id}`);
-      }
-    }
+//     // Sync Assistants
+//     const assistants = await getAssistantFromVapi();
+//     for (const vapiAssistant of assistants) {
+//       const existingAssistant = await Assistant.findOne({
+//         vapiAssistantId: vapiAssistant.id,
+//       });
+//       if (!existingAssistant) {
+//         const newAssistant = new Assistant({
+//           userId: DEFAULT_USER_ID,
+//           vapiAssistantId: vapiAssistant.id,
+//           name: vapiAssistant.name,
+//           firstMessage: vapiAssistant.firstMessage,
+//           voicemailMessage: vapiAssistant.voicemailMessage,
+//           endCallMessage: vapiAssistant.endCallMessage,
+//           recordingEnabled: vapiAssistant.recordingEnabled || false,
+//           voice: vapiAssistant.voice,
+//           model: vapiAssistant.model,
+//           updatedAt: new Date(),
+//         });
+//         await newAssistant.save();
+//         console.log(
+//           `Added new assistant: ${vapiAssistant.id} for user ${DEFAULT_USER_ID}`
+//         );
+//       } else if (
+//         new Date(existingAssistant.updatedAt) <
+//         new Date(vapiAssistant.updatedAt || vapiAssistant.createdAt)
+//       ) {
+//         existingAssistant.name = vapiAssistant.name;
+//         existingAssistant.firstMessage = vapiAssistant.firstMessage;
+//         existingAssistant.voicemailMessage = vapiAssistant.voicemailMessage;
+//         existingAssistant.endCallMessage = vapiAssistant.endCallMessage;
+//         existingAssistant.recordingEnabled = vapiAssistant.recordingEnabled;
+//         existingAssistant.voice = vapiAssistant.voice;
+//         existingAssistant.model = vapiAssistant.model;
+//         existingAssistant.updatedAt = new Date();
+//         await existingAssistant.save();
+//         console.log(`Updated assistant: ${vapiAssistant.id}`);
+//       }
+//     }
 
-    // Sync Calls
-    const calls = await getCallsFromVapi();
-    for (const vapiCall of calls) {
-      const existingCall = await CallLog.findOne({ callId: vapiCall.id });
-      if (!existingCall) {
-        const newCallLog = new CallLog({
-          callId: vapiCall.id,
-          orgId: vapiCall.orgId,
-          type: vapiCall.type,
-          startedAt: vapiCall.startedAt ? new Date(vapiCall.startedAt) : null,
-          endedAt: vapiCall.endedAt ? new Date(vapiCall.endedAt) : null,
-          minutes:
-            vapiCall.costs?.find((c) => c.type === "transcriber")?.minutes || 0,
-          cost: vapiCall.cost || 0,
-          status: vapiCall.status || "completed",
-          customerNumber: vapiCall.customer?.number || null,
-          assistantId: vapiCall.assistantId || null,
-          assistant: vapiCall.assistant
-            ? {
-                name: vapiCall.assistant.name,
-                firstMessage: vapiCall.assistant.firstMessage,
-                voiceProvider: vapiCall.assistant.voice?.provider,
-                voiceId: vapiCall.assistant.voice?.voiceId,
-              }
-            : {},
-          updatedAt: new Date(),
-        });
-        await newCallLog.save();
-        console.log(`Added new call: ${vapiCall.id}`);
-      } else if (
-        new Date(existingCall.updatedAt) <
-        new Date(vapiCall.updatedAt || vapiCall.createdAt)
-      ) {
-        existingCall.startedAt = vapiCall.startedAt
-          ? new Date(vapiCall.startedAt)
-          : existingCall.startedAt;
-        existingCall.endedAt = vapiCall.endedAt
-          ? new Date(vapiCall.endedAt)
-          : existingCall.endedAt;
-        existingCall.minutes =
-          vapiCall.costs?.find((c) => c.type === "transport")?.minutes ||
-          existingCall.minutes;
-        existingCall.cost = vapiCall.cost || existingCall.cost;
-        existingCall.status = vapiCall.status || existingCall.status;
-        existingCall.assistantId =
-          vapiCall.assistantId || existingCall.assistantId;
-        existingCall.assistant = vapiCall.assistant
-          ? {
-              name: vapiCall.assistant.name,
-              firstMessage: vapiCall.assistant.firstMessage,
-              voiceProvider: vapiCall.assistant.voice?.provider,
-              voiceId: vapiCall.assistant.voice?.voiceId,
-            }
-          : existingCall.assistant;
-        existingCall.updatedAt = new Date();
-        await existingCall.save();
-        console.log(`Updated call: ${vapiCall.id}`);
-      }
-    }
+//     // Sync Calls
+//     const calls = await getCallsFromVapi();
+//     for (const vapiCall of calls) {
+//       const existingCall = await CallLog.findOne({ callId: vapiCall.id });
+//       if (!existingCall) {
+//         const newCallLog = new CallLog({
+//           callId: vapiCall.id,
+//           orgId: vapiCall.orgId,
+//           type: vapiCall.type,
+//           startedAt: vapiCall.startedAt ? new Date(vapiCall.startedAt) : null,
+//           endedAt: vapiCall.endedAt ? new Date(vapiCall.endedAt) : null,
+//           minutes:
+//             vapiCall.costs?.find((c) => c.type === "transcriber")?.minutes || 0,
+//           cost: vapiCall.cost || 0,
+//           status: vapiCall.status || "completed",
+//           customerNumber: vapiCall.customer?.number || null,
+//           assistantId: vapiCall.assistantId || null,
+//           assistant: vapiCall.assistant
+//             ? {
+//                 name: vapiCall.assistant.name,
+//                 firstMessage: vapiCall.assistant.firstMessage,
+//                 voiceProvider: vapiCall.assistant.voice?.provider,
+//                 voiceId: vapiCall.assistant.voice?.voiceId,
+//               }
+//             : {},
+//           updatedAt: new Date(),
+//         });
+//         await newCallLog.save();
+//         console.log(`Added new call: ${vapiCall.id}`);
+//       } else if (
+//         new Date(existingCall.updatedAt) <
+//         new Date(vapiCall.updatedAt || vapiCall.createdAt)
+//       ) {
+//         existingCall.startedAt = vapiCall.startedAt
+//           ? new Date(vapiCall.startedAt)
+//           : existingCall.startedAt;
+//         existingCall.endedAt = vapiCall.endedAt
+//           ? new Date(vapiCall.endedAt)
+//           : existingCall.endedAt;
+//         existingCall.minutes =
+//           vapiCall.costs?.find((c) => c.type === "transport")?.minutes ||
+//           existingCall.minutes;
+//         existingCall.cost = vapiCall.cost || existingCall.cost;
+//         existingCall.status = vapiCall.status || existingCall.status;
+//         existingCall.assistantId =
+//           vapiCall.assistantId || existingCall.assistantId;
+//         existingCall.assistant = vapiCall.assistant
+//           ? {
+//               name: vapiCall.assistant.name,
+//               firstMessage: vapiCall.assistant.firstMessage,
+//               voiceProvider: vapiCall.assistant.voice?.provider,
+//               voiceId: vapiCall.assistant.voice?.voiceId,
+//             }
+//           : existingCall.assistant;
+//         existingCall.updatedAt = new Date();
+//         await existingCall.save();
+//         console.log(`Updated call: ${vapiCall.id}`);
+//       }
+//     }
 
-    console.log("VAPI data sync completed");
-  } catch (error) {
-    console.error("Error syncing VAPI data:", error);
-  }
-};
+//     console.log("VAPI data sync completed");
+//   } catch (error) {
+//     console.error("Error syncing VAPI data:", error);
+//   }
+// };
 
 // Connect to MongoDB and sync data
 connectDB()
   .then(async () => {
-    await syncVapiData();
-    scheduleBillingEmails();
+    await //syncVapiData();
+    //scheduleBillingEmails();
     console.log("Billing email scheduler started");
   })
   .catch((error) => {

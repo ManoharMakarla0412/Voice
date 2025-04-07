@@ -116,6 +116,24 @@ const updateAssistant = async (req, res) => {
   }
 };
 
+const getAssistantbysuerid = async (req, res) => {
+  try {
+    const { userid } = req.params;
+
+    // Fetch assistants from the database where userId matches
+    const assistants = await Assistant.find({ userId: userid });
+
+    if (!assistants || assistants.length === 0) {
+      return res.status(404).json({ message: "No assistants found for this user ID" });
+    }
+
+    res.status(200).json(assistants);
+  } catch (error) {
+    console.error("Error fetching assistants by user ID:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // Delete Assistant
 const deleteAssistant = async (req, res) => {
   try {
@@ -173,4 +191,4 @@ const patchAssistant = async (req, res) => {
   }
 };
 
-module.exports = { createAssistant, getAssistant, updateAssistant, deleteAssistant, patchAssistant };
+module.exports = { createAssistant, getAssistant, updateAssistant, deleteAssistant, patchAssistant, getAssistantbysuerid };
