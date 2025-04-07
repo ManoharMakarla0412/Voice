@@ -53,11 +53,11 @@ const sidebarNavItems = [
     href: "/dashboard/calls",
     icon: Headset,
   },
-  {
-    title: "API Requests",
-    href: "/dashboard/api-requests",
-    icon: Network,
-  },
+  // {
+  //   title: "API Requests",
+  //   href: "/dashboard/api-requests",
+  //   icon: Network,
+  // },
   {
     title: "Payments",
     href: "/dashboard/payment",

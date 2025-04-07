@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { BASE_URL } from "../../utils/constants";
+import { useState } from "react";
+import useAssistant from "../../hooks/useAssistant";
 import {
   Plus,
   Bot,
@@ -20,34 +20,27 @@ import {
   X,
 } from "lucide-react";
 
-interface Assistant {
-  id: string;
-  name: string;
-  createdAt: string;
-  model: {
-    model: string;
-    messages: Array<{
-      role: string;
-      content: string;
-    }>;
-    provider: string;
-  };
-  firstMessage: string;
-  endCallMessage: string;
-}
-
 export default function AssistantDashboard() {
   const [step, setStep] = useState(1);
-  const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     firstMessage: "",
     systemPrompt: "",
     endCallMessage: "",
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentAssistantId, setCurrentAssistantId] = useState<string | null>(null);
+
+  const {
+    assistants,
+    loading,
+    error,
+    createAssistant,
+    updateAssistant,
+    deleteAssistant,
+  } = useAssistant();
 
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
@@ -56,75 +49,103 @@ export default function AssistantDashboard() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const fetchAssistants = async () => {
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      firstMessage: "",
+      systemPrompt: "",
+      endCallMessage: "",
+    });
+    setStep(1);
+  };
+
+  const handleCreateAssistant = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`${BASE_URL}/assistant/get`);
+      await createAssistant({
+        name: formData.name,
+        firstMessage: formData.firstMessage,
+        endCallMessage: formData.endCallMessage,
+        model: {
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: formData.systemPrompt }],
+          provider: "openai",
+        },
+        // Add required fields based on VAPI validation
+        // voice: {
+        //   provider: "11labs", // Use a valid voice provider from the API docs
+        //   voiceId: "rachel", // Default voice ID
+        // },
+        // transcriber: {
+        //   provider: "deepgram", // Use a valid transcriber provider
+        // },
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch assistants");
-      }
-
-      const data = await response.json();
-      setAssistants(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch assistants"
-      );
-    } finally {
-      setLoading(false);
+      showToast("Assistant created successfully!", "success");
+      setIsCreateModalOpen(false);
+      resetForm();
+    } catch (error: any) {
+      console.error("Error creating assistant:", error);
+      // Improve error message display
+      
     }
   };
 
-  useEffect(() => {
-    fetchAssistants();
-  }, []);
+  const handleEditClick = (assistant: typeof assistants[0]) => {
+    setFormData({
+      name: assistant.name,
+      firstMessage: assistant.firstMessage,
+      systemPrompt: assistant.model.messages[0]?.content || "",
+      endCallMessage: assistant.endCallMessage,
+    });
+    setCurrentAssistantId(assistant.id);
+    setIsEditModalOpen(true);
+  };
 
-  const createAssistant = async () => {
+  const handleUpdateAssistant = async () => {
+    if (!currentAssistantId) return;
+
     try {
-      const response = await fetch(`${BASE_URL}/assistant/create`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstMessage: formData.firstMessage,
-          modelProvider: "openai",
-          modelName: "gpt-3.5-turbo",
-          content: formData.systemPrompt,
-          knowledgeBaseUrl: "https://example.com/knowledge-base",
-          endCallMessage: formData.endCallMessage,
+      // Create a payload with only the fields we're updating
+      const currentAssistant = assistants.find(a => a.id === currentAssistantId);
+      const updatePayload = {
+        name: formData.name,
+        firstMessage: formData.firstMessage,
+        endCallMessage: formData.endCallMessage,
+        model: {
+          model: currentAssistant?.model.model || "gpt-3.5-turbo",
           messages: [{ role: "user", content: formData.systemPrompt }],
-          name: formData.name,
-          toolIds: ["e402a911-71a4-4879-90d6-92ec38b9d123"],
-        }),
-      });
+          provider: currentAssistant?.model.provider || "openai"
+        }
+      };
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create assistant");
-      }
+      await updateAssistant(currentAssistantId, updatePayload);
 
-      await response.json();
-
-      // Show success toast
-      showToast("Assistant created successfully!", "success");
-
-      setIsModalOpen(false);
-      setStep(1); // Reset step
-      setFormData({
-        name: "",
-        firstMessage: "",
-        systemPrompt: "",
-        endCallMessage: "",
-      });
-
-      // Refresh the assistants list
-      fetchAssistants();
+      showToast("Assistant updated successfully!", "success");
+      setIsEditModalOpen(false);
+      resetForm();
     } catch (error: any) {
-      console.error("Error creating assistant:", error.message);
-      showToast("Failed to create assistant", "error");
+      console.error("Error updating assistant:", error);
+      // Improve error display
+      showToast(`Update failed: ${error.message}`, "error");
+    }
+  };
+
+  const handleDeleteClick = (assistantId: string) => {
+    setCurrentAssistantId(assistantId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteAssistant = async () => {
+    if (!currentAssistantId) return;
+
+    try {
+      await deleteAssistant(currentAssistantId);
+      showToast("Assistant deleted successfully!", "success");
+      setIsDeleteModalOpen(false);
+      setCurrentAssistantId(null);
+    } catch (error: any) {
+      console.error("Error deleting assistant:", error.message);
+      showToast("Failed to delete assistant", "error");
     }
   };
 
@@ -132,19 +153,28 @@ export default function AssistantDashboard() {
     message: string,
     type: "info" | "success" | "warning" | "error"
   ) => {
+    // Limit message length for display but keep it informative
+    const displayMessage = message.length > 100 
+      ? `${message.substring(0, 97)}...` 
+      : message;
+    
     const toast = document.createElement("div");
     toast.className = "toast toast-top toast-end";
 
     const alert = document.createElement("div");
     alert.className = `alert alert-${type} py-2`;
-    alert.innerHTML = `<span>${message}</span>`;
+    
+    // Create a better structured message element
+    const contentSpan = document.createElement("span");
+    contentSpan.textContent = displayMessage;
+    alert.appendChild(contentSpan);
 
     toast.appendChild(alert);
     document.body.appendChild(toast);
 
     setTimeout(() => {
       toast.remove();
-    }, 3000);
+    }, 5000); // Show for longer when it's an error
   };
 
   const stepTooltips = [
@@ -194,7 +224,7 @@ export default function AssistantDashboard() {
             <div className="flex flex-wrap items-center justify-end">
               <button
                 className="btn btn-primary btn-sm"
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setIsCreateModalOpen(true)}
               >
                 <Plus size={16} />
                 Create Assistant
@@ -213,7 +243,7 @@ export default function AssistantDashboard() {
             </div>
             <button
               className="btn btn-sm btn-circle btn-ghost ml-auto"
-              onClick={() => setError(null)}
+              onClick={() => {}}
             >
               <X size={16} />
             </button>
@@ -321,11 +351,17 @@ export default function AssistantDashboard() {
 
                       {/* Actions section - Always at the bottom */}
                       <div className="card-actions justify-between p-4 border-t border-base-100/20 mt-auto">
-                        <button className="btn btn-sm btn-error btn-outline gap-1">
+                        <button
+                          className="btn btn-sm btn-error btn-outline gap-1"
+                          onClick={() => handleDeleteClick(assistant.id)}
+                        >
                           <Trash2 size={14} />
                           Delete
                         </button>
-                        <button className="btn btn-sm btn-primary gap-1">
+                        <button
+                          className="btn btn-sm btn-primary gap-1"
+                          onClick={() => handleEditClick(assistant)}
+                        >
                           <Edit3 size={14} />
                           Edit
                         </button>
@@ -351,7 +387,7 @@ export default function AssistantDashboard() {
 
                 <button
                   className="btn btn-primary btn-lg"
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => setIsCreateModalOpen(true)}
                 >
                   <Sparkles size={20} />
                   Create Your First Assistant
@@ -363,7 +399,7 @@ export default function AssistantDashboard() {
       </div>
 
       {/* Create Assistant Modal */}
-      {isModalOpen && (
+      {isCreateModalOpen && (
         <dialog open className="modal">
           <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-primary/30 shadow-xl max-w-2xl">
             {/* Header */}
@@ -374,7 +410,7 @@ export default function AssistantDashboard() {
               </div>
               <button
                 className="btn btn-sm btn-circle btn-ghost"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsCreateModalOpen(false)}
               >
                 <X size={16} />
               </button>
@@ -546,7 +582,7 @@ export default function AssistantDashboard() {
               <div className="flex items-center gap-3">
                 <button
                   className="btn btn-ghost btn-sm"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => setIsCreateModalOpen(false)}
                 >
                   Cancel
                 </button>
@@ -567,7 +603,7 @@ export default function AssistantDashboard() {
                 ) : (
                   <button
                     className="btn btn-primary btn-sm"
-                    onClick={createAssistant}
+                    onClick={handleCreateAssistant}
                     disabled={!formData.endCallMessage}
                   >
                     <CheckCircle2 size={16} />
@@ -583,7 +619,187 @@ export default function AssistantDashboard() {
             method="dialog"
             className="modal-backdrop"
             onClick={() => {
-              setIsModalOpen(false);
+              setIsCreateModalOpen(false);
+            }}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Edit Assistant Modal */}
+      {isEditModalOpen && (
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-primary/30 shadow-xl max-w-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Edit3 className="text-primary" size={18} />
+                <h2 className="font-bold text-lg">Edit Assistant</h2>
+              </div>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-6">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">
+                    Assistant Name
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter a name for your assistant"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">
+                    First Message
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Hello! How can I assist you today?"
+                  value={formData.firstMessage}
+                  onChange={(e) =>
+                    handleInputChange("firstMessage", e.target.value)
+                  }
+                  className="input input-bordered w-full"
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">
+                    System Prompt
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
+                </label>
+                <textarea
+                  placeholder="You are a helpful assistant that..."
+                  value={formData.systemPrompt}
+                  onChange={(e) =>
+                    handleInputChange("systemPrompt", e.target.value)
+                  }
+                  className="textarea textarea-bordered min-h-[150px] w-full"
+                ></textarea>
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">
+                    End Call Message
+                  </span>
+                  <span className="label-text-alt text-error">Required</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Thank you for contacting us. Have a great day!"
+                  value={formData.endCallMessage}
+                  onChange={(e) =>
+                    handleInputChange("endCallMessage", e.target.value)
+                  }
+                  className="input input-bordered w-full"
+                />
+              </div>
+            </div>
+
+            <div className="divider my-2"></div>
+
+            <div className="flex justify-end items-center mt-6">
+              <div className="flex items-center gap-3">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleUpdateAssistant}
+                  disabled={
+                    !formData.name ||
+                    !formData.firstMessage ||
+                    !formData.systemPrompt ||
+                    !formData.endCallMessage
+                  }
+                >
+                  <CheckCircle2 size={16} />
+                  Update Assistant
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal backdrop */}
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => {
+              setIsEditModalOpen(false);
+            }}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-error/30 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="text-error" size={18} />
+                <h2 className="font-bold text-lg">Confirm Deletion</h2>
+              </div>
+              <button
+                className="btn btn-sm btn-circle btn-ghost"
+                onClick={() => setIsDeleteModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="py-4">
+              Are you sure you want to delete this assistant? This action cannot
+              be undone.
+            </p>
+
+            <div className="modal-action">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setIsDeleteModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-error"
+                onClick={handleDeleteAssistant}
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => {
+              setIsDeleteModalOpen(false);
             }}
           >
             <button>close</button>

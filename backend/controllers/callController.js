@@ -237,9 +237,80 @@ exports.getCallById = async (req, res) => {
   }
 };
 
+// Replace the existing getCallStats function in callController.js with this
+exports.getCallStats = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "No token provided" });
+
+    const decoded = jwt.verify(token, process.env.SECRET);
+    const assistants = await Assistant.find({ userId: decoded.id });
+    const assistantIds = assistants.map((a) => a.vapiAssistantId);
+
+    // Aggregate call stats with weekday breakdown
+    const callStats = await CallLog.aggregate([
+      {
+        $match: {
+          assistantId: { $in: assistantIds },
+          startedAt: { $exists: true, $ne: null }, // Ensure startedAt exists
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dayOfWeek: "$startedAt", // 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+          },
+          totalCalls: { $sum: 1 },
+          totalMinutes: { $sum: "$minutes" },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by day of week (Sunday to Saturday)
+      },
+    ]);
+
+    // Initialize arrays for calls and minutes per day (Monday = 0, Sunday = 6)
+    const callsByDay = Array(7).fill(0);
+    const minutesByDay = Array(7).fill(0);
+    let overallTotalCalls = 0;
+    let overallTotalMinutes = 0;
+
+    // Map MongoDB's day-of-week (1=Sun, 7=Sat) to desired order (0=Mon, 6=Sun)
+    callStats.forEach((stat) => {
+      const mongoDayIndex = stat._id; // 1=Sun, 2=Mon, ..., 7=Sat
+      const adjustedIndex = (mongoDayIndex + 5) % 7; // Shift: 2->0 (Mon), 1->6 (Sun)
+      callsByDay[adjustedIndex] = stat.totalCalls;
+      minutesByDay[adjustedIndex] = stat.totalMinutes || 0; // Handle null/undefined minutes
+      overallTotalCalls += stat.totalCalls;
+      overallTotalMinutes += stat.totalMinutes || 0;
+    });
+
+    // Round minutes to 2 decimal places
+    const roundedMinutesByDay = minutesByDay.map(
+      (min) => Math.round(min * 100) / 100
+    );
+    const roundedTotalMinutes = Math.round(overallTotalMinutes * 100) / 100;
+
+    res.status(200).json({
+      message: "Call stats retrieved successfully",
+      stats: {
+        totalCalls: overallTotalCalls,
+        totalMinutes: roundedTotalMinutes,
+        callsByDay, // [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+        minutesByDay: roundedMinutesByDay, // [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching call stats:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred", details: error.message });
+  }
+};
 module.exports = {
   handleCallWebhook: exports.handleCallWebhook,
   createCall: exports.createCall,
   getCallLogs: exports.getCallLogs,
   getCallById: exports.getCallById,
+  getCallStats: exports.getCallStats,
 };

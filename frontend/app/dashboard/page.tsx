@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useCallData } from "../hooks/useCallData"; // Adjust path
 import {
   TrendingUp,
   Clock,
@@ -28,7 +29,6 @@ import {
 } from "chart.js";
 import { BASE_URL } from "../utils/constants";
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -48,33 +48,7 @@ interface Assistant {
   description?: string;
 }
 
-// Call Minutes Data
-const callMinutesData = {
-  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  datasets: [
-    {
-      data: [95, 120, 105, 145, 160, 130, 85],
-      borderColor: "#f97316",
-      backgroundColor: "rgba(249, 115, 22, 0.2)",
-      fill: true,
-      tension: 0.4,
-    },
-  ],
-};
-
-// Number of Calls Data
-const numberOfCallsData = {
-  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  datasets: [
-    {
-      data: [24, 32, 28, 36, 42, 34, 22],
-      backgroundColor: "rgba(59, 130, 246, 0.7)",
-      borderRadius: 4,
-    },
-  ],
-};
-
-// Time Saved Data
+// Static data (unchanged for now)
 const timeSavedData = {
   labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
   datasets: [
@@ -89,7 +63,6 @@ const timeSavedData = {
   ],
 };
 
-// Customer Satisfaction
 const satisfactionData = {
   labels: [
     "Very Satisfied",
@@ -113,30 +86,6 @@ const satisfactionData = {
   ],
 };
 
-// Call Volume Data (keep as requested)
-const callVolumeData = {
-  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  datasets: [
-    {
-      label: "Inbound",
-      data: [40, 20, 30, 10, 20, 30, 40],
-      borderColor: "#3b82f6",
-      backgroundColor: "rgba(59, 130, 246, 0.3)",
-      fill: true,
-      tension: 0.4,
-    },
-    {
-      label: "Outbound",
-      data: [30, 30, 20, 20, 10, 20, 30],
-      borderColor: "#10b981",
-      backgroundColor: "rgba(16, 185, 129, 0.3)",
-      fill: true,
-      tension: 0.4,
-    },
-  ],
-};
-
-// Call Performance Data (keep as requested)
 const callPerformanceData = {
   labels: ["Successful", "Failed", "Missed", "Busy"],
   datasets: [
@@ -148,7 +97,6 @@ const callPerformanceData = {
   ],
 };
 
-// Peak Hours Data
 const peakHoursData = {
   labels: [
     "8am",
@@ -171,7 +119,6 @@ const peakHoursData = {
   ],
 };
 
-// Chart Options
 const miniChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -245,9 +192,55 @@ const pieChartOptions = {
 };
 
 export default function Dashboard() {
+  const {
+    callStats,
+    statsLoading: loading,
+    statsError: error,
+  } = useCallData();
   const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isAssistantsLoading, setIsAssistantsLoading] = useState(true);
+  const [assistantsError, setAssistantsError] = useState<string | null>(null);
+
+  // Dynamic chart data based on callStats
+  const dynamicCallMinutesData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+      {
+        label: "Minutes",
+        data: callStats.minutesByDay,
+        borderColor: "#f97316",
+        backgroundColor: "rgba(249, 115, 22, 0.2)",
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const dynamicNumberOfCallsData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+      {
+        label: "Calls",
+        data: callStats.callsByDay,
+        backgroundColor: "rgba(59, 130, 246, 0.7)",
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const dynamicCallVolumeData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+      {
+        label: "Calls",
+        data: callStats.callsByDay,
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59, 130, 246, 0.3)",
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
 
   useEffect(() => {
     const fetchAssistants = async () => {
@@ -257,11 +250,11 @@ export default function Dashboard() {
         const data = await response.json();
         setAssistants(data);
       } catch (err) {
-        setError(
+        setAssistantsError(
           err instanceof Error ? err.message : "Failed to fetch assistants"
         );
       } finally {
-        setIsLoading(false);
+        setIsAssistantsLoading(false);
       }
     };
 
@@ -271,8 +264,7 @@ export default function Dashboard() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {isLoading ? (
-          // Skeleton loading states
+        {(loading || isAssistantsLoading) ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array(8)
               .fill(0)
@@ -291,7 +283,6 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Page Header */}
             <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
@@ -314,9 +305,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Key Stats - Row 1 - Smaller cards (with AI Resolution Rate removed) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {/* Total Calls */}
               <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex justify-between">
@@ -325,7 +314,9 @@ export default function Dashboard() {
                         <PhoneCall size={16} className="text-primary" />
                         Total Calls
                       </span>
-                      <span className="mt-2 text-2xl font-bold">218</span>
+                      <span className="mt-2 text-2xl font-bold">
+                        {callStats.totalCalls}
+                      </span>
                     </div>
                     <div className="badge badge-sm badge-success gap-1 h-6">
                       <TrendingUp size={12} />
@@ -333,12 +324,14 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="h-20 mt-3">
-                    <Bar data={numberOfCallsData} options={miniChartOptions} />
+                    <Bar
+                      data={dynamicNumberOfCallsData}
+                      options={miniChartOptions}
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Call Minutes */}
               <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex justify-between">
@@ -347,7 +340,9 @@ export default function Dashboard() {
                         <Clock size={16} className="text-primary" />
                         Call Minutes
                       </span>
-                      <span className="mt-2 text-2xl font-bold">840</span>
+                      <span className="mt-2 text-2xl font-bold">
+                        {Math.round(callStats.totalMinutes)}
+                      </span>
                     </div>
                     <div className="badge badge-sm badge-success gap-1 h-6">
                       <TrendingUp size={12} />
@@ -355,12 +350,14 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="h-20 mt-3">
-                    <Line data={callMinutesData} options={miniChartOptions} />
+                    <Line
+                      data={dynamicCallMinutesData}
+                      options={miniChartOptions}
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Time Saved */}
               <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex justify-between">
@@ -383,7 +380,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Row 3 - Time Saved Chart (full width) */}
             <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg mb-6">
               <div className="card-body p-5">
                 <div className="flex items-center gap-2 mb-4">
@@ -402,9 +398,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Row 4 - Two Column Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Customer Satisfaction */}
               <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex items-center gap-2 mb-4">
@@ -421,7 +415,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Peak Call Hours */}
               <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                 <div className="card-body p-5">
                   <div className="flex items-center gap-2 mb-4">
@@ -439,15 +432,13 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Row 5 - Call Volume and Performance - KEEPING AS REQUESTED */}
-            <div className="card bg-gray-800/60  shadow-lg p-4 backdrop-blur-sm">
+            <div className="card bg-gray-800/60 shadow-lg p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Phone className="text-primary" size={20} />
                 <h2 className="text-xl font-bold">Call Analytics</h2>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Call Volume */}
                 <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                   <div className="card-body p-5">
                     <div className="flex items-center gap-2 mb-4">
@@ -455,16 +446,25 @@ export default function Dashboard() {
                       <h3 className="font-bold text-lg">Call Volume</h3>
                     </div>
                     <div className="h-[280px]">
-                      <Line data={callVolumeData} options={areaChartOptions} />
+                      <Line
+                        data={dynamicCallVolumeData}
+                        options={areaChartOptions}
+                      />
                     </div>
                     <div className="flex justify-between text-xs text-base-content/70 mt-4">
-                      <span>Total Calls: 190</span>
-                      <span>Peak Day: Monday</span>
+                      <span>Total Calls: {callStats.totalCalls}</span>
+                      <span>
+                        Peak Day:{" "}
+                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][
+                          callStats.callsByDay.indexOf(
+                            Math.max(...callStats.callsByDay)
+                          )
+                        ]}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Call Performance */}
                 <div className="card bg-gray-800/60 backdrop-blur-sm shadow-lg">
                   <div className="card-body p-5">
                     <div className="flex items-center gap-2 mb-4">

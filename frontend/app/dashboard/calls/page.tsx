@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { BASE_URL } from "../../utils/constants";
+import React, { useState } from "react";
+import { useCallData } from "../../hooks/useCallData"; // Adjust path
 import {
   PhoneCall,
   Filter,
@@ -27,7 +27,7 @@ interface CallLog {
   type: string;
   startedAt: string;
   endedAt: string;
-  minutes: number; // From costs.transport.minutes
+  minutes: number;
   cost: number;
   status: string;
   customerNumber: string | null;
@@ -45,47 +45,13 @@ interface CallLog {
 }
 
 const CallLogs = () => {
-  const [callLogs, setCallLogs] = useState<CallLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { callLogs, logsLoading: loading, logsError: error } = useCallData();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedLog, setSelectedLog] = useState<CallLog | null>(null);
   const [showModal, setShowModal] = useState(false);
   const logsPerPage = 10;
-
-  useEffect(() => {
-    const fetchCallLogs = async () => {
-      try {
-        setLoading(true);
-        const token = sessionStorage.getItem("auth_token");
-        if (!token) throw new Error("No authentication token found");
-        const response = await fetch(`${BASE_URL}/api/calls`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch call logs");
-        }
-        const data = await response.json();
-        setCallLogs(data.callLogs);
-      } catch (error) {
-        console.error("Error fetching call logs:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to fetch call logs"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCallLogs();
-  }, []);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -109,7 +75,6 @@ const CallLogs = () => {
     currentPage * logsPerPage
   );
 
-  // Format minutes directly from the API response
   const getCallDuration = (minutes: number) => {
     if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
     const wholeMinutes = Math.floor(minutes);
@@ -156,6 +121,10 @@ const CallLogs = () => {
       </div>
     );
   };
+
+  function setLogsError(arg0: null): void {
+    throw new Error("Function .");
+  }
 
   return (
     <div className="p-4 md:p-8">
@@ -279,7 +248,7 @@ const CallLogs = () => {
             </div>
             <button
               className="btn btn-sm btn-circle btn-ghost ml-auto"
-              onClick={() => setError(null)}
+              onClick={() => setLogsError(null)}
             >
               <X size={16} />
             </button>

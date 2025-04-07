@@ -165,7 +165,7 @@ export function Navbar() {
                 </div>
               ) : (
                 <Image
-                  src="/avatars/01.png"
+                  src="/images/logo.png"
                   alt="Avatar"
                   width={40}
                   height={40}
