@@ -59,6 +59,7 @@ const Calendar = () => {
   const [events, setEvents] = useState<Event[]>([]);
 
   // Initialize Socket.IO with fallback to polling
+  console.log("Deployed version: 2025-04-07-v1"); // Unique identifier
   console.log("SOCKET_URL:", SOCKET_URL, "SOCKET_PATH:", SOCKET_PATH);
   const socket = io(SOCKET_URL, {
     path: SOCKET_PATH,
