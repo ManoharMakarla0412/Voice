@@ -33,29 +33,33 @@ interface Event {
   isNewPatient: boolean;
 }
 
+// Type for backend appointment data
+interface Appointment {
+  callId: string;
+  problem: string;
+  fullName: string;
+  appointmentDateTime: string;
+  duration: number;
+  status: "scheduled" | "completed" | "cancelled";
+  assistantId?: string;
+  timestamp?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 const Calendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date("2025-04-06")); // Matches your test data
+  const [currentDate, setCurrentDate] = useState(new Date("2025-04-06"));
   const [view, setView] = useState<"month" | "week" | "day" | "agenda">("month");
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
 
-  // Poll backend for new appointments
   useEffect(() => {
-    interface AppointmentResponse {
-      callId: string;
-      problem: string;
-      fullName: string;
-      appointmentDateTime: string;
-      duration: number;
-      status: "scheduled" | "completed" | "cancelled";
-    }
-
     const fetchAppointments = async () => {
       try {
         const response = await fetch("https://osaw.in/v1/voice/api/appointments/latest");
-        const data: AppointmentResponse[] = await response.json();
-        const newEvents = data.map((appt: AppointmentResponse) => ({
+        const data = await response.json();
+        const newEvents = data.map((appt: Appointment) => ({
           id: appt.callId,
           title: `${appt.problem} - ${appt.fullName}`,
           start: appt.appointmentDateTime,
@@ -70,7 +74,7 @@ const Calendar = () => {
           isNewPatient: false,
         }));
         setEvents((prev) => {
-          const uniqueEvents = newEvents.filter((ne) => !prev.some((e) => e.id === ne.id));
+          const uniqueEvents = newEvents.filter((ne: Event) => !prev.some((e) => e.id === ne.id));
           return [...prev, ...uniqueEvents];
         });
       } catch (error) {
@@ -78,9 +82,9 @@ const Calendar = () => {
       }
     };
 
-    fetchAppointments(); // Initial fetch
-    const interval = setInterval(fetchAppointments, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval); // Cleanup
+    fetchAppointments();
+    const interval = setInterval(fetchAppointments, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const getDaysInMonth = (date: Date) => {
@@ -475,7 +479,12 @@ const Calendar = () => {
         </div>
         <div className="flex justify-end">
           <div className="join shadow-md">
-            {[{ id: "month", icon: <LayoutGrid size={16} /> }, { id: "week", icon: <CalendarViewIcon size={16} /> }, { id: "day", icon: <List size={16} /> }, { id: "agenda", icon: <ListFilter size={16} /> }].map((v) => (
+            {([
+              { id: "month" as const, icon: <LayoutGrid size={16} /> },
+              { id: "week" as const, icon: <CalendarViewIcon size={16} /> },
+              { id: "day" as const, icon: <List size={16} /> },
+              { id: "agenda" as const, icon: <ListFilter size={16} /> },
+            ]).map((v) => (
               <button key={v.id} className={`join-item btn btn-sm ${view === v.id ? "btn-primary" : "btn-ghost bg-base-200/50"}`} onClick={() => setView(v.id)}>
                 {v.icon}
                 <span className="capitalize">{v.id}</span>
