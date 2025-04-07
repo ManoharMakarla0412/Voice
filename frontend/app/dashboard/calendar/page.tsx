@@ -61,14 +61,15 @@ const Calendar = () => {
   // Initialize Socket.IO with fallback to polling
   console.log("Deployed version: 2025-04-07-v1"); // Unique identifier
   console.log("SOCKET_URL:", SOCKET_URL, "SOCKET_PATH:", SOCKET_PATH);
-  const socket = io("https://osaw.in/v1/voice/socket.io", {
-    // path: SOCKET_PATH,
+  const socket = io("https://osaw.in/v1/voice/socket.io?v=2025-04-07", {
     withCredentials: true,
     transports: ["polling"],
-    reconnection: true, // Attempt to reconnect on failure
-    reconnectionAttempts: 5, // Number of reconnection attempts
-    reconnectionDelay: 1000, // Delay between attempts
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
   });
+  console.log("Deployed version: 2025-04-07-v3"); // New version
+  console.log("Socket.IO connecting to: https://osaw.in/v1/voice/socket.io?v=2025-04-07");
   console.log("Socket.IO connecting to:", SOCKET_URL + SOCKET_PATH); // Add this line
   console.log("Socket.IO path:", SOCKET_PATH); // Add this line 
 
