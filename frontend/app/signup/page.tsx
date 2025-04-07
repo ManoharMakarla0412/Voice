@@ -75,7 +75,7 @@ export default function SignupPage() {
       plan: selectedPlan,
       billing: selectedBilling,
     }));
-    router.push("dashboard/checkout");
+    router.push("/checkout");
     setIsLoading(false);
   };
 
