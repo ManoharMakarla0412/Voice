@@ -32,7 +32,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "basic",
       name: "Basic",
-      monthlyPrice: 10000,
+      monthlyPrice: 20,
       yearlyPrice: 110000,
       description: "Perfect for small teams and startups",
       features: [
@@ -47,7 +47,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "pro",
       name: "Pro",
-      monthlyPrice: 17000,
+      monthlyPrice: 17,
       yearlyPrice: 170000,
       description: "For growing businesses with more needs",
       popular: true,
@@ -63,7 +63,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
     {
       id: "enterprise",
       name: "Enterprise",
-      monthlyPrice: 30000,
+      monthlyPrice: 15,
       yearlyPrice: 280000,
       description: "For large organizations with custom needs",
       features: [
@@ -153,7 +153,7 @@ export function PricingSection({ onPlanSelect }: PricingProps) {
                         : plan.yearlyPrice}
                     </span>
                     <span className="text-sm text-base-content/70 ml-1">
-                      /{billingCycle === "monthly" ? "mo" : "yr"}
+                      /{billingCycle === "monthly" ? "minute" : "yr"}
                     </span>
                   </div>
                   {billingCycle === "yearly" && (
