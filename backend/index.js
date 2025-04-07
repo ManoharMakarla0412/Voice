@@ -1,6 +1,5 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
 const cors = require("cors");
 const path = require("path");
 const userRoutes = require("./routes/userRoute");
@@ -26,36 +25,6 @@ const CallLog = require("./models/calllogsModel");
 const app = express();
 const server = http.createServer(app);
 
-// const io = new Server(server, {
-//   cors: {
-//     origin: [
-//       "https://app.elidepro.com",
-//       "http://localhost:3000",
-//       "http://localhost:5003",
-//       "https://mighty-driven-dragon.ngrok-free.app",
-//     ],
-//     methods: ["GET", "POST", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     credentials: true,
-//   },
-//   path: "/v1/voice/socket.io",
-// });
-
-
-const io = new Server(server, {
-  cors: {
-    origin: ["https://app.elidepro.com"],
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  },
-  path: "/socket.io",
-});
-
-
-app.set("socketio", io);
-
-
 app.use(
   cors({
     origin: [
@@ -70,12 +39,8 @@ app.use(
   })
 );
 
+
 app.use("/api/calls/webhook", (req, res, next) => {
-  console.log("Webhook received:", {
-    method: req.method,
-    path: req.path,
-    body: req.body,
-  });
   res.setHeader("Access-Control-Allow-Origin", "*");
   next();
 });
@@ -102,17 +67,6 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpecs, { explorer: true })
 );
-
-io.on("connection", (socket) => {
-  console.log("New client connected:", socket.id);
-  socket.on("join", (userId) => {
-    socket.join(userId);
-    console.log(`User ${userId} joined their room`);
-  });
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-  });
-});
 
 // Sync VAPI data on startup with default user ID
 const DEFAULT_USER_ID = "67e17813bb2f5277647a0850";
@@ -177,7 +131,7 @@ const syncVapiData = async () => {
           cost: vapiCall.cost || 0,
           status: vapiCall.status || "completed",
           customerNumber: vapiCall.customer?.number || null,
-          assistantId: vapiCall.assistantId || null, // Handle missing assistantId
+          assistantId: vapiCall.assistantId || null,
           assistant: vapiCall.assistant
             ? {
                 name: vapiCall.assistant.name,
@@ -259,17 +213,9 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 const port = process.env.PORT || 5003;
-server
-  .listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-    console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
-    console.log(
-      `Socket.IO available at http://localhost:${port}/v1/voice/socket.io`
-    );
-  })
-  .on("error", (error) => {
-    console.error("Server startup error:", error);
-    process.exit(1);
-  });
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+  console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
+});
 
-module.exports = { app, io };
+module.exports = { app };

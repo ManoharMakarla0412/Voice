@@ -1,5 +1,5 @@
 const express = require("express");
-const { createAppointment } = require("../controllers/appointmentController");
+const { createAppointment, getLatestAppointments } = require("../controllers/appointmentController");
 const router = express.Router();
 
 /**
@@ -82,5 +82,26 @@ const router = express.Router();
  *         description: Server error
  */
 router.post("/book", createAppointment);
+
+/**
+ * @swagger
+ * /api/appointments/latest:
+ *   get:
+ *     summary: Get latest appointments
+ *     tags: [Appointment]
+ *     description: Fetches the most recent appointments for polling
+ *     responses:
+ *       200:
+ *         description: List of recent appointments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Appointment'
+ *       500:
+ *         description: Server error
+ */
+router.get("/latest", getLatestAppointments);
 
 module.exports = router;
