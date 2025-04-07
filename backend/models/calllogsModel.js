@@ -1,27 +1,27 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const CallLogSchema = new mongoose.Schema({
-  id: { type: String, required: true },
-  assistantId: { type: String, required: true },
-  phoneNumberId: { type: String, required: true },
-  type: { type: String, required: true },
-  createdAt: { type: Date, required: true },
-  updatedAt: { type: Date, required: true },
-  orgId: { type: String, required: true },
-  cost: { type: Number, required: true },
-  customer: {
-    number: { type: String, required: true },
-  },
-  status: { type: String, required: true },
-  phoneCallProvider: { type: String, required: true },
-  phoneCallProviderId: { type: String, required: true },
-  phoneCallTransport: { type: String, required: true },
-  name: { type: String, required: true },
-  monitor: {
-    listenUrl: { type: String, required: true },
-    controlUrl: { type: String, required: true },
-  },
-  transport: { type: Object },
+const assistantSchema = new mongoose.Schema({
+  name: { type: String },
+  firstMessage: { type: String },
+  voiceProvider: { type: String },
+  voiceId: { type: String },
 });
 
-module.exports = mongoose.model('CallLog', CallLogSchema);
+const CallLogSchema = new mongoose.Schema({
+  callId: { type: String, required: true, unique: true },
+  orgId: { type: String, required: true },
+  type: { type: String, required: true },
+  startedAt: { type: Date },
+  endedAt: { type: Date },
+  minutes: { type: Number },
+  cost: { type: Number },
+  status: { type: String, required: true },
+  phoneCallProvider: { type: String },
+  customerNumber: { type: String },
+  assistantId: { type: String, required: false }, 
+  assistant: assistantSchema,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+module.exports = mongoose.model("CallLog", CallLogSchema);

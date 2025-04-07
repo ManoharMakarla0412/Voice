@@ -1,37 +1,38 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const assistantSchema = new mongoose.Schema({
-  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User reference
-  name: { type: String }, // Assistant's name
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Changed from user_id for consistency
+  vapiAssistantId: { type: String, required: true, unique: true }, // VAPI's assistantId
+  name: { type: String },
   voice: {
     voiceId: { type: String },
     provider: { type: String },
   },
   model: {
-    model: { type: String }, // Model type, e.g., "gpt-3.5-turbo"
+    model: { type: String },
     messages: [
       {
-        role: { type: String }, // Role (e.g., "system", "user")
-        content: { type: String }, // Message content
+        role: { type: String },
+        content: { type: String },
       },
     ],
-    provider: { type: String }, // Provider for the model
-    toolIds: [{ type: String }], // Array of tool IDs
+    provider: { type: String },
+    toolIds: [{ type: String }],
   },
-  firstMessage: { type: String }, // First message content
-  voicemailMessage: { type: String }, // Voicemail message
-  endCallMessage: { type: String }, // End call message
+  firstMessage: { type: String },
+  voicemailMessage: { type: String },
+  endCallMessage: { type: String },
   transcriber: {
     model: { type: String },
     provider: { type: String },
   },
-  clientMessages: [String], // Array of client message types
-  serverMessages: [String], // Array of server message types
-  endCallPhrases: [String], // Array of phrases to end the call
-  recordingEnabled: { type: Boolean, default: false }, // Recording flag
-  isServerUrlSecretSet: { type: Boolean, default: false }, // Server URL secret flag
-  createdAt: { type: Date, default: Date.now }, // Timestamp for creation
-  updatedAt: { type: Date, default: Date.now }, // Timestamp for updates
+  clientMessages: [String],
+  serverMessages: [String],
+  endCallPhrases: [String],
+  recordingEnabled: { type: Boolean, default: false },
+  isServerUrlSecretSet: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Assistant', assistantSchema);
+module.exports = mongoose.model("Assistant", assistantSchema);

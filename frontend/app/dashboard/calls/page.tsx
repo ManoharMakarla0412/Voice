@@ -4,37 +4,44 @@ import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../../utils/constants";
 import {
   PhoneCall,
-
   Filter,
   Copy,
-  
   X,
   AlertTriangle,
   DollarSign,
   Clock,
   Info,
   User,
-
   FileAudio,
   MessageSquare,
-  
   ExternalLink,
   Download as DownloadIcon,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
 
-
-// Define the interface for call logs
 interface CallLog {
-  id: string;
-  assistantId: string | null;
+  _id: string;
+  callId: string;
+  orgId: string;
   type: string;
   startedAt: string;
   endedAt: string;
+  minutes: number; // From costs.transport.minutes
   cost: number;
-  endedReason: string;
-  // Add additional fields as needed
+  status: string;
+  customerNumber: string | null;
+  assistantId: string | null;
+  assistant: {
+    _id: string;
+    name?: string;
+    firstMessage?: string;
+    voiceProvider?: string;
+    voiceId?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 const CallLogs = () => {
@@ -49,11 +56,19 @@ const CallLogs = () => {
   const logsPerPage = 10;
 
   useEffect(() => {
-    // Fetch call logs from the backend API
     const fetchCallLogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/api/calls/logs`);
+        const token = sessionStorage.getItem("auth_token");
+        if (!token) throw new Error("No authentication token found");
+        const response = await fetch(`${BASE_URL}/api/calls`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch call logs");
         }
@@ -72,50 +87,39 @@ const CallLogs = () => {
     fetchCallLogs();
   }, []);
 
-  // Copy to clipboard with visual feedback
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(text);
     setTimeout(() => setCopied(null), 2000);
   };
 
-  // Filter logs based on search query
   const filteredLogs = callLogs.filter((log) => {
     const query = searchQuery.toLowerCase();
     return (
-      log.id.toLowerCase().includes(query) ||
-      log.assistantId?.toLowerCase().includes(query) ||
-      false ||
+      log.callId.toLowerCase().includes(query) ||
+      (log.assistantId?.toLowerCase().includes(query) ?? false) ||
       log.type.toLowerCase().includes(query) ||
-      log.endedReason.toLowerCase().includes(query)
+      log.status.toLowerCase().includes(query)
     );
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
   const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * logsPerPage,
     currentPage * logsPerPage
   );
 
-  const getCallDuration = (startedAt: string, endedAt: string) => {
-    const durationSeconds = Math.round(
-      (new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000
-    );
-
-    if (durationSeconds < 60) {
-      return `${durationSeconds} sec`;
-    }
-
-    const minutes = Math.floor(durationSeconds / 60);
-    const seconds = durationSeconds % 60;
-    return `${minutes}m ${seconds}s`;
+  // Format minutes directly from the API response
+  const getCallDuration = (minutes: number) => {
+    if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
+    const wholeMinutes = Math.floor(minutes);
+    const seconds = Math.round((minutes - wholeMinutes) * 60);
+    return `${wholeMinutes}m ${seconds}s`;
   };
 
-  // Generate pagination items
   const getPaginationItems = () => {
     const items = [];
-    const maxItems = 5; // Show max 5 page numbers at a time
+    const maxItems = 5;
 
     let startPage = Math.max(1, currentPage - Math.floor(maxItems / 2));
     let endPage = Math.min(totalPages, startPage + maxItems - 1);
@@ -131,34 +135,24 @@ const CallLogs = () => {
     return items;
   };
 
-  // Handle double click on a row
   const handleRowDoubleClick = (log: CallLog) => {
     setSelectedLog(log);
     setShowModal(true);
   };
 
-  // Get status badge for call end reason
-  const getStatusBadge = (reason: string) => {
-    if (reason === "caller-hung-up") {
+  const getStatusBadge = (status: string) => {
+    if (status === "ended") {
       return (
         <div className="badge badge-success gap-1">
           <CheckCircle2 size={12} />
-          {reason.replace(/-/g, " ")}
-        </div>
-      );
-    }
-    if (reason === "customer-ended-call") {
-      return (
-        <div className="badge badge-error gap-1">
-          <XCircle size={12} />
-          {reason.replace(/-/g, " ")}
+          Ended
         </div>
       );
     }
     return (
       <div className="badge badge-info gap-1">
         <Info size={12} />
-        {reason.replace(/-/g, " ")}
+        {status}
       </div>
     );
   };
@@ -166,7 +160,6 @@ const CallLogs = () => {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Header with title only (removed breadcrumbs) */}
         <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
           <div className="card-body">
             <div className="flex flex-col md:flex-row justify-between gap-6">
@@ -179,8 +172,6 @@ const CallLogs = () => {
                   Track and analyze your voice assistant interactions
                 </p>
               </div>
-
-              {/* Improved Stats */}
               <div className="stats bg-base-200/60 shadow-md border border-base-200/30">
                 <div className="stat">
                   <div className="flex items-center gap-2">
@@ -207,7 +198,6 @@ const CallLogs = () => {
           </div>
         </div>
 
-        {/* Search and Filters */}
         <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg">
           <div className="card-body">
             <div className="flex flex-wrap items-center gap-4">
@@ -230,7 +220,7 @@ const CallLogs = () => {
                     </g>
                   </svg>
                   <input
-                    type="text" // Changed from "search" to "text" to remove browser's native X button
+                    type="text"
                     placeholder="Search calls..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -249,7 +239,6 @@ const CallLogs = () => {
 
               <div className="grow"></div>
 
-              {/* Call type filter with fixed z-index */}
               <div className="dropdown dropdown-top z-50">
                 <div
                   tabIndex={0}
@@ -281,7 +270,6 @@ const CallLogs = () => {
           </div>
         </div>
 
-        {/* Error display */}
         {error && (
           <div className="alert alert-error shadow-lg border border-error/30">
             <AlertTriangle size={18} />
@@ -298,7 +286,6 @@ const CallLogs = () => {
           </div>
         )}
 
-        {/* Table Card */}
         <div className="card bg-base-300/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
           <div className="card-body p-0">
             <div className="alert alert-info bg-info/10 border-info/30 rounded-none">
@@ -320,7 +307,7 @@ const CallLogs = () => {
                       Cost
                     </th>
                     <th className="text-base-content/90 font-semibold text-center">
-                      Ended Reason
+                      Status
                     </th>
                     <th className="text-base-content/90 font-semibold text-center">
                       Assistant
@@ -376,43 +363,59 @@ const CallLogs = () => {
                   ) : (
                     paginatedLogs.map((log) => (
                       <tr
-                        key={log.id}
+                        key={log.callId}
                         className="hover backdrop-blur-sm cursor-pointer"
                         onDoubleClick={() => handleRowDoubleClick(log)}
                       >
                         <td>
                           <div
                             className={`
-                            badge shadow-sm
-                            ${log.type === "webCall" ? "badge-info" : ""}
-                            ${log.type === "inbound" ? "badge-success" : ""}
-                            ${log.type === "outbound" ? "badge-warning" : ""}
-                            ${
-                              !["webCall", "inbound", "outbound"].includes(
-                                log.type
-                              )
-                                ? "badge-ghost"
-                                : ""
-                            }
-                          `}
+                              badge shadow-sm
+                              ${log.type === "webCall" ? "badge-info" : ""}
+                              ${
+                                log.type === "inboundPhoneCall"
+                                  ? "badge-success"
+                                  : ""
+                              }
+                              ${
+                                log.type === "outboundPhoneCall"
+                                  ? "badge-warning"
+                                  : ""
+                              }
+                              ${
+                                ![
+                                  "webCall",
+                                  "inboundPhoneCall",
+                                  "outboundPhoneCall",
+                                ].includes(log.type)
+                                  ? "badge-ghost"
+                                  : ""
+                              }
+                            `}
                           >
-                            {log.type === "webCall" ? "Web" : log.type}
+                            {log.type === "webCall"
+                              ? "Web"
+                              : log.type === "inboundPhoneCall"
+                              ? "Inbound"
+                              : log.type === "outboundPhoneCall"
+                              ? "Outbound"
+                              : log.type}
                           </div>
                         </td>
                         <td className="font-mono text-xs">
                           <div className="flex items-center gap-2">
                             <span className="truncate max-w-[100px]">
-                              {log.id}
+                              {log.callId}
                             </span>
                             <div className="tooltip" data-tip="Copy ID">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  copyToClipboard(log.id);
+                                  copyToClipboard(log.callId);
                                 }}
                                 className="btn btn-ghost btn-xs"
                               >
-                                {copied === log.id ? (
+                                {copied === log.callId ? (
                                   <span className="text-success text-xs flex items-center">
                                     Copied!
                                   </span>
@@ -428,28 +431,7 @@ const CallLogs = () => {
                             ${log.cost.toFixed(2)}
                           </div>
                         </td>
-                        <td>
-                          <span
-                            className={`
-                            ${
-                              log.endedReason === "caller-hung-up"
-                                ? "text-success"
-                                : ""
-                            }
-                            ${
-                              log.endedReason === "disconnected"
-                                ? "text-error"
-                                : ""
-                            }
-                            ${
-                              log.endedReason === "completed" ? "text-info" : ""
-                            }
-                            font-medium
-                          `}
-                          >
-                            {log.endedReason.replace(/-/g, " ")}
-                          </span>
-                        </td>
+                        <td>{getStatusBadge(log.status)}</td>
                         <td>
                           {log.assistantId ? (
                             <div className="tooltip" data-tip={log.assistantId}>
@@ -462,7 +444,9 @@ const CallLogs = () => {
                           )}
                         </td>
                         <td>
-                          <span className="text-base-content/60">N/A</span>
+                          {log.customerNumber || (
+                            <span className="text-base-content/60">N/A</span>
+                          )}
                         </td>
                         <td>
                           <div
@@ -485,7 +469,7 @@ const CallLogs = () => {
                         </td>
                         <td>
                           <div className="font-mono badge badge-ghost badge-sm text-nowrap">
-                            {getCallDuration(log.startedAt, log.endedAt)}
+                            {getCallDuration(log.minutes)}
                           </div>
                         </td>
                       </tr>
@@ -495,7 +479,6 @@ const CallLogs = () => {
               </table>
             </div>
 
-            {/* Pagination */}
             {!loading && paginatedLogs.length > 0 && (
               <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-primary/10">
                 <span className="text-base-content/70 pb-4 sm:pb-0">
@@ -507,7 +490,6 @@ const CallLogs = () => {
                   -{Math.min(currentPage * logsPerPage, filteredLogs.length)} of{" "}
                   {filteredLogs.length} calls
                 </span>
-
                 <div className="join shadow-md">
                   <button
                     className="join-item btn btn-sm"
@@ -523,7 +505,6 @@ const CallLogs = () => {
                   >
                     ‹
                   </button>
-
                   {getPaginationItems().map((page) => (
                     <button
                       key={page}
@@ -535,7 +516,6 @@ const CallLogs = () => {
                       {page}
                     </button>
                   ))}
-
                   <button
                     className="join-item btn btn-sm"
                     onClick={() => setCurrentPage(currentPage + 1)}
@@ -557,11 +537,9 @@ const CallLogs = () => {
         </div>
       </div>
 
-      {/* Call Details Modal with Better Layout */}
       {showModal && selectedLog && (
         <dialog open className="modal">
           <div className="modal-box bg-base-300/95 backdrop-blur-xl border-2 border-primary/30 shadow-xl max-w-2xl">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <PhoneCall className="text-primary" size={18} />
@@ -569,21 +547,35 @@ const CallLogs = () => {
                   <div className="flex items-center gap-2">
                     <div
                       className={`
-                  badge badge-sm shadow-sm
-                  ${selectedLog.type === "webCall" ? "badge-info" : ""}
-                  ${selectedLog.type === "inbound" ? "badge-success" : ""}
-                  ${selectedLog.type === "outbound" ? "badge-warning" : ""}
-                  ${
-                    !["webCall", "inbound", "outbound"].includes(
-                      selectedLog.type
-                    )
-                      ? "badge-ghost"
-                      : ""
-                  }
-                `}
+                        badge badge-sm shadow-sm
+                        ${selectedLog.type === "webCall" ? "badge-info" : ""}
+                        ${
+                          selectedLog.type === "inboundPhoneCall"
+                            ? "badge-success"
+                            : ""
+                        }
+                        ${
+                          selectedLog.type === "outboundPhoneCall"
+                            ? "badge-warning"
+                            : ""
+                        }
+                        ${
+                          ![
+                            "webCall",
+                            "inboundPhoneCall",
+                            "outboundPhoneCall",
+                          ].includes(selectedLog.type)
+                            ? "badge-ghost"
+                            : ""
+                        }
+                      `}
                     >
                       {selectedLog.type === "webCall"
                         ? "Web"
+                        : selectedLog.type === "inboundPhoneCall"
+                        ? "Inbound"
+                        : selectedLog.type === "outboundPhoneCall"
+                        ? "Outbound"
                         : selectedLog.type}
                     </div>
                     Call Details
@@ -601,13 +593,10 @@ const CallLogs = () => {
               </button>
             </div>
 
-            {/* Main Content */}
             <div className="space-y-4">
-              {/* Summary Card */}
               <div className="card bg-base-200/30 shadow-sm">
                 <div className="card-body p-3">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {/* Duration */}
                     <div className="flex flex-col">
                       <span className="text-xs text-base-content/70">
                         Duration
@@ -617,14 +606,9 @@ const CallLogs = () => {
                           size={12}
                           className="mr-1 text-base-content/70"
                         />
-                        {getCallDuration(
-                          selectedLog.startedAt,
-                          selectedLog.endedAt
-                        )}
+                        {getCallDuration(selectedLog.minutes)}
                       </div>
                     </div>
-
-                    {/* Date & Time */}
                     <div className="flex flex-col">
                       <span className="text-xs text-base-content/70">
                         Start Time
@@ -642,8 +626,6 @@ const CallLogs = () => {
                         </span>
                       </div>
                     </div>
-
-                    {/* Cost */}
                     <div className="flex flex-col">
                       <span className="text-xs text-base-content/70">Cost</span>
                       <div className="font-medium text-success">
@@ -651,36 +633,28 @@ const CallLogs = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Status - Full width */}
                   <div className="mt-3 pt-3 border-t border-base-300/50">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-base-content/70">
                         Status
                       </span>
                       <span
-                        className={`
-                          font-medium ${
-                            selectedLog.endedReason === "caller-hung-up"
-                              ? "text-success"
-                              : selectedLog.endedReason === "disconnected"
-                              ? "text-error"
-                              : "text-info"
-                          }
-                        `}
+                        className={
+                          selectedLog.status === "ended"
+                            ? "font-medium text-success"
+                            : "font-medium text-info"
+                        }
                       >
-                        {selectedLog.endedReason.replace(/-/g, " ")}
+                        {selectedLog.status}
                       </span>
                     </div>
                     <div className="w-full bg-base-100/30 h-2 rounded-full mt-2 overflow-hidden">
                       <div
-                        className={`h-full ${
-                          selectedLog.endedReason === "caller-hung-up"
-                            ? "bg-success"
-                            : selectedLog.endedReason === "disconnected"
-                            ? "bg-error"
-                            : "bg-info"
-                        }`}
+                        className={
+                          selectedLog.status === "ended"
+                            ? "h-full bg-success"
+                            : "h-full bg-info"
+                        }
                         style={{ width: "100%" }}
                       ></div>
                     </div>
@@ -688,14 +662,12 @@ const CallLogs = () => {
                 </div>
               </div>
 
-              {/* Technical Details */}
               <div className="card bg-base-200/30 shadow-sm">
                 <div className="card-body p-3">
                   <h3 className="text-sm font-medium mb-2">
                     Technical Details
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* Call ID */}
                     <div className="bg-base-100/20 p-2 rounded-lg">
                       <div className="text-xs text-base-content/70 flex items-center gap-1 mb-1">
                         <Info size={12} />
@@ -703,17 +675,17 @@ const CallLogs = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="font-mono text-xs truncate max-w-[85%]">
-                          {selectedLog.id}
+                          {selectedLog.callId}
                         </div>
                         <div
                           className="tooltip tooltip-left"
                           data-tip="Copy to clipboard"
                         >
                           <button
-                            onClick={() => copyToClipboard(selectedLog.id)}
+                            onClick={() => copyToClipboard(selectedLog.callId)}
                             className="btn btn-ghost btn-xs h-6 min-h-0 px-1"
                           >
-                            {copied === selectedLog.id ? (
+                            {copied === selectedLog.callId ? (
                               <CheckCircle2
                                 size={14}
                                 className="text-success"
@@ -725,8 +697,6 @@ const CallLogs = () => {
                         </div>
                       </div>
                     </div>
-
-                    {/* Assistant */}
                     <div className="bg-base-100/20 p-2 rounded-lg">
                       <div className="text-xs text-base-content/70 flex items-center gap-1 mb-1">
                         <User size={12} />
@@ -758,14 +728,12 @@ const CallLogs = () => {
                 </div>
               </div>
 
-              {/* Timeline */}
               <div className="card bg-base-200/30 shadow-sm">
                 <div className="card-body p-3">
                   <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
                     <Clock size={12} />
                     Call Timeline
                   </h3>
-
                   <ul className="timeline timeline-vertical timeline-compact timeline-snap-icon">
                     <li>
                       <div className="timeline-middle">
@@ -797,7 +765,7 @@ const CallLogs = () => {
                       <div className="timeline-end text-xs ml-4">
                         <span className="font-medium">Call Ended</span>
                         <div className="text-2xs opacity-70">
-                          {selectedLog.endedReason.replace(/-/g, " ")}
+                          {selectedLog.status}
                         </div>
                       </div>
                     </li>
@@ -805,7 +773,6 @@ const CallLogs = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="card bg-base-200/30 shadow-sm">
                 <div className="card-body p-3">
                   <h3 className="text-sm font-medium mb-2">
@@ -829,8 +796,6 @@ const CallLogs = () => {
               </div>
             </div>
           </div>
-
-          {/* Modal backdrop */}
           <form
             method="dialog"
             className="modal-backdrop"

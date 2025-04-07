@@ -1,59 +1,57 @@
-const https = require('https');
+const https = require("https");
 
-// Utility function to make API call to vapi.ai
-const createAssistantAPI = (firstMessage, modelProvider, modelName, messages, knowledgeBaseUrl, endCallMessage, name, toolIds) => {
+const createAssistantAPI = (
+  firstMessage,
+  modelProvider,
+  modelName,
+  messages,
+  knowledgeBaseUrl,
+  endCallMessage,
+  name,
+  toolIds
+) => {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
-      "firstMessage": firstMessage || "",
-      "model": {
-        "provider": modelProvider || "openai",
-        "model": modelName || "gpt-3.5-turbo",
-        "messages": messages || [{ "role": "user", "content": "" }],
-        // "knowledgeBase": {
-        //   "server": {
-        //     "url": knowledgeBaseUrl || ""
-        //   }
-        // }
-        "toolIds": toolIds || [
-          "e402a911-71a4-4879-90d6-92ec38b9d123"
-        ]
+      firstMessage: firstMessage || "",
+      model: {
+        provider: modelProvider || "openai",
+        model: modelName || "gpt-3.5-turbo",
+        messages: messages || [{ role: "user", content: "" }],
+        toolIds: toolIds || ["e402a911-71a4-4879-90d6-92ec38b9d123"],
       },
-      "endCallMessage": endCallMessage || "",
-      "name": name || "bb"
+      endCallMessage: endCallMessage || "",
+      name: name || "bb",
     });
 
     const options = {
-      hostname: 'api.vapi.ai',
-      path: '/assistant',
-      method: 'POST',
+      hostname: "api.vapi.ai",
+      path: "/assistant",
+      method: "POST",
       headers: {
-        'Authorization': 'Bearer e009eade-80be-4308-a5cb-ce7543eb6744', // Replace with your token
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
-      }
+        Authorization: `Bearer ${process.env.VAPI_TOKEN}`,
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(data),
+      },
     };
 
     const req = https.request(options, (res) => {
-      let responseData = '';
-
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on('end', () => {
+      let responseData = "";
+      res.on("data", (chunk) => (responseData += chunk));
+      res.on("end", () => {
         try {
           const responseJson = JSON.parse(responseData);
-          resolve(responseJson);
+          if (res.statusCode === 200) resolve(responseJson);
+          else
+            reject(
+              new Error(`VAPI API error: ${res.statusCode} - ${responseData}`)
+            );
         } catch (err) {
           reject(err);
         }
       });
     });
 
-    req.on('error', (error) => {
-      reject(error);
-    });
-
+    req.on("error", (error) => reject(error));
     req.write(data);
     req.end();
   });
@@ -62,39 +60,69 @@ const createAssistantAPI = (firstMessage, modelProvider, modelName, messages, kn
 const getAssistantFromVapi = () => {
   return new Promise((resolve, reject) => {
     const options = {
-      hostname: 'api.vapi.ai',
-      path: `/assistant`,
-      method: 'GET',
+      hostname: "api.vapi.ai",
+      path: "/assistant",
+      method: "GET",
       headers: {
-        'Authorization': 'Bearer e009eade-80be-4308-a5cb-ce7543eb6744', // Use your VAPI token
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.VAPI_TOKEN}`,
+        "Content-Type": "application/json",
       },
     };
 
     const req = https.request(options, (res) => {
-      let responseData = '';
-
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on('end', () => {
+      let responseData = "";
+      res.on("data", (chunk) => (responseData += chunk));
+      res.on("end", () => {
         try {
           const responseJson = JSON.parse(responseData);
-          resolve(responseJson);
+          if (res.statusCode === 200) resolve(responseJson);
+          else
+            reject(
+              new Error(`VAPI API error: ${res.statusCode} - ${responseData}`)
+            );
         } catch (err) {
           reject(err);
         }
       });
     });
 
-    req.on('error', (error) => {
-      reject(error);
-    });
-
+    req.on("error", (error) => reject(error));
     req.end();
   });
 };
 
+const getCallsFromVapi = () => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: "api.vapi.ai",
+      path: "/call",
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${process.env.VAPI_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    };
 
-module.exports = { createAssistantAPI, getAssistantFromVapi };
+    const req = https.request(options, (res) => {
+      let responseData = "";
+      res.on("data", (chunk) => (responseData += chunk));
+      res.on("end", () => {
+        try {
+          const responseJson = JSON.parse(responseData);
+          if (res.statusCode === 200) resolve(responseJson);
+          else
+            reject(
+              new Error(`VAPI API error: ${res.statusCode} - ${responseData}`)
+            );
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on("error", (error) => reject(error));
+    req.end();
+  });
+};
+
+module.exports = { createAssistantAPI, getAssistantFromVapi, getCallsFromVapi };
