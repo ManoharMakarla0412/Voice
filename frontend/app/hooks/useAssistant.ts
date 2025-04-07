@@ -22,11 +22,11 @@ const useAssistant = () => {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const id = sessionStorage.getItem("user_id") || "defaultUserId"; // Replace with actual user ID logic
   const fetchAssistants = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/assistant`);
+      const response = await fetch(`${BASE_URL}/assistant/getassitant/${id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch assistants");
       }

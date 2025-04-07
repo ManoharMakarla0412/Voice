@@ -245,7 +245,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchAssistants = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/assistant/get`);
+        const response = await fetch(`${BASE_URL}/assistant/`);
         if (!response.ok) throw new Error("Failed to fetch assistants");
         const data = await response.json();
         setAssistants(data);

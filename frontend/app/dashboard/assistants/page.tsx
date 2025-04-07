@@ -234,7 +234,7 @@ export default function AssistantDashboard() {
         </div>
 
         {/* Error display */}
-        {error && (
+        {/* {error && (
           <div className="alert alert-error shadow-lg border border-error/30">
             <AlertTriangle size={18} />
             <div>
@@ -248,7 +248,7 @@ export default function AssistantDashboard() {
               <X size={16} />
             </button>
           </div>
-        )}
+        )} */}
 
         {/* Display assistants */}
         <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg overflow-hidden">

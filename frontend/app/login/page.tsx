@@ -53,6 +53,7 @@ function LoginPageContent() {
         sessionStorage.setItem("auth_token", response.data.token);
         sessionStorage.setItem("username", response.data.user.username);
         sessionStorage.setItem("email", response.data.user.email);
+        sessionStorage.setItem('user_id', response.data.user.id);
 
         // Show toast with DaisyUI
         document.body.appendChild(createToast("Login Successful", "success"));
