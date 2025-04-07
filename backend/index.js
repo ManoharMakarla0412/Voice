@@ -26,21 +26,35 @@ const CallLog = require("./models/calllogsModel");
 const app = express();
 const server = http.createServer(app);
 
+// const io = new Server(server, {
+//   cors: {
+//     origin: [
+//       "https://app.elidepro.com",
+//       "http://localhost:3000",
+//       "http://localhost:5003",
+//       "https://mighty-driven-dragon.ngrok-free.app",
+//     ],
+//     methods: ["GET", "POST", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
+//   },
+//   path: "/v1/voice/socket.io",
+// });
+
+
 const io = new Server(server, {
   cors: {
-    origin: [
-      "https://app.elidepro.com",
-      "http://localhost:3000",
-      "http://localhost:5003",
-      "https://mighty-driven-dragon.ngrok-free.app",
-    ],
+    origin: ["https://app.elidepro.com"],
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   },
-  path: "/v1/voice/socket.io",
+  path: "/socket.io",
 });
+
+
 app.set("socketio", io);
+
 
 app.use(
   cors({
