@@ -72,13 +72,13 @@ const mongoose = require("mongoose");
  */
 const appointmentSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: "default-user" }, // Optional
     fullName: { type: String, default: "Unknown" },
     problem: { type: String, default: "Not specified" },
     appointmentDateTime: { type: Date, required: true },
     duration: { type: Number, required: true },
-    callId: { type: String, required: true, unique: true },
-    assistantId: { type: String },
+    callId: { type: String, default: "unknown" }, // No unique constraint
+    assistantId: { type: String, default: "unknown" },
     timestamp: { type: Date, default: Date.now },
     status: {
       type: String,
