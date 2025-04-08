@@ -1,6 +1,5 @@
 const express = require("express");
 const { createAppointment, getLatestAppointments } = require("../controllers/appointmentController");
-const { authenticateToken} = require("../utils/auth");
 const router = express.Router();
 
 /**
@@ -10,8 +9,6 @@ const router = express.Router();
  *     summary: Book a new appointment
  *     tags: [Appointment]
  *     description: Creates a new appointment based on conversation with assistant
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -81,14 +78,10 @@ const router = express.Router();
  *         description: Appointment booked successfully
  *       400:
  *         description: Invalid request data
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Invalid token
  *       500:
  *         description: Server error
  */
-router.post("/book", authenticateToken, createAppointment);
+router.post("/book", createAppointment);
 
 /**
  * @swagger
@@ -96,9 +89,7 @@ router.post("/book", authenticateToken, createAppointment);
  *   get:
  *     summary: Get latest appointments
  *     tags: [Appointment]
- *     description: Fetches the most recent appointments for the authenticated user
- *     security:
- *       - bearerAuth: []
+ *     description: Fetches the most recent appointments for polling
  *     responses:
  *       200:
  *         description: List of recent appointments
@@ -108,13 +99,9 @@ router.post("/book", authenticateToken, createAppointment);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Appointment'
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Invalid token
  *       500:
  *         description: Server error
  */
-router.get("/latest", authenticateToken, getLatestAppointments);
+router.get("/latest", getLatestAppointments);
 
 module.exports = router;
