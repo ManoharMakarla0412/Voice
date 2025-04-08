@@ -36,6 +36,9 @@ export default function AssistantDashboard() {
   const {
     assistants,
     loading,
+    createLoading,
+    updateLoading,
+    deleteLoading,
     error,
     createAssistant,
     updateAssistant,
@@ -70,14 +73,14 @@ export default function AssistantDashboard() {
           messages: [{ role: "user", content: formData.systemPrompt }],
           provider: "openai",
         },
-        // Add required fields based on VAPI validation
-        // voice: {
-        //   provider: "11labs", // Use a valid voice provider from the API docs
-        //   voiceId: "rachel", // Default voice ID
-        // },
-        // transcriber: {
-        //   provider: "deepgram", // Use a valid transcriber provider
-        // },
+        voice: {
+          provider: "deepgram",
+          voiceId: "luna",
+        },
+        transcriber: {
+          provider: "deepgram",
+          language: "en",
+        },
       });
 
       showToast("Assistant created successfully!", "success");
@@ -85,8 +88,7 @@ export default function AssistantDashboard() {
       resetForm();
     } catch (error: any) {
       console.error("Error creating assistant:", error);
-      // Improve error message display
-      
+      showToast(`Failed to create assistant: ${error.message}`, "error");
     }
   };
 
@@ -105,17 +107,13 @@ export default function AssistantDashboard() {
     if (!currentAssistantId) return;
 
     try {
-      // Create a payload with only the fields we're updating
-      const currentAssistant = assistants.find(a => a.id === currentAssistantId);
       const updatePayload = {
         name: formData.name,
         firstMessage: formData.firstMessage,
         endCallMessage: formData.endCallMessage,
         model: {
-          model: currentAssistant?.model.model || "gpt-3.5-turbo",
           messages: [{ role: "user", content: formData.systemPrompt }],
-          provider: currentAssistant?.model.provider || "openai"
-        }
+        },
       };
 
       await updateAssistant(currentAssistantId, updatePayload);
@@ -125,8 +123,7 @@ export default function AssistantDashboard() {
       resetForm();
     } catch (error: any) {
       console.error("Error updating assistant:", error);
-      // Improve error display
-      showToast(`Update failed: ${error.message}`, "error");
+      showToast(`Failed to update assistant: ${error.message}`, "error");
     }
   };
 
@@ -153,7 +150,6 @@ export default function AssistantDashboard() {
     message: string,
     type: "info" | "success" | "warning" | "error"
   ) => {
-    // Limit message length for display but keep it informative
     const displayMessage = message.length > 100 
       ? `${message.substring(0, 97)}...` 
       : message;
@@ -164,7 +160,6 @@ export default function AssistantDashboard() {
     const alert = document.createElement("div");
     alert.className = `alert alert-${type} py-2`;
     
-    // Create a better structured message element
     const contentSpan = document.createElement("span");
     contentSpan.textContent = displayMessage;
     alert.appendChild(contentSpan);
@@ -174,7 +169,7 @@ export default function AssistantDashboard() {
 
     setTimeout(() => {
       toast.remove();
-    }, 5000); // Show for longer when it's an error
+    }, 5000);
   };
 
   const stepTooltips = [
@@ -186,7 +181,6 @@ export default function AssistantDashboard() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Header with title */}
         <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg">
           <div className="card-body">
             <div className="flex flex-col md:flex-row justify-between gap-6">
@@ -200,7 +194,6 @@ export default function AssistantDashboard() {
                 </p>
               </div>
 
-              {/* Stats */}
               <div className="stats bg-base-200/60 shadow-md border border-base-200/30">
                 <div className="stat">
                   <div className="flex items-center gap-2">
@@ -218,7 +211,6 @@ export default function AssistantDashboard() {
           </div>
         </div>
 
-        {/* Action bar */}
         <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg">
           <div className="card-body">
             <div className="flex flex-wrap items-center justify-end">
@@ -233,24 +225,6 @@ export default function AssistantDashboard() {
           </div>
         </div>
 
-        {/* Error display */}
-        {/* {error && (
-          <div className="alert alert-error shadow-lg border border-error/30">
-            <AlertTriangle size={18} />
-            <div>
-              <h3 className="font-bold">Error</h3>
-              <div className="text-xs">{error}</div>
-            </div>
-            <button
-              className="btn btn-sm btn-circle btn-ghost ml-auto"
-              onClick={() => {}}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )} */}
-
-        {/* Display assistants */}
         <div className="card bg-base-300/80 border-2 border-primary/30 shadow-lg overflow-hidden">
           <div className="card-body p-0">
             <div className="alert alert-info bg-info/10 border-info/30 rounded-none">
@@ -276,7 +250,6 @@ export default function AssistantDashboard() {
                       key={assistant.id}
                       className="card bg-base-300/80 border-2 border-primary/30 shadow-lg flex flex-col"
                     >
-                      {/* Header section with gradient background */}
                       <div className="bg-primary/10 p-5 rounded-t-lg">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="avatar avatar-placeholder">
@@ -309,9 +282,7 @@ export default function AssistantDashboard() {
                         </div>
                       </div>
 
-                      {/* Content section - Fixed height with both message blocks always present */}
                       <div className="card-body p-5 flex-1 flex flex-col gap-4">
-                        {/* First Message - Always shown */}
                         <div className="bg-base-100/20 rounded-lg p-3 border border-base-100/10 min-h-[85px] flex flex-col">
                           <div className="flex items-center text-sm font-medium mb-1.5">
                             <MessageSquare
@@ -331,7 +302,6 @@ export default function AssistantDashboard() {
                           )}
                         </div>
 
-                        {/* End Call Message - Always shown */}
                         <div className="bg-base-100/20 rounded-lg p-3 border border-base-100/10 min-h-[85px] flex flex-col">
                           <div className="flex items-center text-sm font-medium mb-1.5">
                             <Clock size={14} className="mr-1.5 text-primary" />
@@ -349,22 +319,31 @@ export default function AssistantDashboard() {
                         </div>
                       </div>
 
-                      {/* Actions section - Always at the bottom */}
                       <div className="card-actions justify-between p-4 border-t border-base-100/20 mt-auto">
                         <button
                           className="btn btn-sm btn-error btn-outline gap-1"
                           onClick={() => handleDeleteClick(assistant.id)}
+                          disabled={deleteLoading === assistant.id}
                         >
-                          <Trash2 size={14} />
-                          Delete
+                          {deleteLoading === assistant.id ? (
+                            <>
+                              <span className="loading loading-spinner loading-sm"></span>
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 size={14} />
+                              Delete
+                            </>
+                          )}
                         </button>
-                        <button
+                        {/* <button
                           className="btn btn-sm btn-primary gap-1"
                           onClick={() => handleEditClick(assistant)}
                         >
                           <Edit3 size={14} />
                           Edit
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   ))}
@@ -398,11 +377,9 @@ export default function AssistantDashboard() {
         </div>
       </div>
 
-      {/* Create Assistant Modal */}
       {isCreateModalOpen && (
         <dialog open className="modal">
           <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-primary/30 shadow-xl max-w-2xl">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Terminal className="text-primary" size={18} />
@@ -420,7 +397,6 @@ export default function AssistantDashboard() {
               Configure your AI assistant in 3 simple steps
             </p>
 
-            {/* Step progress */}
             <div className="w-full bg-base-100/30 h-1.5 mb-6 rounded-full">
               <div
                 className="bg-primary h-1.5 rounded-full transition-all"
@@ -604,17 +580,25 @@ export default function AssistantDashboard() {
                   <button
                     className="btn btn-primary btn-sm"
                     onClick={handleCreateAssistant}
-                    disabled={!formData.endCallMessage}
+                    disabled={createLoading || !formData.endCallMessage}
                   >
-                    <CheckCircle2 size={16} />
-                    Create Assistant
+                    {createLoading ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={16} />
+                        Create Assistant
+                      </>
+                    )}
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Modal backdrop */}
           <form
             method="dialog"
             className="modal-backdrop"
@@ -627,11 +611,9 @@ export default function AssistantDashboard() {
         </dialog>
       )}
 
-      {/* Edit Assistant Modal */}
       {isEditModalOpen && (
         <dialog open className="modal">
           <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-primary/30 shadow-xl max-w-2xl">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Edit3 className="text-primary" size={18} />
@@ -730,20 +712,29 @@ export default function AssistantDashboard() {
                   className="btn btn-primary btn-sm"
                   onClick={handleUpdateAssistant}
                   disabled={
+                    updateLoading === currentAssistantId ||
                     !formData.name ||
                     !formData.firstMessage ||
                     !formData.systemPrompt ||
                     !formData.endCallMessage
                   }
                 >
-                  <CheckCircle2 size={16} />
-                  Update Assistant
+                  {updateLoading === currentAssistantId ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={16} />
+                      Update Assistant
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Modal backdrop */}
           <form
             method="dialog"
             className="modal-backdrop"
@@ -756,7 +747,6 @@ export default function AssistantDashboard() {
         </dialog>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <dialog open className="modal">
           <div className="modal-box bg-base-300/60 backdrop-blur-2xl border-2 border-error/30 shadow-xl">
@@ -788,9 +778,19 @@ export default function AssistantDashboard() {
               <button
                 className="btn btn-error"
                 onClick={handleDeleteAssistant}
+                disabled={deleteLoading === currentAssistantId}
               >
-                <Trash2 size={16} />
-                Delete
+                {deleteLoading === currentAssistantId ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Delete
+                  </>
+                )}
               </button>
             </div>
           </div>

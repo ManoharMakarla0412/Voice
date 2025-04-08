@@ -21,12 +21,23 @@ interface Assistant {
 const useAssistant = () => {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const id = sessionStorage.getItem("user_id") || "defaultUserId"; // Replace with actual user ID logic
+  
+  const userId = sessionStorage.getItem("user_id");
+
   const fetchAssistants = async () => {
+    if (!userId) {
+      setError("User ID not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/assistant/getassitant/${id}`);
+      const response = await fetch(`${BASE_URL}/assistant/getassitant/${userId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch assistants");
       }
@@ -34,96 +45,116 @@ const useAssistant = () => {
       setAssistants(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch assistants");
+      console.error("Error fetching assistants:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const createAssistant = async (assistantData: any) => {
-    setLoading(true);
-    setError(null); // Reset error state
+    if (!userId) {
+      throw new Error("User ID not found. Please log in again.");
+    }
+    
+    setCreateLoading(true);
+    setError(null);
+    
     try {
       const response = await fetch(`${BASE_URL}/assistant`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(assistantData),
+        body: JSON.stringify({
+          ...assistantData,
+          userId: userId // Add userId from session storage
+        }),
       });
 
-      // Log raw response for debugging
-      console.log("Create Assistant Response Status:", response.status);
-      const responseText = await response.text();
-      console.log("Create Assistant Response Text:", responseText);
-
       if (!response.ok) {
-        const errorData = JSON.parse(responseText);
+        const errorData = await response.json();
         throw new Error(errorData.error || "Failed to create assistant");
       }
 
-      const newAssistant = JSON.parse(responseText);
-      setAssistants((prev) => [...prev, newAssistant.assistant]); // Add the new assistant
-      return newAssistant; // Return the full response for the caller
-    } catch (error: unknown) {
+      const responseData = await response.json();
+      
+      // Add the new assistant to our local state
+      setAssistants(prev => [...prev, responseData.assistant]);
+      
+      return responseData;
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("Error creating assistant:", errorMessage);
       setError(errorMessage);
-      throw error; // Re-throw to let the caller handle it
+      throw error;
     } finally {
-      setLoading(false);
+      setCreateLoading(false);
     }
   };
 
   const updateAssistant = async (assistantId: string, updateData: any) => {
+    setUpdateLoading(assistantId);
+    setError(null);
+    
     try {
       const response = await fetch(`${BASE_URL}/assistant/${assistantId}`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updateData),
       });
   
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update assistant");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update assistant");
       }
   
-      const updatedAssistant = await response.json();
-      setAssistants((prev) =>
-        prev.map((assistant) =>
-          assistant.id === assistantId ? updatedAssistant.assistant : assistant
+      const responseData = await response.json();
+      
+      // Update the assistant in our local state
+      setAssistants(prev =>
+        prev.map(assistant =>
+          assistant.id === assistantId ? responseData.assistant : assistant
         )
       );
-      return updatedAssistant;
-    } catch (error: any) {
-      console.error("Error updating assistant:", error.message);
-      setError(error.message);
+      
+      return responseData;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error updating assistant:", errorMessage);
+      setError(errorMessage);
       throw error;
+    } finally {
+      setUpdateLoading(null);
     }
   };
 
   const deleteAssistant = async (assistantId: string) => {
+    setDeleteLoading(assistantId);
+    setError(null);
+    
     try {
       const response = await fetch(`${BASE_URL}/assistant/${assistantId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
-        },
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete assistant");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete assistant");
       }
 
-      setAssistants((prev) => prev.filter((assistant) => assistant.id !== assistantId));
-    } catch (error: any) {
-      console.error("Error deleting assistant:", error.message);
+      // Remove the deleted assistant from our local state
+      setAssistants(prev => prev.filter(assistant => assistant.id !== assistantId));
+      
+      return await response.json();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error deleting assistant:", errorMessage);
+      setError(errorMessage);
       throw error;
+    } finally {
+      setDeleteLoading(null);
     }
   };
 
@@ -134,7 +165,11 @@ const useAssistant = () => {
   return {
     assistants,
     loading,
+    createLoading,
+    updateLoading,
+    deleteLoading,
     error,
+    fetchAssistants,
     createAssistant,
     updateAssistant,
     deleteAssistant,
