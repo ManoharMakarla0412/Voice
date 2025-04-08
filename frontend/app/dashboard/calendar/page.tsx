@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { BASE_URL } from "../../utils/constants";
 import {
   ChevronLeft,
   ChevronRight,
@@ -57,7 +58,7 @@ const Calendar = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await fetch("https://osaw.in/v1/voice/api/appointments/latest");
+        const response = await fetch(`${BASE_URL}/api/appointments/latest`);
         const data = await response.json();
         const newEvents = data.map((appt: Appointment) => ({
           id: appt.callId,
