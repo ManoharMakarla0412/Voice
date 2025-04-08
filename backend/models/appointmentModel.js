@@ -73,8 +73,8 @@ const mongoose = require("mongoose");
 const appointmentSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    fullName: { type: String, required: true },
-    problem: { type: String, required: true },
+    fullName: { type: String, default: "Unknown" },
+    problem: { type: String, default: "Not specified" },
     appointmentDateTime: { type: Date, required: true },
     duration: { type: Number, required: true },
     callId: { type: String, required: true, unique: true },
