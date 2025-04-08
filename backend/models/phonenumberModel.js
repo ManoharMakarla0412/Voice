@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 
 const phoneNumberSchema = new mongoose.Schema({
+  userId: { type: String, required: false, default: null },
+  vapiId: { type: String, required: true },
+  assistantId: { type: String, required: false ,default: null },
   provider: { type: String, required: true },
   number: { type: String, required: true },
   twilioAccountSid: { type: String, required: true },

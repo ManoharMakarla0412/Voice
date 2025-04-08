@@ -2,6 +2,9 @@ const express = require("express");
 const {
   createPhoneNumber,
   fetchPhoneNumbers,
+  fetchPhoneNumbersByUserId,
+  updatePhoneNumberAssistant,
+  deletePhoneNumber
 } = require("../controllers/phoneNumberController");
 
 const router = express.Router();
@@ -210,5 +213,70 @@ router.post("/createphonenumber", createPhoneNumber);
  *                   example: Error details message
  */
 router.get("/getphonenumbers", fetchPhoneNumbers);
+
+/**
+ * @swagger
+ * /phonenumber/getphonenumbersbyuser/{userId}:
+ *   get:
+ *     summary: Get phone numbers for a specific user
+ *     tags: [PhoneNumber]
+ *     description: Retrieves phone numbers associated with a specific user ID
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user phone numbers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/PhoneNumber'
+ *       400:
+ *         description: Bad request - missing user ID
+ *       500:
+ *         description: Server error
+ */
+router.get("/getphonenumbersbyuser/:userId", fetchPhoneNumbersByUserId);
+
+/**
+ * @swagger
+ * /phonenumber/updateassistant:
+ *   post:
+ *     summary: Update the assistant associated with a phone number
+ *     tags: [PhoneNumber]
+ *     description: Updates the assistant ID for a specific phone number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phoneId
+ *               - assistantId
+ *             properties:
+ *               phoneId:
+ *                 type: string
+ *                 description: The ID of the phone number
+ *               assistantId:
+ *                 type: string
+ *                 description: The ID of the assistant to associate
+ *     responses:
+ *       200:
+ *         description: Assistant updated successfully
+ *       400:
+ *         description: Bad request - missing required fields
+ *       500:
+ *         description: Server error
+ */
+router.post("/updateassistant", updatePhoneNumberAssistant);
+
+router.delete("/deletephonenumber/:id", deletePhoneNumber);
 
 module.exports = router;

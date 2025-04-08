@@ -24,17 +24,22 @@ interface PhoneNumber {
   provider: string;
   twilioAccountSid: string;
   twilioAuthToken: string;
-  assistantId: string;
+  assistantId: string; // This stores the VAPI assistant ID
+  vapiId: string;
 }
 
 interface Assistant {
-  id: string;
+  _id: string; // Database ID
+  userId: string;
+  vapiAssistantId: string; // VAPI ID
   name: string;
   description?: string;
 }
 
 export default function PhoneNumberManager() {
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [phoneToDelete, setPhoneToDelete] = useState<{ id: string; vapiId: string; name: string; number: string } | null>(null);
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +52,12 @@ export default function PhoneNumberManager() {
     twilioAccountSid: "",
     twilioAuthToken: "",
     name: "",
+    userId: "",
+    assistantId: "", // This will store the VAPI assistant ID
   });
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [assistantUpdateLoading, setAssistantUpdateLoading] = useState<string | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([fetchPhoneNumbers(), fetchAssistants()]).finally(() =>
@@ -55,29 +65,51 @@ export default function PhoneNumberManager() {
     );
   }, []);
 
+  useEffect(() => {
+    const userId = sessionStorage.getItem("user_id");
+    if (userId) {
+      setFormData((prevData) => ({
+        ...prevData,
+        userId,
+      }));
+    }
+  }, []);
+
+  // Helper function to find the database _id for an assistant based on its VAPI ID
+  const findAssistantDbId = (vapiAssistantId: string | null): string => {
+    if (!vapiAssistantId) return "";
+
+    const assistant = assistants.find((a) => a.vapiAssistantId === vapiAssistantId);
+    return assistant ? assistant._id : "";
+  };
+
   const fetchAssistants = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/assistant/`);
+      const userId = sessionStorage.getItem("user_id");
+      if (!userId) throw new Error("User ID not found in session storage");
+      const response = await fetch(`${BASE_URL}/assistant/getassitant/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch assistants");
       const data = await response.json();
+      console.log("Fetched assistants:", data); // Debug
       setAssistants(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch assistants"
-      );
+      setError(err instanceof Error ? err.message : "Failed to fetch assistants");
     }
   };
 
   const fetchPhoneNumbers = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/phone/getphonenumbers`);
+      const userId = sessionStorage.getItem("user_id");
+      if (!userId) throw new Error("User ID not found in session storage");
+
+      const response = await fetch(`${BASE_URL}/api/phone/getphonenumbersbyuser/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch phone numbers");
+
       const data = await response.json();
+      console.log("Fetched phone numbers:", data); // Debug
       setPhoneNumbers(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch phone numbers"
-      );
+      setError(err instanceof Error ? err.message : "Failed to fetch phone numbers");
     }
   };
 
@@ -86,18 +118,125 @@ export default function PhoneNumberManager() {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleAssistantChange = async (
-    phoneId: string,
-    assistantId: string
-  ) => {
-    // Here you would implement the API call to update the assistant for this phone number
-    console.log("Updating assistant:", { phoneId, assistantId });
+  const handleAssistantChange = async (phoneId: string, assistantDbId: string) => {
+    try {
+      setAssistantUpdateLoading(phoneId); // Only set loading for this specific phone
+
+      // Find the phone number by ID to get its vapiId
+      const phoneNumber = phoneNumbers.find((phone) => phone.id === phoneId);
+      if (!phoneNumber) {
+        throw new Error("Phone number not found");
+      }
+
+      // Find the assistant to get its vapiAssistantId
+      const assistant = assistants.find((assistant) => assistant._id === assistantDbId);
+      if (!assistant) {
+        throw new Error("Assistant not found");
+      }
+
+      // Send the update request to our backend API
+      const response = await fetch(`${BASE_URL}/api/phone/updateassistant`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneId: phoneNumber.vapiId, // Use the VAPI ID for the phone number
+          assistantId: assistant.vapiAssistantId, // Use the VAPI assistant ID
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update assistant");
+      }
+
+      // Update local state to reflect the change
+      setPhoneNumbers((prev) =>
+        prev.map((phone) =>
+          phone.id === phoneId ? { ...phone, assistantId: assistant.vapiAssistantId } : phone
+        )
+      );
+
+      // Show success toast using DaisyUI
+      const toastContainer = document.createElement("div");
+      toastContainer.className = "toast toast-end";
+
+      const alert = document.createElement("div");
+      alert.className = "alert alert-success";
+      alert.innerHTML = `<span>Assistant updated successfully!</span>`;
+
+      toastContainer.appendChild(alert);
+      document.body.appendChild(toastContainer);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => toastContainer.remove(), 3000);
+
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to update assistant");
+    } finally {
+      setAssistantUpdateLoading(null);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDelete = async (id: string, vapiId: string) => {
+    try {
+      setDeleteLoading(id);
+
+      const response = await fetch(`${BASE_URL}/api/phone/deletephonenumber/${vapiId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete phone number");
+      }
+
+      // After successful deletion, update the UI by removing the deleted phone number
+      setPhoneNumbers((prev) => prev.filter((phone) => phone.id !== id));
+
+      // Show success toast using DaisyUI
+      const toastContainer = document.createElement("div");
+      toastContainer.className = "toast toast-end";
+
+      const alert = document.createElement("div");
+      alert.className = "alert alert-success";
+      alert.innerHTML = `<span>Phone number deleted successfully!</span>`;
+
+      toastContainer.appendChild(alert);
+      document.body.appendChild(toastContainer);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => toastContainer.remove(), 3000);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to delete phone number");
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      setIsLoading(true);
+      setImportLoading(true);
+
+      // Make sure userId is in the payload
+      if (!formData.userId) {
+        const userId = sessionStorage.getItem("user_id");
+        if (userId) {
+          setFormData((prev) => ({ ...prev, userId }));
+        } else {
+          setError("User ID not found. Please log in again.");
+          setImportLoading(false);
+          return;
+        }
+      }
+
+      // Validate that assistantId is selected
+      if (!formData.assistantId) {
+        setError("Please select an assistant for this phone number.");
+        setImportLoading(false);
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/phone/createphonenumber`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -107,30 +246,41 @@ export default function PhoneNumberManager() {
       if (response.ok) {
         await fetchPhoneNumbers();
         setShowImportModal(false);
-        // Create a toast notification
-        const toast = document.createElement("div");
-        toast.className = "toast toast-end";
-        toast.innerHTML = `
-          <div class="alert alert-success">
-            <span>Phone number imported successfully!</span>
-          </div>
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setFormData({
+          provider: "twilio",
+          number: "",
+          twilioAccountSid: "",
+          twilioAuthToken: "",
+          name: "",
+          userId: formData.userId,
+          assistantId: "",
+        });
+
+        // Create a toast notification using DaisyUI
+        const toastContainer = document.createElement("div");
+        toastContainer.className = "toast toast-end";
+
+        const alert = document.createElement("div");
+        alert.className = "alert alert-success";
+        alert.innerHTML = `<span>Phone number imported successfully!</span>`;
+
+        toastContainer.appendChild(alert);
+        document.body.appendChild(toastContainer);
+
+        // Remove toast after 3 seconds
+        setTimeout(() => toastContainer.remove(), 3000);
       } else {
         const errorData = await response.json();
-        setError(errorData.error);
+        setError(
+          errorData.error || errorData.message || "Failed to import phone number"
+        );
       }
     } catch (error) {
       setError("An unexpected error occurred.");
+      console.error(error);
     } finally {
-      setIsLoading(false);
+      setImportLoading(false);
     }
-  };
-
-  const handleDelete = async (id: string) => {
-    // Implementation for delete functionality would go here
-    console.log("Delete phone number:", id);
   };
 
   const copyToClipboard = (id: string) => {
@@ -209,28 +359,35 @@ export default function PhoneNumberManager() {
                 </div>
               </div>
 
-              {/* Assistant selector */}
+              {/* Assistant selector - Updated to use mapped assistantId */}
               <div>
                 <label className="label label-text text-xs py-0">
                   Assistant
                 </label>
                 <div className="join w-full mt-1 shadow-sm">
-                  <select
-                    className="select select-sm h-8 w-full bg-base-100/90 border border-base-200/50"
-                    value={phone.assistantId}
-                    onChange={(e) =>
-                      handleAssistantChange(phone.id, e.target.value)
-                    }
-                  >
-                    <option disabled value="">
-                      Select Assistant
-                    </option>
-                    {assistants.map((assistant) => (
-                      <option key={assistant.id} value={assistant.id}>
-                        {assistant.name}
+                  {assistantUpdateLoading === phone.id ? (
+                    <div className="select select-bordered select-xs w-full flex items-center justify-center bg-base-100/70">
+                      <span className="loading loading-spinner loading-xs"></span>
+                      <span className="ml-2 text-xs">Updating...</span>
+                    </div>
+                  ) : (
+                    <select
+                      className="select select-bordered select-xs w-full max-w-xs bg-base-100/70"
+                      value={findAssistantDbId(phone.assistantId)}
+                      onChange={(e) =>
+                        handleAssistantChange(phone.id, e.target.value)
+                      }
+                    >
+                      <option disabled value="">
+                        Select Assistant
                       </option>
-                    ))}
-                  </select>
+                      {assistants.map((assistant) => (
+                        <option key={assistant._id} value={assistant._id}>
+                          {assistant.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -291,8 +448,24 @@ export default function PhoneNumberManager() {
 
           {/* Card Actions - always at bottom */}
           <div className="card-actions justify-end p-4 border-t border-base-100/20 mt-auto">
-            <button className="btn btn-sm btn-error btn-outline gap-1">
-              <Trash2 size={14} />
+            <button
+              className="btn btn-sm btn-error btn-outline gap-1"
+              onClick={() => {
+                setPhoneToDelete({
+                  id: phone.id,
+                  vapiId: phone.vapiId,
+                  name: phone.name,
+                  number: phone.number,
+                });
+                setShowDeleteModal(true);
+              }}
+              disabled={deleteLoading === phone.id}
+            >
+              {deleteLoading === phone.id ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : (
+                <Trash2 size={14} />
+              )}
               Delete Number
             </button>
           </div>
@@ -332,22 +505,29 @@ export default function PhoneNumberManager() {
               </td>
               <td className="text-center">{phone.name}</td>
               <td className="text-center">
-                <select
-                  className="select select-bordered select-xs w-full max-w-xs bg-base-100/70"
-                  value={phone.assistantId}
-                  onChange={(e) =>
-                    handleAssistantChange(phone.id, e.target.value)
-                  }
-                >
-                  <option disabled value="">
-                    Select Assistant
-                  </option>
-                  {assistants.map((assistant) => (
-                    <option key={assistant.id} value={assistant.id}>
-                      {assistant.name}
+                {assistantUpdateLoading === phone.id ? (
+                  <div className="select select-bordered select-xs w-full flex items-center justify-center bg-base-100/70">
+                    <span className="loading loading-spinner loading-xs"></span>
+                    <span className="ml-2 text-xs">Updating...</span>
+                  </div>
+                ) : (
+                  <select
+                    className="select select-bordered select-xs w-full max-w-xs bg-base-100/70"
+                    value={findAssistantDbId(phone.assistantId)}
+                    onChange={(e) =>
+                      handleAssistantChange(phone.id, e.target.value)
+                    }
+                  >
+                    <option disabled value="">
+                      Select Assistant
                     </option>
-                  ))}
-                </select>
+                    {assistants.map((assistant) => (
+                      <option key={assistant._id} value={assistant._id}>
+                        {assistant.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </td>
               <td className="text-center">
                 <div className="flex gap-2 justify-center">
@@ -364,9 +544,22 @@ export default function PhoneNumberManager() {
                   </button>
                   <button
                     className="btn btn-ghost btn-xs text-error"
-                    onClick={() => handleDelete(phone.id)}
+                    onClick={() => {
+                      setPhoneToDelete({
+                        id: phone.id,
+                        vapiId: phone.vapiId,
+                        name: phone.name,
+                        number: phone.number,
+                      });
+                      setShowDeleteModal(true);
+                    }}
+                    disabled={deleteLoading === phone.id}
                   >
-                    <Trash2 size={14} />
+                    {deleteLoading === phone.id ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
                   </button>
                 </div>
               </td>
@@ -635,6 +828,34 @@ export default function PhoneNumberManager() {
                 </label>
               </div>
 
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">Assistant</span>
+                  <span className="label-text-alt text-error">Required</span>
+                </label>
+                <select
+                  name="assistantId"
+                  value={formData.assistantId}
+                  onChange={handleChange}
+                  className="select select-bordered w-full"
+                  required
+                >
+                  <option value="" disabled>
+                    Select an Assistant
+                  </option>
+                  {assistants.map((assistant) => (
+                    <option key={assistant._id} value={assistant.vapiAssistantId}>
+                      {assistant.name}
+                    </option>
+                  ))}
+                </select>
+                <label className="label">
+                  <span className="label-text-alt text-base-content/70">
+                    The AI assistant that will handle calls to this number
+                  </span>
+                </label>
+              </div>
+
               <div className="divider my-2"></div>
 
               <div className="flex justify-end items-center mt-4">
@@ -648,12 +869,18 @@ export default function PhoneNumberManager() {
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm"
-                  disabled={isLoading}
+                  disabled={importLoading}
                 >
-                  {isLoading ? (
-                    <span className="loading loading-spinner loading-sm"></span>
+                  {importLoading ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm mr-2"></span>
+                      Importing...
+                    </>
                   ) : (
-                    "Import from Twilio"
+                    <>
+                      <Plus size={16} className="mr-1" />
+                      Import from Twilio
+                    </>
                   )}
                 </button>
               </div>
@@ -663,6 +890,49 @@ export default function PhoneNumberManager() {
           {/* Modal backdrop */}
           <form method="dialog" className="modal-backdrop">
             <button onClick={() => setShowImportModal(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && phoneToDelete && (
+        <dialog open className="modal">
+          <div className="modal-box bg-base-300/95 backdrop-blur-xl border-2 border-error/30 shadow-xl">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <AlertTriangle className="text-error" size={18} />
+              Confirm Deletion
+            </h3>
+            <p className="py-4">
+              Are you sure you want to delete  <span className="font-semibold">{phoneToDelete.name}</span> ({phoneToDelete.number})? This action cannot be undone.
+            </p>
+            <div className="modal-action">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-error"
+                disabled={deleteLoading === phoneToDelete.id}
+                onClick={() => {
+                  handleDelete(phoneToDelete.id, phoneToDelete.vapiId);
+                  setShowDeleteModal(false);
+                }}
+              >
+                {deleteLoading === phoneToDelete.id ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Delete Phone Number
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowDeleteModal(false)}>close</button>
           </form>
         </dialog>
       )}
