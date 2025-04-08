@@ -372,7 +372,7 @@ export default function PhoneNumberManager() {
                     </div>
                   ) : (
                     <select
-                      className="select select-bordered select-xs w-full max-w-xs bg-base-100/70"
+                      className="select select-bordered select-sm w-full  "
                       value={findAssistantDbId(phone.assistantId)}
                       onChange={(e) =>
                         handleAssistantChange(phone.id, e.target.value)
@@ -506,13 +506,13 @@ export default function PhoneNumberManager() {
               <td className="text-center">{phone.name}</td>
               <td className="text-center">
                 {assistantUpdateLoading === phone.id ? (
-                  <div className="select select-bordered select-xs w-full flex items-center justify-center bg-base-100/70">
+                  <div className="select select-bordered select-sm w-full flex items-center justify-center ">
                     <span className="loading loading-spinner loading-xs"></span>
                     <span className="ml-2 text-xs">Updating...</span>
                   </div>
                 ) : (
                   <select
-                    className="select select-bordered select-xs w-full max-w-xs bg-base-100/70"
+                    className="select select-bordered select-sm w-full  "
                     value={findAssistantDbId(phone.assistantId)}
                     onChange={(e) =>
                       handleAssistantChange(phone.id, e.target.value)
