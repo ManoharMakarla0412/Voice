@@ -648,21 +648,7 @@ export default function PhoneNumberManager() {
         </div>
 
         {/* Error display */}
-        {error && (
-          <div className="alert alert-error shadow-lg border border-error/30">
-            <AlertTriangle size={18} />
-            <div>
-              <h3 className="font-bold">Error</h3>
-              <div className="text-xs">{error}</div>
-            </div>
-            <button
-              className="btn btn-sm btn-circle btn-ghost ml-auto"
-              onClick={() => setError(null)}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
+        
 
         {/* Phone Numbers content */}
         <div className="card bg-base-200/80 backdrop-blur-xl border-2 border-primary/30 shadow-lg overflow-hidden">
