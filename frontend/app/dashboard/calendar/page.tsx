@@ -31,9 +31,9 @@ interface Event {
   status: "scheduled" | "completed" | "cancelled";
   phoneNumber: string;
   isNewPatient: boolean;
-  userId?: string;
 }
 
+// Type for backend appointment data
 interface Appointment {
   callId: string;
   problem: string;
@@ -45,7 +45,6 @@ interface Appointment {
   timestamp?: string;
   createdAt?: string;
   updatedAt?: string;
-  userId: string;
 }
 
 const Calendar = () => {
@@ -54,57 +53,35 @@ const Calendar = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  const fetchAppointments = async () => {
-    try {
-      const token = sessionStorage.getItem("auth_token");
-      if (!token) {
-        setAuthError("Please log in to view appointments");
-        return;
-      }
-
-      const response = await fetch("https://osaw.in/v1/voice/api/appointments/latest", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          setAuthError("Session expired. Please log in again.");
-          sessionStorage.removeItem("auth_token");
-        }
-        throw new Error("Failed to fetch appointments");
-      }
-
-      const data = await response.json();
-      const newEvents = data.map((appt: Appointment) => ({
-        id: appt.callId,
-        title: `${appt.problem} - ${appt.fullName}`,
-        start: appt.appointmentDateTime,
-        end: new Date(new Date(appt.appointmentDateTime).getTime() + appt.duration * 60000).toISOString(),
-        color: "bg-primary",
-        description: appt.problem,
-        patientName: appt.fullName,
-        patientId: `PT-${Math.floor(Math.random() * 10000)}`,
-        appointmentType: appt.problem,
-        status: appt.status,
-        phoneNumber: "(555) 000-0000",
-        isNewPatient: false,
-        userId: appt.userId,
-      }));
-      setEvents((prev) => {
-        const uniqueEvents = newEvents.filter((ne: Event) => !prev.some((e) => e.id === ne.id));
-        return [...prev, ...uniqueEvents];
-      });
-      setAuthError(null);
-    } catch (error) {
-      console.error("Failed to fetch appointments:", error);
-    }
-  };
 
   useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await fetch("https://osaw.in/v1/voice/api/appointments/latest");
+        const data = await response.json();
+        const newEvents = data.map((appt: Appointment) => ({
+          id: appt.callId,
+          title: `${appt.problem} - ${appt.fullName}`,
+          start: appt.appointmentDateTime,
+          end: new Date(new Date(appt.appointmentDateTime).getTime() + appt.duration * 60000).toISOString(),
+          color: "bg-primary",
+          description: appt.problem,
+          patientName: appt.fullName,
+          patientId: `PT-${Math.floor(Math.random() * 10000)}`,
+          appointmentType: appt.problem,
+          status: appt.status,
+          phoneNumber: "(555) 000-0000",
+          isNewPatient: false,
+        }));
+        setEvents((prev) => {
+          const uniqueEvents = newEvents.filter((ne: Event) => !prev.some((e) => e.id === ne.id));
+          return [...prev, ...uniqueEvents];
+        });
+      } catch (error) {
+        console.error("Failed to fetch appointments:", error);
+      }
+    };
+
     fetchAppointments();
     const interval = setInterval(fetchAppointments, 5000);
     return () => clearInterval(interval);
@@ -461,72 +438,9 @@ const Calendar = () => {
     );
   };
 
-  const handleNewAppointment = async () => {
-    const token = sessionStorage.getItem("auth_token");
-    if (!token) {
-      setAuthError("Please log in to create an appointment");
-      return;
-    }
-
-    const appointmentData = {
-      message: {
-        type: "tool-calls",
-        toolCalls: [
-          {
-            function: {
-              name: "Function_Tool",
-              arguments: {
-                customername: "New Patient",
-                dateandtime: new Date().toISOString(),
-                typeofservice: "Consultation",
-              },
-            },
-          },
-        ],
-        call: { id: `call_${Date.now()}` },
-        assistant: { id: "asst_default" },
-        timestamp: new Date().toISOString(),
-        artifact: {
-          messages: [
-            { time: Date.now() - 60000 },
-            { time: Date.now() },
-          ],
-        },
-      },
-    };
-
-    try {
-      const response = await fetch("https://osaw.in/v1/voice/api/appointments/book", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(appointmentData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to book appointment");
-      }
-      fetchAppointments(); // Now accessible here
-    } catch (error) {
-      console.error("Failed to book appointment:", error);
-      setAuthError("Failed to create appointment");
-    }
-  };
-
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {authError && (
-          <div className="alert alert-error shadow-lg">
-            <div>
-              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span>{authError}</span>
-            </div>
-            <button className="btn btn-sm" onClick={() => setAuthError(null)}>Dismiss</button>
-          </div>
-        )}
         <div className="card bg-base-300/80 backdrop-blur-xl p-5 border-2 border-primary/30 shadow-lg">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -559,9 +473,7 @@ const Calendar = () => {
                 </button>
               </div>
               <span className="badge badge-lg bg-base-200/60 font-medium shadow-sm">{formatMonthYear(currentDate)}</span>
-              <button className="btn btn-primary btn-sm ml-auto shadow-md" onClick={handleNewAppointment}>
-                <Plus size={16} /> New Appointment
-              </button>
+              <button className="btn btn-primary btn-sm ml-auto shadow-md"><Plus size={16} />New Appointment</button>
             </div>
           </div>
         </div>
